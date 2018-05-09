@@ -15,7 +15,7 @@ docker run -itd -p 9701-9708:9701-9708 indy_pool
 
 ```
 git clone https:/github.com/hyperledger/indy-agent.git
-cd indy-agent
+cd indy-agent/nodejs
 npm install # This will fail if libindy is not accessible
 npm start # Starts the node.js express server
 ```
