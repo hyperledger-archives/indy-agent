@@ -1,5 +1,6 @@
 'use strict';
 const fs = require('fs');
+const uuid = require('uuid');
 const homedir = require('home-dir');
 const PATH = homedir('/.indy_client/messageStore.json');
 
@@ -55,9 +56,14 @@ exports.getMessages = function() {
     return this.store;
 };
 
-exports.writeMessage = function(message) {
+exports.writeMessage = function(did, message) {
     let messages = this.getMessages();
-    messages.push(message);
+    messages.push({
+        id: uuid(),
+        did: did,
+        timestamp: new Date(),
+        message: message
+    });
     fs.writeFileSync(PATH, JSON.stringify(messages));
 };
 

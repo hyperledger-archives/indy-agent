@@ -31,6 +31,9 @@ return indy.setupPool()
         return indy.setupWallet();
     })
     .then(() => {
+        return indy.createAndStorePublicDid();
+    })
+    .then(() => {
         server.listen(port);
         server.on('error', onError);
         server.on('listening', onListening);

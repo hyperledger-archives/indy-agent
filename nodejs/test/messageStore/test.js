@@ -33,7 +33,7 @@ describe('messageStore', function() {
     it('getOldestMessage() should get the oldest message', function() {
         let oldestMessage = {
             id: '1',
-            timestamp: new Date(),
+            received_timestamp: new Date(),
             message: "some message"
         };
         store.writeMessage(oldestMessage);

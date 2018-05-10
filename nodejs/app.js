@@ -5,7 +5,8 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 
 const indexRouter = require('./routes/index');
-const indyHandler = require('./indy/handler');
+const apiRouter = require('./routes/api');
+const indyHandler = require('./indy/handler')({ defaultHandlers: true }); // () executes the function so that we can potentially have multiple indy handlers;
 
 const app = express();
 
@@ -20,7 +21,8 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.post('/indy', indyHandler);
+app.use('/api', apiRouter);
+app.post('/indy', indyHandler.middleware);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
