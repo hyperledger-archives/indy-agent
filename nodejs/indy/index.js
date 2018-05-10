@@ -7,6 +7,9 @@ const common = require('./common');
 const POOL_NAME = process.env.POOL_NAME || 'pool1';
 const WALLET_NAME = process.env.WALLET_NAME || 'wallet';
 let publicDid;
+let stewardDid;
+let stewardKey;
+let stewardWallet;
 let wallet;
 let pool;
 
@@ -74,13 +77,36 @@ exports.anonCrypt = async function(did, message) {
 
 exports.createAndStorePublicDid = async function() {
     let endpoint = process.env.PUBLIC_DID_ENDPOINT;
+    await setupSteward();
+
     let verkey;
     [publicDid, verkey] = await sdk.createAndStoreMyDid(wallet, {});
-    await sdk.setEndpointForDid(wallet, publicDid, endpoint, verkey);
-    await common.sendNym(pool, wallet, publicDid, publicDid, verkey);
-    let attributeRequest = await sdk.buildAttribRequest(publicDid, publicDid, null, {endpoint: endpoint});
+
+    await common.sendNym(pool, stewardWallet, stewardDid, publicDid, verkey, "TRUST_ANCHOR");
+
+    let attributeRequest = await sdk.buildAttribRequest(publicDid, publicDid, null, {endpoint: {ha: endpoint}}, null);
     await sdk.signAndSubmitRequest(pool, wallet, publicDid, attributeRequest);
 };
+
+async function setupSteward() {
+    let stewardWalletName = 'stewardWallet';
+    try {
+        await sdk.createWallet(POOL_NAME, stewardWalletName);
+    } catch(e) {
+        if(e.message !== "WalletAlreadyExistsError") {
+            throw e;
+        }
+    } finally {
+        stewardWallet = await sdk.openWallet(stewardWalletName);
+    }
+
+    let stewardDidInfo = {
+        'seed': '000000000000000000000000Steward1'
+    };
+
+    [stewardDid, stewardKey] = await sdk.createAndStoreMyDid(stewardWallet, stewardDidInfo);
+
+}
 
 exports.getPublicDid = async function() {
     if(!publicDid) {
@@ -90,7 +116,25 @@ exports.getPublicDid = async function() {
 };
 
 exports.getEndpointForDid = async function (did) {
-    let [endpoint] = await sdk.getEndpointForDid(wallet, pool, did);
-    return endpoint;
+    let getAttrRequest = await sdk.buildGetAttribRequest(publicDid, did, 'endpoint', null, null);
+    let res = await waitUntilApplied(pool, getAttrRequest, data => data['result']['data'] != null);
+    return JSON.parse(res.result.data).endpoint.ha;
 };
 
+function sleep (ms) {
+    return new Promise(function (resolve) {
+        setTimeout(resolve, ms)
+    })
+}
+
+async function waitUntilApplied (ph, req, cond) {
+    for (let i = 0; i < 3; i++) {
+        let res = await sdk.submitRequest(ph, req);
+
+        if (cond(res)) {
+            return res;
+        }
+
+        await sleep(5 * 1000);
+    }
+}

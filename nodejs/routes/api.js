@@ -12,7 +12,7 @@ router.post('/send_message', async function(req, res, next) {
     let encryptedMessage = await indy.anonCrypt(req.body.did, req.body.message);
     console.log(endpoint);
     let requestOptions = {
-        uri: endpoint,
+        uri: `http://${endpoint}/indy`,
         method: 'POST',
         body: {
             message: Buffer.from(encryptedMessage).toString('base64')
