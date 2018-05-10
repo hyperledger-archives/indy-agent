@@ -76,6 +76,7 @@ exports.createAndStorePublicDid = async function() {
     let verkey;
     [publicDid, verkey] = await sdk.createAndStoreMyDid(wallet, {});
     await common.sendNym(pool, wallet, publicDid, publicDid, verkey);
+    await sdk.setEndpointForDid(wallet, publicDid, process.env.PUBLIC_DID_ENDPOINT, verkey);
 };
 
 exports.getPublicDid = async function() {
@@ -85,4 +86,8 @@ exports.getPublicDid = async function() {
     return publicDid;
 };
 
+exports.getEndpointForDid = async function (did) {
+    let [endpoint] = await sdk.getEndpointForDid(wallet, pool, did);
+    return endpoint;
+};
 

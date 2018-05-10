@@ -67,12 +67,12 @@
                     <%}%>
                 </div>
                 <div class="w3-half w3-right">
-                    <form action="/api/send_message" method="POST">
-                        <div>
-                            Recipient: <input type="text" name="did" value="<%=publicDid%>">
+                    <form class="w3-container w3-card-4 w3-padding" action="/api/send_message" method="POST">
+                        <div class="w3-section">
+                            Recipient: <input class="w3-input" type="text" name="did" value="<%=publicDid%>">
                         </div>
-                        <div>
-                            Message: <textarea name="message"></textarea>
+                        <div class="w3-section">
+                            Message: <textarea class="w3-input" name="message"></textarea>
                         </div>
                         <input type="submit">
                     </form>
