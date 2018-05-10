@@ -10,6 +10,7 @@ router.get('/', function(req, res, next) {
 router.post('/send_message', async function(req, res, next) {
     let endpoint = await indy.getEndpointForDid(req.body.did);
     let encryptedMessage = await indy.anonCrypt(req.body.did, req.body.message);
+    console.log(endpoint);
     let requestOptions = {
         uri: endpoint,
         method: 'POST',

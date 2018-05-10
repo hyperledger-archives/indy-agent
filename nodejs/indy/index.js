@@ -75,8 +75,8 @@ exports.anonCrypt = async function(did, message) {
 exports.createAndStorePublicDid = async function() {
     let verkey;
     [publicDid, verkey] = await sdk.createAndStoreMyDid(wallet, {});
-    await common.sendNym(pool, wallet, publicDid, publicDid, verkey);
     await sdk.setEndpointForDid(wallet, publicDid, process.env.PUBLIC_DID_ENDPOINT, verkey);
+    await common.sendNym(pool, wallet, publicDid, publicDid, verkey);
 };
 
 exports.getPublicDid = async function() {
