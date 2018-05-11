@@ -24,7 +24,7 @@ exports.getVerinym = async function(poolHandle, From, fromWallet, fromDid, fromT
     if (senderVerkey !== retrievedVerkey) {
         throw Error("Verkey is not the same");
     }
-
+    
     console.log(`\"${From}\" > Send Nym to Ledger for \"${to} DID\" with ${role} Role`);
     await sendNym(poolHandle, fromWallet, fromDid, authdecryptedDidInfoJson['did'], authdecryptedDidInfoJson['verkey'], role);
 

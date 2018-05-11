@@ -67,14 +67,14 @@
                     <%}%>
                 </div>
                 <div class="w3-half w3-right">
-                    <form class="w3-container w3-card-4 w3-padding" action="/api/send_message" method="POST">
+                    <form class="w3-container w3-card-4 w3-padding" action="/api/send_message" method="POST" target="_self">
                         <div class="w3-section">
                             Recipient: <input class="w3-input" type="text" name="did" value="<%=publicDid%>">
                         </div>
                         <div class="w3-section">
-                            Message: <textarea class="w3-input" name="message"></textarea>
+                            Message: <textarea class="w3-input" name="message" rows="6"></textarea>
                         </div>
-                        <input type="submit">
+                        <input class="w3-btn w3-white w3-border" type="submit">
                     </form>
                 </div>
             </div>
