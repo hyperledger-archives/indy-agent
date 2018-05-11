@@ -64,8 +64,8 @@ module.exports = function(config) { //factory function creates object and return
     };
 
     if(config.defaultHandlers) {
-        factory.defineHandler("CONNECTION_REQUEST", handlers.connectionRequest);
-        factory.defineHandler("CONNECTION_RESPONSE", handlers.connectionResponse);
+        factory.defineHandler("urn:sovrin:agent:message_type:sovrin.org/connection_request", handlers.connectionRequest);
+        factory.defineHandler("urn:sovrin:agent:message_type:sovrin.org/connection_response", handlers.connectionResponse);
     }
 
     return factory;
