@@ -1,7 +1,8 @@
 'use strict';
-const store = require('../messageStore');
-const handlers = require('./handlers');
+const store = require('../store');
+const handlers = require('./defaultHandlers');
 const indy = require('../index.js');
+const connections = require('../connections');
 
 module.exports = function(config) { //factory function creates object and returns it.
     const factory = {};
@@ -50,7 +51,7 @@ module.exports = function(config) { //factory function creates object and return
                         })
                 }
             } else {
-                store.writeMessage(null, decryptedMessage);
+                store.messages.write(null, decryptedMessage);
                 res.status(202).send("Accepted");
             }
         } catch(err) {
@@ -64,28 +65,9 @@ module.exports = function(config) { //factory function creates object and return
     };
 
     if(config.defaultHandlers) {
-        factory.defineHandler("urn:sovrin:agent:message_type:sovrin.org/connection_request", handlers.connectionRequest);
-        factory.defineHandler("urn:sovrin:agent:message_type:sovrin.org/connection_response", handlers.connectionResponse);
+        factory.defineHandler(connections.MESSAGE_TYPES.RESPONSE, handlers.connectionResponse);
+        factory.defineHandler(connections.MESSAGE_TYPES.ACKNOWLEDGE, handlers.connectionAcknowledge);
     }
 
     return factory;
 };
-
-/*
-module.exports = function(req, res) {
-    try {
-        let messageType = req.body.type;
-
-        // Do something with the message if it shouldn't be stored. else
-        store.writeMessage(req.body);
-        res.status(202).send("Accepted");
-    } catch(e) {
-        if(e.message === "Invalid Request") {
-            res.status(400).send(e.message);
-        } else {
-            res.send(500).send("Internal Server Error");
-        }
-    }
-
-};
-*/

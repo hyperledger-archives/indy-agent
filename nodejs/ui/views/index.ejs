@@ -27,15 +27,13 @@
                 <header class="w3-container w3-theme-l1">
         <span onclick="document.getElementById('id01').style.display='none'"
               class="w3-button w3-display-topright">×</span>
-                    <h4>Oh snap! We just showed you a modal..</h4>
-                    <h5>Because we can <i class="fa fa-smile-o"></i></h5>
+                    <h4>Sovrin Reference Agent</h4>
                 </header>
                 <div class="w3-padding">
-                    <p>Cool huh? Ok, enough teasing around..</p>
-                    <p>Go to our <a class="w3-btn" href="/w3css/default.asp">W3.CSS Tutorial</a> to learn more!</p>
+                    <p></p>
                 </div>
                 <footer class="w3-container w3-theme-l1">
-                    <p>Modal footer</p>
+                    <p></p>
                 </footer>
             </div>
         </div>
@@ -52,16 +50,48 @@
                 <p>My Credentials</p>
             </div>
             <div id="relationships" class="tab" style="display:none;" >
-                <p>My Relationships</p>
+                <div class="w3-half">
+                    <div class="center w3-padding">
+                        <div class="w3-card w3-container" >
+                            <p>My Relationship with Matthew Hailstone</p>
+                            <p>My Did: </p>
+                            <p>Their Did: </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="w3-half w3-right">
+                    <form class="w3-container w3-card-4 w3-padding" action="/api/send_connection_request" method="POST" target="_self">
+                        <h4>Create a New Relationship</h4>
+                        <div class="w3-section">
+                            Name of New Relationship: <input class="w3-input" type="text" name="name" value="John Doe">
+                        </div>
+                        <div class="w3-section">
+                            Recipient's Public DID: <input class="w3-input" type="text" name="did" value="<%=publicDid%>">
+                        </div>
+                        <input class="w3-btn w3-white w3-border" type="submit" value="Send Connection Request">
+                    </form>
+                </div>
             </div>
             <div id="messages" class="tab" >
                 <div class="w3-half">
                     <%for(var message of messages) {%>
                         <div class="center w3-padding">
                             <div class="w3-card w3-container" >
-                                <!--<h3>From: <%=message.did%></h3><br>-->
-                                <p>Timestamp: <%=message.timestamp%></p>
-                                <p>Message: <%=JSON.stringify(message.message)%></p>
+                                <p>From: <%=message.message.did%></p>
+                                <p>Type: <%=message.message.type%></p>
+                                <p>Message: <%=message.message.message%></p>
+                                <p>Received <%=message.timestamp%></p>
+                            </div>
+                            <div>
+                                <%for(var link of message.links) {%>
+                                    <form action="<%=link.href%>" method="<%=link.method%>">
+                                        <input type="hidden" name="messageId" value="<%=message.id%>">
+                                        <%for(var missingField of link.missingFields) {%>
+                                            <input type="text" name="<%=missingField.name%>">
+                                        <%}%>
+                                        <input type="submit" value="<%=link.name%>">
+                                    </form>
+                                <%}%>
                             </div>
                         </div>
                     <%}%>
@@ -72,7 +102,11 @@
                             Recipient: <input class="w3-input" type="text" name="did" value="<%=publicDid%>">
                         </div>
                         <div class="w3-section">
-                            Message: <textarea class="w3-input" name="message" rows="6"></textarea>
+                            Message: <textarea class="w3-input" name="message" rows="6" >{
+    "type":"SOME_TYPE",
+    "message":"test"
+}
+                            </textarea>
                         </div>
                         <input class="w3-btn w3-white w3-border" type="submit">
                     </form>

@@ -1,9 +1,12 @@
 'use strict';
 const sdk = require('indy-sdk');
 const uuid = require('uuid');
+const request = require('request-promise');
 const utils = require('./utils');
 const ledgerConfig = require('./ledgerConfig');
 const common = require('./common');
+const store = require('./store');
+const connections = require('./connections');
 const POOL_NAME = process.env.POOL_NAME || 'pool1';
 const WALLET_NAME = process.env.WALLET_NAME || 'wallet';
 let publicDid;
@@ -12,6 +15,7 @@ let stewardKey;
 let stewardWallet;
 let wallet;
 let pool;
+let endpoint;
 
 exports.setupPool = async function() {
     let poolGenesisTxnPath = await ledgerConfig.getPoolGenesisTxnPath(POOL_NAME);
@@ -72,19 +76,28 @@ exports.anonDecrypt = async function(did, message) {
 
 exports.anonCrypt = async function(did, message) {
     let verkey = await sdk.keyForDid(pool, wallet, did);
-    return await sdk.cryptoAnonCrypt(verkey, Buffer.from(message, 'utf8'));
+    let buffer = await sdk.cryptoAnonCrypt(verkey, Buffer.from(message, 'utf8'));
+    return Buffer.from(buffer).toString('base64')
 };
 
 exports.createAndStorePublicDid = async function() {
-    let endpoint = process.env.PUBLIC_DID_ENDPOINT;
+    endpoint = process.env.PUBLIC_DID_ENDPOINT;
     await setupSteward();
 
     let verkey;
     [publicDid, verkey] = await sdk.createAndStoreMyDid(wallet, {});
+    let didMeta = JSON.stringify({
+        primary: true
+    });
+    await sdk.setDidMetadata(wallet, publicDid, didMeta);
 
     await common.sendNym(pool, stewardWallet, stewardDid, publicDid, verkey, "TRUST_ANCHOR");
+    await this.setEndpointForDid(publicDid, endpoint);
 
-    let attributeRequest = await sdk.buildAttribRequest(publicDid, publicDid, null, {endpoint: {ha: endpoint}}, null);
+};
+
+exports.setEndpointForDid = async function(did, endpoint) {
+    let attributeRequest = await sdk.buildAttribRequest(publicDid, did, null, {endpoint: {ha: endpoint}}, null);
     await sdk.signAndSubmitRequest(pool, wallet, publicDid, attributeRequest);
 };
 
@@ -138,3 +151,124 @@ async function waitUntilApplied (ph, req, cond) {
         await sleep(5 * 1000);
     }
 }
+
+exports.getRelationships = async function() {
+    let relationships = await sdk.listPairwise(wallet);
+    return relationships;
+};
+
+// FIXME: Assumption: Their public did has an endpoint attribute
+exports.anonCryptMessage = async function(did, message) {
+    message = JSON.stringify(message);
+    let endpoint = await this.getEndpointForDid(did);
+    let encryptedMessage = await this.anonCrypt(did, message);
+    await this.sendMessage(endpoint, encryptedMessage);
+};
+
+exports.sendMessage = function(endpoint, message) {
+    let requestOptions = {
+        uri: `http://${endpoint}/indy`,
+        method: 'POST',
+        body: {
+            message: message
+        },
+        json: true
+    };
+    return request(requestOptions);
+};
+
+exports.prepareConnectionRequest = async function(nameOfRelationship, theirPublicDid) {
+    let [myNewDid, myNewVerkey] = await sdk.createAndStoreMyDid(wallet, {});
+    await common.sendNym(pool, wallet, publicDid, myNewDid, myNewVerkey, null);
+
+    let nonce = uuid();
+    store.pendingRelationships.write(nameOfRelationship, myNewDid, theirPublicDid, nonce);
+
+    return {
+        type: connections.MESSAGE_TYPES.REQUEST,
+        message: {
+            did: myNewDid,
+            publicDid: publicDid,
+            nonce: nonce
+        }
+    }
+};
+
+exports.acceptConnectionRequest = async function(nameOfRelationship, theirPublicDid, theirDid, requestNonce) {
+    //FIXME: Check to see if pairwise exists
+    let [myDid, myVerkey] = await sdk.createAndStoreMyDid(wallet, {});
+
+    let theirVerkey = await indy.keyForDid(pool, wallet, theirDid);
+
+    await sdk.storeTheirDid(wallet, {
+        did: theirDid,
+        verkey: theirVerkey
+    });
+
+    let meta = JSON.stringify({
+        name: nameOfRelationship,
+        theirPublicDid: theirPublicDid
+    });
+    await sdk.createPairwise(wallet, theirDid, myDid, meta);
+
+    // Send connection response
+    let connectionResponse = {
+        did: myDid,
+        verkey: myVerkey,
+        nonce: requestNonce
+    };
+    let message = {
+        aud: theirDid,
+        type: connections.MESSAGE_TYPES.RESPONSE,
+        message: await this.anonCrypt(theirDid, connectionResponse)
+    };
+    await this.anonCryptMessage(theirPublicDid, connectionResponse);
+};
+
+exports.acceptConnectionResponse = async function(theirPublicDid, theirDid, theirVerkey, requestNonce) {
+    let pendingRelationships = store.pendingRelationships.getAll();
+    let relationship;
+    for(let entry of pendingRelationships) {
+        if(entry.theirPublicDid === theirPublicDid) {
+            relationship = entry;
+        }
+    }
+    if(!relationship) {
+        throw Error("RelationshipNotFound");
+    } else {
+        if(relationship.nonce !== requestNonce) {
+            throw Error("NoncesDontMatch");
+        } else {
+            await sdk.storeTheirDid(wallet, {
+                did: theirDid,
+                verkey: theirVerkey
+            });
+
+            let meta = JSON.stringify({
+                name: relationship.name,
+                theirPublicDid: theirPublicDid
+            });
+            await sdk.createPairwise(wallet, theirDid, relationship.myNewDid, meta);
+
+            // send acknowledge
+            this.sendAuthcryptedMessage(relationship.myNewDid, theirDid, "Success");
+        }
+    }
+};
+
+exports.authCrypt = async function(myDid, theirDid, message) {
+    let myVerkey = await sdk.keyForLocalDid(wallet, myDid);
+    let theirVerkey = await sdk.keyForLocalDid(wallet, theirDid);
+    let buffer = await sdk.cryptoAuthCrypt(wallet, myDid, theirDid, Buffer.from(message, 'utf8'));
+    return Buffer.from(buffer).toString('base64')
+};
+
+exports.sendAuthcryptedMessage = async function(myDid, theirDid, message) {
+
+    //FIXME: Is their endpoint in the wallet yet?
+    let endpoint = await sdk.getEndpointForDid(wallet, pool, theirDid);
+    let authcryptedMessage = await this.authCrypt(myDid, theirDid, message);
+    this.sendMessage(endpoint, authcryptedMessage);
+};
+
+

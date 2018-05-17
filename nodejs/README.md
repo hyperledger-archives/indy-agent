@@ -29,3 +29,4 @@ The agent is a simple http server that can receive messages [POST](https://en.wi
 * Send and manage Credentials
 * Make and request proofs
 
+## Message Types
