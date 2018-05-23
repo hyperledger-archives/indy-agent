@@ -67,7 +67,7 @@ describe('store', function() {
             timestamp: new Date(),
             message: "some message"
         });
-        expect(store.getMessageById('1') === rightMessage);
+        expect(store.messages.getMessage('1') === rightMessage);
     })
 
     it('deleteMessage() should delete the right message', function() {
@@ -90,7 +90,7 @@ describe('store', function() {
             timestamp: new Date(),
             message: "some message"
         });
-        store.deleteMessage('3');
+        store.messages.deleteMessage('3');
         expect(store.getMessages === rightMessages);
     })
 });

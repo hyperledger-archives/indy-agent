@@ -47,13 +47,14 @@
 
         <div class="w3-row-padding w3-center w3-margin-top">
             <div id="credentials" class="tab" style="display:none;">
-                <p>My Credentials</p>
+                <p>My Credentials:</p>
+                <p>My Public DID: <%=publicDid%></p>
             </div>
             <div id="relationships" class="tab" style="display:none;" >
                 <div class="w3-half">
                     <div class="center w3-padding">
                         <div class="w3-card w3-container" >
-                            <p>My Relationship with Matthew Hailstone</p>
+                            <p>My Relationship with </p>
                             <p>My Did: </p>
                             <p>Their Did: </p>
                         </div>
@@ -79,18 +80,23 @@
                             <div class="w3-card w3-container" >
                                 <p>From: <%=message.message.did%></p>
                                 <p>Type: <%=message.message.type%></p>
-                                <p>Message: <%=message.message.message%></p>
                                 <p>Received <%=message.timestamp%></p>
                             </div>
                             <div>
-                                <%for(var link of message.links) {%>
-                                    <form action="<%=link.href%>" method="<%=link.method%>">
-                                        <input type="hidden" name="messageId" value="<%=message.id%>">
-                                        <%for(var missingField of link.missingFields) {%>
-                                            <input type="text" name="<%=missingField.name%>">
-                                        <%}%>
-                                        <input type="submit" value="<%=link.name%>">
-                                    </form>
+                                <%if (message.message.type === messageTypes.connections.REQUEST) {%>
+                                  <form>
+                                      <input type="hidden" id="connection_message_id" value="<%=message.id%>">
+                                      <input type="text" id="connection_name" required/>
+                                      <%if (message.links.accept) {%>
+                                        <button type="submit" onclick="acceptConnection('<%=message.links.accept.href%>', '<%=message.links.accept.method%>')">Accept Connection Request</button>
+                                      <%}%>
+                                      <%if (message.links.reject) {%>
+                                        <button type="submit" onclick="deleteConnection('<%=message.links.reject.href%>', '<%=message.links.reject.method%>')">Reject Connection Request</button>
+                                      <%}%>
+                                  </form>
+                                <%} else {%>
+                                  <p>Message:</p>
+                                  <textarea><%=message.message.message%></textarea>
                                 <%}%>
                             </div>
                         </div>
@@ -122,6 +128,19 @@
                     x[i].style.display = "none";
                 }
                 document.getElementById(id).style.display = "block";
+            }
+
+            function acceptConnection(url, method) {
+              let xhttp = new XMLHttpRequest();
+              xhttp.open(method, url, true);
+              xhttp.setRequestHeader('Content-Type', 'application/json');
+              xhttp.send(JSON.stringify({ name: document.getElementById('connection_name').value, messageId: document.getElementById('connection_message_id').value}));
+            }
+
+            function deleteConnection(url, method) {
+              let xhttp = new XMLHttpRequest();
+              xhttp.open(method, url, true);
+              xhttp.send();
             }
         </script>
     </body>

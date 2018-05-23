@@ -16,5 +16,3 @@ exports.send = function(host, type, message) {
         }
     });
 };
-
-exports.messageTypes =

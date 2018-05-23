@@ -1,31 +1,17 @@
 'use strict';
 const store = require('../store');
+const indy = require('../index.js');
 
-// exports.connectionRequest = function(msg) {
-//     msg.links = [];
-//     msg.links.push({
-//         name: "Accept",
-//         request: {
-//             uri: '/api/connection_request/accept',
-//             method: 'POST'
-//         }
-//     });
-//     msg.links.push({
-//         name: "Reject",
-//         request: {
-//             uri: '/api/connection_request/reject',
-//             method: 'POST'
-//         }
-//     });
-//     store.messages.write(null, msg);
-// };
-
-exports.connectionResponse = function(msg) {
-    // ...
-    store.messages.write(null, msg);
+exports.connectionResponse = async function(message) {
+  let id = store.messages.write(null, message);
+  await indy.acceptConnectionResponse(message.aud, message.message);
+  store.messages.deleteMessage(id);
+  return Promise.resolve();
 };
 
-exports.connectionAcknowledge = function(msg) {
-    // ...
-
+exports.connectionAcknowledge = async function(message) {
+  let id = store.messages.write(null, message);
+  await indy.acceptConnectionAcknowledgement(message.aud, message.message);
+  store.messages.deleteMessage(id);
+  return Promise.resolve();
 };
