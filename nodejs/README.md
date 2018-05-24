@@ -29,4 +29,6 @@ The agent is a simple http server that can receive messages [POST](https://en.wi
 * Send and manage Credentials
 * Make and request proofs
 
-## Message Types
+## Notes
+* The Issuer page could be simplified.  Why not let the only action be issue credential and have them pick a schema. If the cred def doesn't exist, just create it.
+* They will need the ability to create schemas. That could be a separate tab. Schema Explorer.

@@ -5,6 +5,7 @@
         <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
         <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-black.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.min.css">
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jdenticon@2.0.0"></script>
         <style>
             .center {
                 margin:auto;
@@ -21,11 +22,11 @@
             </div>
         </header>
 
-        <!-- Modal -->
-        <div id="id01" class="w3-modal">
+        <!-- About Modal -->
+        <div id="aboutModel" class="w3-modal">
             <div class="w3-modal-content w3-card-4 w3-animate-top">
                 <header class="w3-container w3-theme-l1">
-        <span onclick="document.getElementById('id01').style.display='none'"
+        <span onclick="document.getElementById('aboutModel').style.display='none'"
               class="w3-button w3-display-topright">×</span>
                     <h4>Sovrin Reference Agent</h4>
                 </header>
@@ -38,42 +39,141 @@
             </div>
         </div>
 
+        <!-- Send Credential Modal -->
+        <div id="sendCredModel" class="w3-modal">
+            <div class="w3-modal-content w3-card-4 w3-animate-top">
+                <header class="w3-container w3-theme-l1">
+        <span onclick="document.getElementById('sendCredModel').style.display='none'"
+              class="w3-button w3-display-topright">×</span>
+                    <h4>Credential Builder</h4>
+                </header>
+                <div class="w3-padding">
+                    <p></p>
+                </div>
+                <footer class="w3-container w3-theme-l1">
+                    <p></p>
+                </footer>
+            </div>
+        </div>
+
         <div class="w3-bar w3-theme" id="menubar">
-            <a onclick="document.getElementById('id01').style.display='block'" class="w3-right w3-bar-item w3-button w3-padding-16">About</a>
-            <a class="w3-left w3-bar-item w3-button w3-padding-16" onclick="showTab('credentials')" >Credentials</a>
-            <a class="w3-left w3-bar-item w3-button w3-padding-16" onclick="showTab('relationships')" >Relationships</a>
-            <a class="w3-left w3-bar-item w3-button w3-padding-16" onclick="showTab('messages')" >Messages</a>
+            <a onclick="document.getElementById('aboutModel').style.display='block'" class="w3-right w3-bar-item w3-button w3-padding-16">About</a>
+            <a id="credentials_link" class="w3-left w3-bar-item w3-button w3-padding-16 tab_link" onclick="showTab('credentials')" >Credentials</a>
+            <a id="proofs_link" class="w3-left w3-bar-item w3-button w3-padding-16 tab_link" onclick="showTab('proofs')" >Proofs</a>
+            <a id="issuing_link" class="w3-left w3-bar-item w3-button w3-padding-16 tab_link" onclick="showTab('issuing')" >Issuing</a>
+            <a id="relationships_link" class="w3-left w3-bar-item w3-button w3-padding-16 tab_link" onclick="showTab('relationships')" >Relationships</a>
+            <a id="messages_link" class="w3-left w3-bar-item w3-button w3-padding-16 tab_link" onclick="showTab('messages')" >Messages</a>
         </div>
 
         <div class="w3-row-padding w3-center w3-margin-top">
             <div id="credentials" class="tab" style="display:none;">
-                <p>My Credentials:</p>
+                <div class="center w3-padding">
+                    <%for(let credential of credentials) {%>
+                    <div class="w3-card w3-container" >
+                        <p>My Credential: </p>
+                        <p>Some Data</p>
+                        <p>Some More Data</p>
+                    </div>
+                    <%}%>
+                </div>
+                <button onclick="document.getElementById('sendCredModel').style.display='block'" class="w3-btn w3-white w3-border">Start</button>
+            </div>
+            <div id="proofs" class="tab" style="display:none;">
+
                 <p>My Public DID: <%=publicDid%></p>
+            </div>
+            <div id="issuing" class="tab" style="display:none;">
+                <div class="w3-container w3-card w3-padding w3-margin" style="float: left;width: 31%">
+                    <h3>Create Schema: </h3>
+                    <form method="POST" action="/api/issuer/create_schema">
+                        <label>Name of Schema: </label>
+                        <input type="text" class="w3-input" name="name_of_schema" value="Transcript">
+                        <br><br>
+                        <label>Schema Version: </label>
+                        <input type="text" class="w3-input" name="version" value="1.2">
+                        <br><br>
+                        <label>Please supply a JSON array of attributes:</label><br><br>
+                        <textarea style="height:220px;" class="w3-input" name="attributes" required>[
+    "first_name",
+    "last_name",
+    "degree",
+    "status",
+    "year",
+    "average",
+    "ssn"
+]</textarea>
+                        <br><br>
+                        <input class="w3-btn w3-white w3-border" type="submit">
+                    </form>
+                </div>
+                <div class="w3-container w3-card w3-padding w3-margin" style="float: left;width: 31%">
+                    <h3>Create Credential Definition</h3>
+                    <form method="POST" action="/api/issuer/create_cred_def">
+                        <label>Select a Schema:</label>
+                        <select class="w3-select" name="schema_id" required>
+                            <%for(let schema of schemas) {%>
+                                <option value="<%=schema.id%>"><%=schema.name%> <%=schema.version%></option>
+                            <%}%>
+                        </select>
+                        <br><br>
+                        <label>Tag:</label>
+                        <input class="w3-input" type="text" name="tag" value="MyTranscript" required>
+                        <br><br>
+                        <input class="w3-btn w3-white w3-border" type="submit">
+                    </form>
+                </div>
+                <div class="w3-container w3-card w3-padding w3-margin" style="float: left;width: 31%">
+                    <h3>Send Credential Offer</h3>
+                    <form method="POST" action="/api/issuer/send_credential_offer">
+                        <label>Relationship: </label>
+                        <select class="w3-select" name="relationship_did" required>
+                            <%for(let relationship of relationships) {%>
+                            <option value="<%=relationship.my_did%>"><%=relationship.metadata.name%></option>
+                            <%}%>
+                        </select>
+                        <br><br>
+                        <label>Select a Credential Definition:</label>
+                        <select class="w3-select" name="cred_def_id" required>
+                            <%for(let credDef of credentialDefinitions) {%>
+                            <option value="<%=credDef.id%>"><%=credDef.tag%></option>
+                            <%}%>
+                        </select>
+                        <br><br>
+                        <input class="w3-btn w3-white w3-border" type="submit">
+                    </form>
+                </div>
             </div>
             <div id="relationships" class="tab" style="display:none;" >
                 <div class="w3-half">
                     <div class="center w3-padding">
-                        <div class="w3-card w3-container" >
-                            <p>My Relationship with </p>
-                            <p>My Did: </p>
-                            <p>Their Did: </p>
-                        </div>
+                        <%for(let relationship of relationships) {%>
+                            <div class="w3-card w3-container w3-cell-row" >
+                                <div class="w3-cell-middle" style="width:25%">
+                                    <svg width="120" height="120" data-jdenticon-value="<%relationship.their_did%>"></svg>
+                                </div>
+                                <div class="w3-cell" style="width:75%">
+                                    <p>My Relationship with <%=relationship.metadata.name%></p>
+                                    <p>My Did: <%=relationship.my_did%></p>
+                                    <p>Their Did: <%=relationship.their_did%></p>
+                                </div>
+                            </div>
+                        <%}%>
                     </div>
                 </div>
                 <div class="w3-half w3-right">
                     <form class="w3-container w3-card-4 w3-padding" action="/api/send_connection_request" method="POST" target="_self">
                         <h4>Create a New Relationship</h4>
                         <div class="w3-section">
-                            Name of New Relationship: <input class="w3-input" type="text" name="name" value="John Doe">
+                            Name of New Relationship: <input class="w3-input" type="text" name="name" value="John Doe" required>
                         </div>
                         <div class="w3-section">
-                            Recipient's Public DID: <input class="w3-input" type="text" name="did" value="<%=publicDid%>">
+                            Recipient's Public DID: <input class="w3-input" type="text" name="did" value="<%=publicDid%>" required>
                         </div>
                         <input class="w3-btn w3-white w3-border" type="submit" value="Send Connection Request">
                     </form>
                 </div>
             </div>
-            <div id="messages" class="tab" >
+            <div id="messages" class="tab" style="display:none;">
                 <div class="w3-half">
                     <%for(var message of messages) {%>
                         <div class="center w3-padding">
@@ -111,8 +211,7 @@
                             Message: <textarea class="w3-input" name="message" rows="6" >{
     "type":"SOME_TYPE",
     "message":"test"
-}
-                            </textarea>
+}</textarea>
                         </div>
                         <input class="w3-btn w3-white w3-border" type="submit">
                     </form>
@@ -123,11 +222,33 @@
         <script>
             function showTab(id) {
                 let i;
-                let x = document.getElementsByClassName("tab");
-                for (i = 0; i < x.length; i++) {
-                    x[i].style.display = "none";
+                let tabs = document.getElementsByClassName("tab");
+                for (i = 0; i < tabs.length; i++) {
+                    tabs[i].style.display = "none";
                 }
                 document.getElementById(id).style.display = "block";
+
+                // Store current active tab in session storage
+                if(typeof(Storage) !== "undefined") {
+                    sessionStorage.setItem("currentTab", id);
+                }
+
+                // Bold the selected link, unbold others
+                let tabLinks = document.getElementsByClassName("tab_link");
+                for (i = 0; i < tabLinks.length; i++) {
+                    tabLinks[i].style['font-weight'] = "normal";
+                }
+
+                document.getElementById(`${id}_link`).style['font-weight'] = "bold";
+
+            }
+
+            // Show credentials tab if currentTab is not defined in sessionStorage, else show currentTab from session storage.
+            let currentTab = sessionStorage.getItem("currentTab");
+            if(currentTab) {
+                showTab(currentTab);
+            } else {
+                showTab("credentials");
             }
 
             function acceptConnection(url, method) {
