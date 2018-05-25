@@ -1,0 +1,44 @@
+<div id="messages" class="tab" style="display:none;">
+    <div class="w3-half">
+        <%for(var message of messages) {%>
+        <div class="center w3-padding">
+            <div class="w3-card w3-container" >
+                <p>From: <%=message.message.did%></p>
+                <p>Type: <%=message.message.type%></p>
+                <p>Received <%=message.timestamp%></p>
+            </div>
+            <div>
+                <%if (message.message.type === messageTypes.connections.REQUEST) {%>
+                <form>
+                    <input type="hidden" id="connection_message_id" value="<%=message.id%>">
+                    <input type="text" id="connection_name" required/>
+                    <%if (message.links.accept) {%>
+                    <button type="submit" onclick="acceptConnection('<%=message.links.accept.href%>', '<%=message.links.accept.method%>')">Accept Connection Request</button>
+                    <%}%>
+                    <%if (message.links.reject) {%>
+                    <button type="submit" onclick="deleteConnection('<%=message.links.reject.href%>', '<%=message.links.reject.method%>')">Reject Connection Request</button>
+                    <%}%>
+                </form>
+                <%} else {%>
+                <p>Message:</p>
+                <textarea><%=message.message.message%></textarea>
+                <%}%>
+            </div>
+        </div>
+        <%}%>
+    </div>
+    <div class="w3-half w3-right">
+        <form class="w3-container w3-card-4 w3-padding" action="/api/send_message" method="POST" target="_self">
+            <div class="w3-section">
+                Recipient: <input class="w3-input" type="text" name="did" value="<%=publicDid%>">
+            </div>
+            <div class="w3-section">
+                Message: <textarea class="w3-input" name="message" rows="6" >{
+    "type":"SOME_TYPE",
+    "message":"test"
+}</textarea>
+            </div>
+            <input class="w3-btn w3-white w3-border" type="submit">
+        </form>
+    </div>
+</div>

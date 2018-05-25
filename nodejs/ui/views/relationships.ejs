@@ -1,0 +1,31 @@
+<div id="relationships" class="tab" style="display:none;" >
+    <div class="w3-half">
+        <div class="center w3-padding">
+            <%for(let relationship of relationships) {%>
+            <div class="w3-card w3-container w3-cell-row" >
+                <div class="w3-cell-middle" style="width:25%">
+                    <svg width="120" height="120" data-jdenticon-value="<%=relationship.their_did%>"></svg>
+                </div>
+                <div class="w3-cell" style="width:75%">
+                    <p>My Relationship with <%=relationship.metadata.name%></p>
+                    <p>My Did: <%=relationship.my_did%></p>
+                    <p>Their Did: <%=relationship.their_did%></p>
+                </div>
+            </div>
+            <br>
+            <%}%>
+        </div>
+    </div>
+    <div class="w3-half w3-right">
+        <form class="w3-container w3-card-4 w3-padding" action="/api/send_connection_request" method="POST" target="_self">
+            <h4>Create a New Relationship</h4>
+            <div class="w3-section">
+                Name of New Relationship: <input class="w3-input" type="text" name="name" value="John Doe" required>
+            </div>
+            <div class="w3-section">
+                Recipient's Public DID: <input class="w3-input" type="text" name="did" value="<%=publicDid%>" required>
+            </div>
+            <input class="w3-btn w3-white w3-border" type="submit" value="Send Connection Request">
+        </form>
+    </div>
+</div>

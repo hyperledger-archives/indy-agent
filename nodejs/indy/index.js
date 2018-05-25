@@ -63,21 +63,38 @@ exports.createAndStoreMyDid = async function (didInfoParam) {
 //     utils.send('government', 'CONNECTION_REQUEST', connectionRequest);
 // };
 
+async function searchWalletForPublicDid() {
+    let dids = await sdk.listMyDidsWithMeta(wallet);
+    for(let did of dids) {
+        let meta = JSON.parse(did.metadata);
+        if(meta && meta.primary) {
+            return did;
+        }
+    }
+}
+
 exports.createAndStorePublicDid = async function () {
     endpoint = process.env.PUBLIC_DID_ENDPOINT;
-    await setupSteward();
+    let publicDidInfo = await searchWalletForPublicDid();
 
-    let verkey;
-    [publicDid, verkey] = await sdk.createAndStoreMyDid(wallet, {});
-    let didMeta = JSON.stringify({
-        primary: true,
-        schemas: [],
-        credential_definitions: []
-    });
-    await sdk.setDidMetadata(wallet, publicDid, didMeta);
+    if(publicDidInfo) {
+        publicDid = publicDidInfo.did;
+        exports.setEndpointForDid(publicDid, endpoint);
+    } else {
+        await setupSteward();
 
-    await common.sendNym(pool, stewardWallet, stewardDid, publicDid, verkey, "TRUST_ANCHOR");
-    await this.setEndpointForDid(publicDid, endpoint);
+        let verkey;
+        [publicDid, verkey] = await sdk.createAndStoreMyDid(wallet, {});
+        let didMeta = JSON.stringify({
+            primary: true,
+            schemas: [],
+            credential_definitions: []
+        });
+        await sdk.setDidMetadata(wallet, publicDid, didMeta);
+
+        await common.sendNym(pool, stewardWallet, stewardDid, publicDid, verkey, "TRUST_ANCHOR");
+        await this.setEndpointForDid(publicDid, endpoint);
+    }
 };
 
 exports.setEndpointForDid = async function (did, endpoint) {
@@ -359,8 +376,18 @@ exports.createCredDef = async function (schemaId, tag) {
     await this.pushPublicDidAttribute('credential_definitions', credDefJson);
 };
 
-exports.sendCredentialOffer = async function(myRelationshipDid, credentialDefinitionId) {
-
+exports.sendCredentialOffer = async function(theirRelationshipDid, credentialDefinitionId) {
+    let credOffer = await sdk.issuerCreateCredentialOffer(wallet, credentialDefinitionId);
+    let pairwise = await sdk.getPairwise(wallet, theirDid);
+    let myDid = pairwise.myDid;
+    let message = {
+        aud: theirRelationshipDid,
+        type: connections.MESSAGE_TYPES.CREDENTIAL_OFFER,
+        message: await exports.authCrypt(myDid, theirDid, message)
+    };
+    let meta = JSON.parse(pairwise.metadata);
+    let theirPublicDid = meta.theirPublicDid;
+    return exports.sendAnonCryptedMessage(theirPublicDid, message);
 };
 
 

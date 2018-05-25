@@ -36,7 +36,7 @@ router.post('/issuer/create_cred_def', async function (req, res) {
 });
 
 router.post('/issuer/send_credential_offer', async function (req, res) {
-    await indy.sendCredentialOffer(req.body.relationship_did, req.body.cred_def_id);
+    await indy.sendCredentialOffer(req.body.their_relationship_did, req.body.cred_def_id);
 });
 
 router.put('/connections/request', async function (req, res) {
