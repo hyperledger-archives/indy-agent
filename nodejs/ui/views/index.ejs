@@ -59,11 +59,11 @@
         <div class="w3-bar w3-theme" id="menubar">
             <a onclick="document.getElementById('aboutModel').style.display='block'" class="w3-right w3-bar-item w3-button w3-padding-16">About</a>
             <a href=""><img class="w3-left w3-bar-item" width="55px" height="55px" src="/images/sovrinIcon.png"></a>
-            <a id="credentials_link" class="w3-left w3-bar-item w3-button w3-padding-16 tab_link" onclick="showTab('credentials')" >Credentials</a>
-            <a id="proofs_link" class="w3-left w3-bar-item w3-button w3-padding-16 tab_link" onclick="showTab('proofs')" >Proofs</a>
-            <a id="issuing_link" class="w3-left w3-bar-item w3-button w3-padding-16 tab_link" onclick="showTab('issuing')" >Issuing</a>
-            <a id="relationships_link" class="w3-left w3-bar-item w3-button w3-padding-16 tab_link" onclick="showTab('relationships')" >Relationships</a>
-            <a id="messages_link" class="w3-left w3-bar-item w3-button w3-padding-16 tab_link" onclick="showTab('messages')" >Messages</a>
+            <a href="#credentials" id="credentials_link" class="w3-left w3-bar-item w3-button w3-padding-16 tab_link" onclick="showTab('credentials')" >Credentials</a>
+            <a href="#proofs" id="proofs_link" class="w3-left w3-bar-item w3-button w3-padding-16 tab_link" onclick="showTab('proofs')" >Proofs</a>
+            <a href="#issuing" id="issuing_link" class="w3-left w3-bar-item w3-button w3-padding-16 tab_link" onclick="showTab('issuing')" >Issuing</a>
+            <a href="#relationships" id="relationships_link" class="w3-left w3-bar-item w3-button w3-padding-16 tab_link" onclick="showTab('relationships')" >Relationships</a>
+            <a href="#messages" id="messages_link" class="w3-left w3-bar-item w3-button w3-padding-16 tab_link" onclick="showTab('messages')" >Messages</a>
         </div>
 
         <div class="w3-row-padding w3-center w3-margin-top">
@@ -77,18 +77,13 @@
             <p style="text-align: center;color: white;">My Public DID: <%=publicDid%></p>
         </footer>
         <script>
+
             function showTab(id) {
-                let i;
                 let tabs = document.getElementsByClassName("tab");
-                for (i = 0; i < tabs.length; i++) {
+                for (let i = 0; i < tabs.length; i++) {
                     tabs[i].style.display = "none";
                 }
                 document.getElementById(id).style.display = "block";
-
-                // Store current active tab in session storage
-                if(typeof(Storage) !== "undefined") {
-                    sessionStorage.setItem("currentTab", id);
-                }
 
                 // Bold the selected link, unbold others
                 let tabLinks = document.getElementsByClassName("tab_link");
@@ -100,25 +95,31 @@
 
             }
 
-            // Show credentials tab if currentTab is not defined in sessionStorage, else show currentTab from session storage.
-            let currentTab = sessionStorage.getItem("currentTab");
-            if(currentTab) {
-                showTab(currentTab);
-            } else {
-                showTab("credentials");
+            let tabs = document.getElementsByClassName("tab");
+            let hashlink = document.location.hash.replace('#', '');
+            let found = false;
+            for(let tab of tabs) {
+                if(tab.id === hashlink) {
+                    showTab(hashlink);
+                    found = true;
+                }
+            }
+            if(!found) {
+                window.location.href = window.location.href + "#credentials";
+                showTab('credentials');
             }
 
-            function acceptConnection(url, method) {
-              let xhttp = new XMLHttpRequest();
-              xhttp.open(method, url, true);
-              xhttp.setRequestHeader('Content-Type', 'application/json');
-              xhttp.send(JSON.stringify({ name: document.getElementById('connection_name').value, messageId: document.getElementById('connection_message_id').value}));
-            }
-
-            function deleteConnection(url, method) {
-              let xhttp = new XMLHttpRequest();
-              xhttp.open(method, url, true);
-              xhttp.send();
+            function request(url, method, message) {
+                console.log(message);
+                console.log(`${method}ing ${url}: ${message}`);
+                let xhttp = new XMLHttpRequest();
+                xhttp.open(method, url, true);
+                if(message) {
+                    xhttp.setRequestHeader('Content-Type', 'application/json');
+                    xhttp.send(message);
+                } else {
+                    xhttp.send();
+                }
             }
         </script>
     </body>

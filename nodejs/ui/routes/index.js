@@ -3,7 +3,7 @@ const router = express.Router();
 const store = require('../../indy/store/index');
 const indy = require('../../indy/index');
 const messageParsers = require('../messageParsers');
-const connectionMessageTypes = require('../../indy/connections').MESSAGE_TYPES;
+const connectionMessageTypes = require('../../indy/messageTypes').MESSAGE_TYPES;
 const messageTypes = {connections: connectionMessageTypes};
 
 /* GET home page. */
@@ -14,7 +14,7 @@ router.get('/', async function (req, res, next) {
         if (messageParsers[message.message.type]) {
             messages.push(await messageParsers[message.message.type](message));
         } else {
-            throw Error(`messageParser not found for messages of type ${message.message.type}`);
+            messages.push(message);
         }
     }
 

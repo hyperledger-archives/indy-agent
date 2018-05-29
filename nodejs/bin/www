@@ -26,13 +26,7 @@ const server = http.createServer(app);
  * Listen on provided port, on all network interfaces.
  */
 
-return indy.setupPool()
-    .then(() => {
-        return indy.setupWallet();
-    })
-    .then(() => {
-        return indy.createAndStorePublicDid();
-    })
+return indy.setupAgent()
     .then(() => {
         server.listen(port);
         server.on('error', onError);

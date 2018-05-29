@@ -6,7 +6,7 @@ const utils = require('./utils');
 const ledgerConfig = require('./ledgerConfig');
 const common = require('./common');
 const store = require('./store');
-const connections = require('./connections');
+const messageTypes = require('./messageTypes');
 const POOL_NAME = process.env.POOL_NAME || 'pool1';
 const WALLET_NAME = process.env.WALLET_NAME || 'wallet';
 let publicDid;
@@ -16,6 +16,16 @@ let stewardWallet;
 let wallet;
 let pool;
 let endpoint;
+
+// exports.crypto = require('./crypto.js');
+// exports.did = require('./did.js');
+// exports.wallet = require('./wallet.js');
+// exports.connection = require('./connection);
+// exports.credentials = require('./credentials');
+// exports.proofs = require('./proofs');
+// exports.issuer = require('./issuer');
+// exports.messages = require('./messages');
+// exports.store = require('./store');
 
 exports.setupPool = async function () {
     let poolGenesisTxnPath = await ledgerConfig.getPoolGenesisTxnPath(POOL_NAME);
@@ -65,9 +75,9 @@ exports.createAndStoreMyDid = async function (didInfoParam) {
 
 async function searchWalletForPublicDid() {
     let dids = await sdk.listMyDidsWithMeta(wallet);
-    for(let did of dids) {
+    for (let did of dids) {
         let meta = JSON.parse(did.metadata);
-        if(meta && meta.primary) {
+        if (meta && meta.primary) {
             return did;
         }
     }
@@ -77,7 +87,7 @@ exports.createAndStorePublicDid = async function () {
     endpoint = process.env.PUBLIC_DID_ENDPOINT;
     let publicDidInfo = await searchWalletForPublicDid();
 
-    if(publicDidInfo) {
+    if (publicDidInfo) {
         publicDid = publicDidInfo.did;
         exports.setEndpointForDid(publicDid, endpoint);
     } else {
@@ -95,6 +105,23 @@ exports.createAndStorePublicDid = async function () {
         await common.sendNym(pool, stewardWallet, stewardDid, publicDid, verkey, "TRUST_ANCHOR");
         await this.setEndpointForDid(publicDid, endpoint);
     }
+};
+
+exports.createMasterSecret = async function () {
+    let masterSecretId = await exports.getPublicDidAttribute('master_secret_id');
+    if(!masterSecretId) {
+        masterSecretId = await sdk.proverCreateMasterSecret(wallet);
+        await exports.pushPublicDidAttribute('master_secret_id', masterSecretId);
+    }
+};
+
+exports.setupAgent = async function () {
+    await exports.setupPool();
+    await exports.setupWallet();
+    await exports.createAndStorePublicDid();
+    await exports.createMasterSecret();
+
+    return Promise.resolve();
 };
 
 exports.setEndpointForDid = async function (did, endpoint) {
@@ -182,7 +209,7 @@ exports.prepareConnectionRequest = async function (nameOfRelationship, theirPubl
     store.pendingRelationships.write(nameOfRelationship, myNewDid, theirPublicDid, nonce);
 
     return {
-        type: connections.MESSAGE_TYPES.REQUEST,
+        type: messageTypes.MESSAGE_TYPES.REQUEST,
         message: {
             did: myNewDid,
             publicDid: publicDid,
@@ -217,7 +244,7 @@ exports.acceptConnectionRequest = async function (nameOfRelationship, theirPubli
     };
     let message = {
         aud: theirDid,
-        type: connections.MESSAGE_TYPES.RESPONSE,
+        type: messageTypes.MESSAGE_TYPES.RESPONSE,
         message: await this.anonCrypt(theirDid, JSON.stringify(connectionResponse))
     };
     await this.sendAnonCryptedMessage(theirPublicDid, message);
@@ -266,7 +293,7 @@ exports.acceptConnectionResponse = async function (myDid, rawMessage) {
 exports.sendConnectionAcknowledgement = async function (myDid, theirDid, theirPublicDid) {
     let acknowledgementMessage = {
         aud: theirDid,
-        type: connections.MESSAGE_TYPES.ACKNOWLEDGE,
+        type: messageTypes.MESSAGE_TYPES.ACKNOWLEDGE,
         message: await this.authCrypt(myDid, theirDid, "Success")
     };
 
@@ -316,10 +343,9 @@ exports.authCrypt = async function (myDid, theirDid, message) {
     return Buffer.from(buffer).toString('base64')
 };
 
-exports.authDecrypt = async function (myDid, theirDid, message) {
+exports.authDecrypt = async function (myDid, message) {
     let myVerkey = await sdk.keyForLocalDid(wallet, myDid);
-    let theirVerkey = await sdk.keyForLocalDid(wallet, theirDid);
-    let decryptedMessageBuffer = await sdk.cryptoAuthDecrypt(wallet, myVerkey, message.message);
+    let [, decryptedMessageBuffer] = await sdk.cryptoAuthDecrypt(wallet, myVerkey, message);
     let buffer = Buffer.from(decryptedMessageBuffer).toString('utf8');
     return JSON.parse(buffer);
 };
@@ -376,18 +402,56 @@ exports.createCredDef = async function (schemaId, tag) {
     await this.pushPublicDidAttribute('credential_definitions', credDefJson);
 };
 
-exports.sendCredentialOffer = async function(theirRelationshipDid, credentialDefinitionId) {
+exports.getTheirPublicDid = async function (theirDid) {
+    let pairwise = await sdk.getPairwise(wallet, theirDid);
+    let metadata = JSON.parse(pairwise.metadata);
+    return metadata.theirPublicDid;
+};
+
+exports.sendCredentialOffer = async function (theirDid, credentialDefinitionId) {
     let credOffer = await sdk.issuerCreateCredentialOffer(wallet, credentialDefinitionId);
     let pairwise = await sdk.getPairwise(wallet, theirDid);
-    let myDid = pairwise.myDid;
-    let message = {
-        aud: theirRelationshipDid,
-        type: connections.MESSAGE_TYPES.CREDENTIAL_OFFER,
-        message: await exports.authCrypt(myDid, theirDid, message)
-    };
+    let myDid = pairwise.my_did;
+    let message = await exports.buildAuthcryptedMessage(myDid, theirDid, messageTypes.MESSAGE_TYPES.CREDENTIAL_OFFER, credOffer);
     let meta = JSON.parse(pairwise.metadata);
     let theirPublicDid = meta.theirPublicDid;
     return exports.sendAnonCryptedMessage(theirPublicDid, message);
 };
 
+exports.buildAuthcryptedMessage = async function (myDid, theirDid, messageType, message) {
+    return {
+        origin: myDid,
+        type: messageType,
+        message: await exports.authCrypt(myDid, theirDid, JSON.stringify(message))
+    }
+};
+
+exports.getMyDid = async function(theirDid) {
+    let pairwise = await sdk.getPairwise(wallet, theirDid);
+    return pairwise.my_did;
+};
+
+exports.sendCredentialRequest = async function (theirDid, encryptedMessage) {
+    let myDid = await exports.getMyDid(theirDid);
+    let credentialOffer = await exports.authDecrypt(myDid, Buffer.from(encryptedMessage, 'base64'));
+    let [, credentialDefinition] = await common.getCredDef(pool, myDid, credentialOffer.cred_def_id);
+    let [masterSecretId] = await exports.getPublicDidAttribute('master_secret_id');
+    let [credRequestJson, credRequestMetadataJson] = await sdk.proverCreateCredentialReq(wallet, myDid, credentialOffer, credentialDefinition, masterSecretId);
+
+    let message = await exports.buildAuthcryptedMessage(myDid, theirDid, messageTypes.MESSAGE_TYPES.CREDENTIAL_REQUEST, credRequestJson);
+    let theirPublicDid = await exports.getTheirPublicDid(theirDid);
+    return exports.sendAnonCryptedMessage(theirPublicDid, message);
+};
+
+exports.acceptCredentialRequest = async function(theirDid, encryptedMessage) {
+    let myDid = await exports.getMyDid(theirDid);
+    let credentialRequest = await exports.authDecrypt(myDid, Buffer.from(encryptedMessage, 'base64'));
+    let [, credDef] = await common.getCredDef(pool, publicDid, credentialRequest.cred_def_id);
+    let theirPublicDid = await exports.getTheirPublicDid(theirDid);
+    let schema = await common.getSchema(pool, theirPublicDid, credDef.schemaId);
+    let credentialValues = {};
+
+    console.log(credentialRequest);
+    let [credential] = await sdk.issuerCreateCredential(wallet, credentialOffer, credentialRequest, credentialValues);
+};
 

@@ -2,7 +2,7 @@
 const store = require('../store');
 const handlers = require('./defaultHandlers');
 const indy = require('../index.js');
-const connections = require('../connections');
+const connections = require('../messageTypes');
 
 module.exports = function(config) { //factory function creates object and returns it.
     const factory = {};
@@ -67,6 +67,7 @@ module.exports = function(config) { //factory function creates object and return
     if(config.defaultHandlers) {
         factory.defineHandler(connections.MESSAGE_TYPES.RESPONSE, handlers.connectionResponse);
         factory.defineHandler(connections.MESSAGE_TYPES.ACKNOWLEDGE, handlers.connectionAcknowledge);
+        factory.defineHandler(connections.MESSAGE_TYPES.CREDENTIAL_REQUEST, handlers.credentialRequest);
     }
 
     return factory;
