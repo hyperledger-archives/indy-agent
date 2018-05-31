@@ -1,14 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const store = require('../../indy/store/index');
 const indy = require('../../indy/index');
 const messageParsers = require('../messageParsers');
-const connectionMessageTypes = require('../../indy/messageTypes').MESSAGE_TYPES;
-const messageTypes = {connections: connectionMessageTypes};
+const messageTypes = {
+    connections: indy.connections.MESSAGE_TYPES,
+    credentials: indy.credentials.MESSAGE_TYPES
+};
 
 /* GET home page. */
 router.get('/', async function (req, res, next) {
-    let rawMessages = store.messages.getAll();
+    let rawMessages = indy.store.messages.getAll();
     let messages = [];
     for (let message of rawMessages) {
         if (messageParsers[message.message.type]) {
@@ -18,20 +19,15 @@ router.get('/', async function (req, res, next) {
         }
     }
 
-    // Temporary until we have credentials to show
-
-    let credentials = await indy.getCredentials();
-    credentials.push({});
-
-    let credDefs = await indy.getPublicDidAttribute('credential_definitions');
+    let credentials = await indy.credentials.getAll();
     res.render('index', {
         messages: messages,
         messageTypes: messageTypes,
-        relationships: await indy.getRelationships(),
+        relationships: await indy.pairwise.getAll(),
         credentials: credentials,
-        schemas: await indy.getSchemas(),
-        credentialDefinitions: credDefs,
-        publicDid: await indy.getPublicDid()
+        schemas: await indy.issuer.getSchemas(),
+        credentialDefinitions: await indy.did.getPublicDidAttribute('credential_definitions'),
+        publicDid: await indy.did.getPublicDid()
     });
 });
 

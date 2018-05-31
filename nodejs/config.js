@@ -2,9 +2,6 @@
 
 const config = {
 
-    // Change to your public did.
-    publicDid: process.env.PUBLIC_DID,
-
     // Change to your public did's endpoint
     publicDidEndpoint: process.env.PUBLIC_DID_ENDPOINT,
 

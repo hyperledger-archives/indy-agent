@@ -6,7 +6,7 @@ const logger = require('morgan');
 
 const indexRouter = require('./ui/routes/index');
 const apiRouter = require('./ui/routes/api');
-const indyHandler = require('./indy/handler')({ defaultHandlers: true }); // () executes the function so that we can potentially have multiple indy handlers;
+const indyHandler = require('./indy/src/handler')({ defaultHandlers: true }); // () executes the function so that we can potentially have multiple indy handlers;
 
 const app = express();
 

@@ -15,8 +15,8 @@
     "http-errors": "~1.6.2",
     "indy-sdk": "^0.2.5",
     "morgan": "~1.9.0",
-    "request": "^2.85.0",
-    "request-promise": "^4.2.2"
+    "request": "^2.87.0",
+    "request-promise-native": "^1.0.5"
   },
   "devDependencies": {
     "chai": "^4.1.2",

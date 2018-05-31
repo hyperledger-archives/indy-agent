@@ -1,8 +1,5 @@
 'use strict';
-const store = require('../store');
-const handlers = require('./defaultHandlers');
-const indy = require('../index.js');
-const connections = require('../messageTypes');
+const indy = require('../../index.js');
 
 module.exports = function(config) { //factory function creates object and returns it.
     const factory = {};
@@ -28,7 +25,7 @@ module.exports = function(config) { //factory function creates object and return
     factory.middleware = async function(req, res) {
         try {
             let buffer = Buffer.from(req.body.message, 'base64');
-            let decryptedMessage = await indy.publicKeyAnonDecrypt(buffer);
+            let decryptedMessage = await indy.crypto.publicKeyAnonDecrypt(buffer);
             if(messageHandlerMap[decryptedMessage.type]) {
                 let handler = messageHandlerMap[decryptedMessage.type];
                 if(handler.length === 2) { // number of parameters
@@ -51,13 +48,13 @@ module.exports = function(config) { //factory function creates object and return
                         })
                 }
             } else {
-                store.messages.write(null, decryptedMessage);
+                indy.store.messages.write(null, decryptedMessage);
                 res.status(202).send("Accepted");
             }
         } catch(err) {
             console.error(err.stack);
             if(err.message === "Invalid Request") {
-                res.status(400).send(e.message);
+                res.status(400).send(err.message);
             } else {
                 res.status(500).send("Internal Server Error");
             }
@@ -65,9 +62,10 @@ module.exports = function(config) { //factory function creates object and return
     };
 
     if(config.defaultHandlers) {
-        factory.defineHandler(connections.MESSAGE_TYPES.RESPONSE, handlers.connectionResponse);
-        factory.defineHandler(connections.MESSAGE_TYPES.ACKNOWLEDGE, handlers.connectionAcknowledge);
-        factory.defineHandler(connections.MESSAGE_TYPES.CREDENTIAL_REQUEST, handlers.credentialRequest);
+        factory.defineHandler(indy.connections.MESSAGE_TYPES.RESPONSE, indy.connections.handlers.response);
+        factory.defineHandler(indy.connections.MESSAGE_TYPES.ACKNOWLEDGE, indy.connections.handlers.acknowledge);
+        factory.defineHandler(indy.credentials.MESSAGE_TYPES.REQUEST, indy.credentials.handlers.request);
+        factory.defineHandler(indy.credentials.MESSAGE_TYPES.CREDENTIAL, indy.credentials.handlers.credential);
     }
 
     return factory;
