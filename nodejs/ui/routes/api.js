@@ -54,8 +54,8 @@ router.put('/connections/request', async function (req, res) {
     let name = req.body.name;
     let messageId = req.body.messageId;
     let message = indy.store.messages.getMessage(messageId);
-    await indy.connections.acceptRequest(name, message.message.message.publicDid, message.message.message.did, message.message.message.nonce);
     indy.store.messages.deleteMessage(messageId);
+    await indy.connections.acceptRequest(name, message.message.message.publicDid, message.message.message.did, message.message.message.nonce);
     res.redirect('/#relationships');
 });
 
