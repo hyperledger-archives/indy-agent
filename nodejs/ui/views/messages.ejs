@@ -1,5 +1,5 @@
 <div id="messages" class="tab" style="display:none;">
-    <div class="w3-half">
+    <div id="messages" class="w3-half" style="width:50%; height:700px; overflow:scroll;">
         <%for(var message of messages) {%>
         <div class="center w3-padding">
             <div class="w3-card w3-container" >
@@ -37,17 +37,26 @@
         <%}%>
     </div>
     <div class="w3-half w3-right">
-        <form class="w3-container w3-card-4 w3-padding" action="/api/send_message" method="POST" target="_self">
+        <form class="w3-container w3-card-4 w3-padding" onsubmit="sendSovrinMessage('urn:sovrin:agent:message_type:sovrin.org/ui/send_message', this)">
             <div class="w3-section">
-                Recipient: <input class="w3-input" type="text" name="did" value="<%=publicDid%>">
+                Recipient: <input id="send_message_form_did" class="w3-input" type="text" name="did" value="<%=publicDid%>">
             </div>
             <div class="w3-section">
-                Message: <textarea class="w3-input" name="message" rows="6" >{
+                Message: <textarea id="send_message_form_message" class="w3-input" name="message" rows="6" >{
     "type":"SOME_TYPE",
     "message":"test"
 }</textarea>
             </div>
             <input class="w3-btn w3-white w3-border" type="submit">
         </form>
+        <!--<br><br>-->
+        <!--<div class="w3-container w3-card-4 w3-padding">-->
+            <!--<div><ul id="testMessages"></ul></div>-->
+            <!--<br>-->
+            <!--<form id="socketTestForm" action="">-->
+                <!--Socket message: <input id="m" autocomplete="off" /><button>Send</button>-->
+            <!--</form>-->
+        <!--</div>-->
+
     </div>
 </div>

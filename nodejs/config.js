@@ -15,7 +15,17 @@ const config = {
     walletName: process.env.WALLET_NAME || 'wallet',
 
     // Optional: Give your pool config a unique name
-    poolName: process.env.POOL_NAME || 'pool1'
+    poolName: process.env.POOL_NAME || 'pool1',
+
+    // This information is used to issue your "Government ID"
+    personalInformation: {
+        first_name: "Bugs",
+        middle_name: "Bunny",
+        last_name: "Ithaca",
+        age: "42",
+        gender: "M",
+        ssn: "123-45-6789"
+    }
 };
 
 module.exports = config;

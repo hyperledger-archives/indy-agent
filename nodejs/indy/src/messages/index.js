@@ -2,7 +2,7 @@
 const sdk = require('indy-sdk');
 const indy = require('../../index.js');
 const config = require('../../../config');
-const request = require('request-promise-native');
+const request = require('request-promise');
 
 // FIXME: Assumption: Their public did has an endpoint attribute
 exports.sendMessage = function (endpoint, message) {

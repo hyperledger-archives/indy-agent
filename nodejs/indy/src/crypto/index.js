@@ -33,7 +33,7 @@ exports.sendAnonCryptedMessage = async function (did, message) {
     message = JSON.stringify(message);
     let endpoint = await indy.pool.getEndpointForDid(did);
     let encryptedMessage = await exports.anonCrypt(did, message);
-    await indy.messages.sendMessage(endpoint, encryptedMessage);
+    return indy.messages.sendMessage(endpoint, encryptedMessage);
 };
 
 exports.authCrypt = async function (myDid, theirDid, message) {

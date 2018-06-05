@@ -7,7 +7,8 @@ const MESSAGE_TYPES = {
     OFFER : "urn:sovrin:agent:message_type:sovrin.org/connection_offer",
     REQUEST : "urn:sovrin:agent:message_type:sovrin.org/connection_request",
     RESPONSE : "urn:sovrin:agent:message_type:sovrin.org/connection_response",
-    ACKNOWLEDGE : "urn:sovrin:agent:message_type:sovrin.org/connection_acknowledge"
+    ACKNOWLEDGE : "urn:sovrin:agent:message_type:sovrin.org/connection_acknowledge",
+    IDENTITY_PR : "urn:sovrin:agent:message_type:sovrin.org/identity_proof_request"
 };
 exports.MESSAGE_TYPES = MESSAGE_TYPES;
 
@@ -30,7 +31,7 @@ exports.prepareRequest = async function (nameOfRelationship, theirPublicDid) {
     }
 };
 
-exports.acceptRequest = async function (nameOfRelationship, theirPublicDid, theirDid, requestNonce) {
+exports.acceptRequest = async function (theirPublicDid, theirDid, requestNonce) {
     let [myDid, myVerkey] = await sdk.createAndStoreMyDid(await indy.wallet.get(), {});
 
     let theirVerkey = await sdk.keyForDid(await indy.pool.get(), await indy.wallet.get(), theirDid);
@@ -41,8 +42,10 @@ exports.acceptRequest = async function (nameOfRelationship, theirPublicDid, thei
     });
 
     let meta = JSON.stringify({
-        name: nameOfRelationship,
-        theirPublicDid: theirPublicDid
+        theirFirstName: null,
+        theirLastName: null,
+        theirPublicDid: theirPublicDid,
+        verified: false // Indicates that the owner of the agent has confirmed they want to stay connected with this person.
     });
 
     //FIXME: Check to see if pairwise exists
@@ -59,7 +62,7 @@ exports.acceptRequest = async function (nameOfRelationship, theirPublicDid, thei
         type: MESSAGE_TYPES.RESPONSE,
         message: await indy.crypto.anonCrypt(theirDid, JSON.stringify(connectionResponse))
     };
-    await indy.crypto.sendAnonCryptedMessage(theirPublicDid, message);
+    return indy.crypto.sendAnonCryptedMessage(theirPublicDid, message);
 };
 
 exports.acceptResponse = async function (myDid, rawMessage) {
@@ -103,23 +106,37 @@ exports.acceptResponse = async function (myDid, rawMessage) {
 };
 
 exports.sendAcknowledgement = async function (myDid, theirDid, theirPublicDid) {
-    let acknowledgementMessage = {
-        aud: theirDid,
-        type: MESSAGE_TYPES.ACKNOWLEDGE,
-        message: await indy.crypto.authCrypt(myDid, theirDid, "Success")
+    await indy.crypto.sendAnonCryptedMessage(theirPublicDid, await indy.crypto.buildAuthcryptedMessage(myDid, theirDid, MESSAGE_TYPES.ACKNOWLEDGE, "Success"));
+};
+
+exports.acceptAcknowledgement = async function (theirDid, encryptedMessage) {
+    let myDid = await indy.pairwise.getMyDid(theirDid);
+    let theirPublicDid = await indy.did.getTheirPublicDid(theirDid);
+
+    let message = await indy.crypto.authDecrypt(myDid, encryptedMessage);
+    console.log(message);
+
+    let identityProofRequest = {
+        nonce: uuid(),
+        name: 'General-Identity',
+        version: '0.1',
+        requested_attributes: {
+            attr1_referent: {
+                name: 'first_name'
+            },
+            attr2_referent: {
+                name: 'last_name'
+            }
+        }
     };
 
-    await indy.crypto.sendAnonCryptedMessage(theirPublicDid, acknowledgementMessage);
+    return indy.crypto.sendAnonCryptedMessage(theirPublicDid, await indy.crypto.buildAuthcryptedMessage(myDid, theirDid, MESSAGE_TYPES.IDENTITY_PR, identityProofRequest));
 };
 
-exports.acceptAcknowledgement = async function (myDid, encryptedMessage) {
-    let theirDid;
-    let pairwiseList = await sdk.listPairwise(await indy.wallet.get());
-    for (let pair of pairwiseList) {
-        if (pair.my_did === myDid) {
-            theirDid = pair.their_did;
-        }
-    }
-    let message = await indy.crypto.authDecrypt(myDid, theirDid, encryptedMessage);
-    // FIXME: Not finished. Validate message.
-};
+// accept identity proof request, send identity proof and own proof request on identity
+
+// accept identity proof (use same above to respond to identity proof)
+
+// show in UI unverified relationships to be verified by the user.
+
+// Relationship must be verified in order to issue credential to them.

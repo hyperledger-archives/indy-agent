@@ -6,5 +6,9 @@ exports.response = function (message) {
 };
 
 exports.acknowledge = function (message) {
-    return indy.connections.acceptAcknowledgement(message.aud, message.message);
+    return indy.connections.acceptAcknowledgement(message.origin, message.message);
+};
+
+exports.request = function(message) {
+    return indy.connections.acceptRequest(message.message.publicDid, message.message.did, message.message.nonce);
 };

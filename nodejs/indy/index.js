@@ -19,7 +19,6 @@ exports.setupAgent = async function () {
     await exports.wallet.setup();
     let publicDid = await exports.did.getPublicDid(); // Creates it if it doesn't exist
     await exports.pool.setEndpointForDid(publicDid, config.publicDidEndpoint);
-    await exports.crypto.createMasterSecret();
     return Promise.resolve();
 };
 

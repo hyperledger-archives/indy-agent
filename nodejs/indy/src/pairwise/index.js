@@ -15,3 +15,8 @@ exports.getMyDid = async function(theirDid) {
     let pairwise = await sdk.getPairwise(await indy.wallet.get(), theirDid);
     return pairwise.my_did;
 };
+
+exports.getAttr = async function(theirDid, attr) {
+    let pairwise = await sdk.getPairwise(await indy.wallet.get(), theirDid);
+    return JSON.parse(pairwise.metadata)[attr];
+}

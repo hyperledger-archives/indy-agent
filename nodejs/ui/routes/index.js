@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const router = express.Router();
 const indy = require('../../indy/index');
@@ -9,6 +10,7 @@ const messageTypes = {
 
 /* GET home page. */
 router.get('/', async function (req, res, next) {
+    // res.sendFile(path.join(__dirname + '/../views/index.html'));
     let rawMessages = indy.store.messages.getAll();
     let messages = [];
     for (let message of rawMessages) {
