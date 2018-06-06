@@ -57,13 +57,13 @@
             <div id="relationships" class="tab" >
                 <p>My Connections</p>
 
-                <h3>{{ agent_name }}</h3>
+                <h3 id="agent_name_header">{{ agent_name }}</h3>
 
                 <form action="/indy/request" method="post">
                    Name:
                     <input type="text" name="agent_name" value="Default">
                     Endpoint:<br>
-                  <input type="text" name="endpoint" value="http://localhost:8080">
+                  <input id="send_endpoint" type="text" name="endpoint" value="http://localhost:8080">
                   <br><br>
                   <button id="send_request" type="button">Send Request</button>
                 </form>

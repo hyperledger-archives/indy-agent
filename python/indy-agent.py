@@ -22,6 +22,7 @@ from ui_event import UIEventQueue
 from model import Agent
 import modules.connection as connection
 import modules.init as init
+import modules.ui as ui
 import serializer.json_serializer as Serializer
 import view.site_handlers as site_handlers
 
@@ -93,6 +94,7 @@ async def ui_event_process(agent):
     ui_event_queue = agent['ui_event_queue']
 
     await ui_router.register("SEND_REQ", connection.send_request)
+    await ui_router.register("EDGE_CONNECT", ui.edge_connect)
     await ui_router.register("AGENT_INIT", init.initialize_agent)
 
     while True:
@@ -103,8 +105,9 @@ async def ui_event_process(agent):
             print('Failed to unpack message: {}\n\nError: {}'.format(msg_bytes, e))
             continue
         msg = Serializer.unpack(msg_bytes)
-        await ui_router.route(msg, agent['agent'])
-        await ui_event_queue.send("Processed message: {}".format(msg_bytes))
+        res = await ui_router.route(msg, agent['agent'])
+        if res is not None:
+            await ui_event_queue.send(res)
 
 try:
     print('===== Starting Server on: http://localhost:{} ====='.format(PORT))

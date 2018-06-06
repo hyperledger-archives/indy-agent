@@ -25,4 +25,4 @@ class SimpleRouter(BaseRouter):
         """ Route a message to it's registered callback.
         """
         if msg.msg_type in self.routes.keys():
-            await self.routes[msg.msg_type](msg, agent)
+            return await self.routes[msg.msg_type](msg, agent)
