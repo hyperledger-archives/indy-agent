@@ -4,6 +4,8 @@
 # pylint: disable=import-error
 
 import aiohttp_jinja2
+from aiohttp import web
+import aiohttp
 
 @aiohttp_jinja2.template('index.html')
 def index(request):
@@ -11,7 +13,6 @@ def index(request):
 
         Uses template index.html
     """
-    print("Handling /")
     agent = request.app['agent']
     conns = agent.connections
     reqs = agent.received_requests
@@ -27,6 +28,28 @@ def index(request):
         "requests": reqs,
         "first": first
     }
+
+async def websocket_handler(request):
+
+    ws = web.WebSocketResponse()
+    await ws.prepare(request)
+    request.app['agent'].ui_socket = ws
+    print(request.app['agent'].ui_socket)
+
+    async for msg in ws:
+        if msg.type == aiohttp.WSMsgType.TEXT:
+            if msg.data == 'close':
+                await ws.close()
+            else:
+                await ws.send_str(msg.data + '/answer')
+        elif msg.type == aiohttp.WSMsgType.ERROR:
+            print('ws connection closed with exception %s' %
+                  ws.exception())
+    
+    request.app['agent'].ui_socket = None
+    print('websocket connection closed')
+
+    return ws
 
 # Not sure if this is needed and it's causing problems
 # with pylint. Commenting out for now.

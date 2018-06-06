@@ -17,6 +17,7 @@ class Agent:
         self.pool_handle = None
         self.received_requests = {}
         self.connections = {}
+        self.ui_socket = None
         self.initialized = False
 
 class Message(object):

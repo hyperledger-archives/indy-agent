@@ -18,6 +18,7 @@ import aiohttp_jinja2
 
 from receiver.message_receiver import MessageReceiver as Receiver
 from router.simple_router import SimpleRouter as Router
+from ui_event import UIEventQueue
 from model import Agent
 import modules.connection as connection
 import modules.init as init
@@ -30,9 +31,15 @@ else:
     PORT = 8080
 
 LOOP = asyncio.get_event_loop()
+
 AGENT = web.Application(middlewares=[IndexMiddleware()])
+
 AGENT['msg_router'] = Router()
-AGENT['msg_receiver'] = Receiver(asyncio.Queue())
+AGENT['msg_receiver'] = Receiver()
+
+AGENT['ui_event_queue'] = UIEventQueue(LOOP)
+AGENT['ui_router'] = Router()
+
 AGENT['agent'] = Agent()
 
 # template engine setup
@@ -45,12 +52,14 @@ aiohttp_jinja2.setup(
 
 ROUTES = [
     web.get('/', site_handlers.index),
+    web.get('/ws', AGENT['ui_event_queue'].ws_handler),
     web.post('/indy', AGENT['msg_receiver'].handle_message),
     web.post('/indy/request', connection.send_request),
     #web.get('/indy/connections', site_handlers.connections),
     web.get('/indy/accept/{did}', connection.handle_request_accepted),
     #web.get('/indy/requests', site_handlers.requests),
-    web.post('/indy/init', init.initialize_agent)
+    web.post('/indy/init', init.initialize_agent),
+    web.static('/res', 'view/res')
 ]
 
 AGENT.add_routes(ROUTES)
@@ -72,13 +81,35 @@ async def message_process(agent):
 
     while True:
         msg_bytes = await msg_receiver.recv()
-        msg = Serializer.unpack(msg_bytes)
+        try:
+            msg = Serializer.unpack(msg_bytes)
+        except Exception as e:
+            print('Failed to unpack message: {}\n\nError: {}'.format(msg_bytes, e))
+            continue
         await msg_router.route(msg, agent['agent'])
+
+async def ui_event_process(agent):
+    ui_router = agent['ui_router']
+    ui_event_queue = agent['ui_event_queue']
+
+    await ui_router.register("SEND_REQ", connection.send_request)
+    await ui_router.register("AGENT_INIT", init.initialize_agent)
+
+    while True:
+        msg_bytes = await ui_event_queue.recv()
+        try:
+            msg = Serializer.unpack(msg_bytes)
+        except Exception as e:
+            print('Failed to unpack message: {}\n\nError: {}'.format(msg_bytes, e))
+            continue
+        msg = Serializer.unpack(msg_bytes)
+        await ui_router.route(msg, agent['agent'])
 
 try:
     print('===== Starting Server on: http://localhost:{} ====='.format(PORT))
     LOOP.create_task(SERVER.start())
     LOOP.create_task(message_process(AGENT))
+    LOOP.create_task(ui_event_process(AGENT))
     LOOP.run_forever()
 except KeyboardInterrupt:
     print("exiting")

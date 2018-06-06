@@ -107,8 +107,7 @@ async def handle_request_accepted(request):
     raise web.HTTPFound('/')
 
 
-@aiohttp_jinja2.template('index.html')
-async def send_request(request):
+async def send_request(msg, agent):
     """ sends a connection request.
 
         a connection request contains:
@@ -121,9 +120,7 @@ async def send_request(request):
            - Public verkey
     """
 
-    agent = request.app['agent']
-
-    req_data = await request.post()
+    req_data = msg.data
 
     our_endpoint = agent.endpoint
     endpoint = req_data['endpoint']
@@ -163,21 +160,6 @@ async def send_request(request):
         async with session.post(endpoint, data=msg_json) as resp:
             print(resp.status)
             print(await resp.text())
-
-
-    # Testing for webpage:
-    conns = agent.connections
-    reqs = agent.received_requests
-    owner = agent.owner
-    if owner is None or owner == '':
-        owner = 'Default'
-    return {
-        "agent_name": owner,
-        "connections": conns,
-        "requests": reqs
-    }
-
-
 
 async def send_response(to_did, agent):
     """ sends a connection response should be anon_encrypted.

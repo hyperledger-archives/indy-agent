@@ -27,10 +27,10 @@
                 </header>
                  <form action="/indy/init" method="post">
                    Name:
-                    <input type="text" name="agent_name" value="Default">
+                    <input id="agent_name" type="text" name="agent_name" value="Default">
                    Endpoint:
-                    <input type="text" name="endpoint" value="Default">
-                        <input type="submit" value="Make Wallet" onclick="document.getElementById('id01').style.display='none'">
+                    <input id="agent_endpoint" type="text" name="endpoint" value="Default">
+                        <input id="agent_init" type="button" value="Make Wallet">
                 </form>
 
                 <footer class="w3-container w3-theme-l1">
@@ -65,7 +65,7 @@
                     Endpoint:<br>
                   <input type="text" name="endpoint" value="http://localhost:8080">
                   <br><br>
-                  <input type="submit" value="Send Request">
+                  <button id="send_request" type="button">Send Request</button>
                 </form>
                 <h4>Connections</h4>
                 <ul>
@@ -127,5 +127,6 @@
 
 
         </script>
+        <script src="/res/indy-agent.js"></script>
     </body>
 </html>

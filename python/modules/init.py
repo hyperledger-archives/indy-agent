@@ -7,12 +7,11 @@ import json
 from aiohttp import web
 from indy import wallet
 
-async def initialize_agent(request):
+async def initialize_agent(msg, agent):
     """ Initialize agent.
     """
-    agent = request.app['agent']
-    data = await request.post()
-    agent.owner = data['agent_name']
+    data = msg.data
+    agent.owner = data['name']
     agent.endpoint = data['endpoint']
 
     wallet_name = '%s-wallet' % agent.owner
@@ -29,8 +28,5 @@ async def initialize_agent(request):
     except Exception as e:
         print(e)
         print("Could not open wallet!")
-        raise web.HTTPBadRequest()
 
     agent.initialized = True
-
-    raise web.HTTPFound('/')
