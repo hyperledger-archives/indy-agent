@@ -53,5 +53,5 @@ class UIEventQueue(object):
     async def recv(self):
         return await self.recv_q.get()
 
-    async def send(self):
-        return await self.send_q.put()
+    async def send(self, msg):
+        return await self.send_q.put(msg)

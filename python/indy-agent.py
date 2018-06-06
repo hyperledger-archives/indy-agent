@@ -104,6 +104,7 @@ async def ui_event_process(agent):
             continue
         msg = Serializer.unpack(msg_bytes)
         await ui_router.route(msg, agent['agent'])
+        await ui_event_queue.send("Processed message: {}".format(msg_bytes))
 
 try:
     print('===== Starting Server on: http://localhost:{} ====='.format(PORT))
