@@ -58,10 +58,10 @@ exports.acceptRequest = async function(theirDid, encryptedMessage) {
         let value;
         switch(attr) {
             case "first_name":
-                value = {"raw": "Alice", "encoded": "1139481716457488690172217916278103335"};
+                value = {"raw": await indy.pairwise.getAttr(theirDid, 'first_name') || "Alice", "encoded": "1139481716457488690172217916278103335"};
                 break;
             case "last_name":
-                value = {"raw": "Garcia", "encoded": "5321642780241790123587902456789123452"};
+                value = {"raw": await indy.pairwise.getAttr(theirDid, 'last_name') || "Alice", "encoded": "5321642780241790123587902456789123452"};
                 break;
             case "degree":
                 value = {"raw": "Bachelor of Science, Marketing", "encoded": "12434523576212321"};

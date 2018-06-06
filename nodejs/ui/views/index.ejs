@@ -60,11 +60,63 @@
             </div>
         </div>
 
-        <div class="w3-bar w3-theme" id="menubar">
+        <!-- New Relationship Model -->
+        <div id="newRelationshipModel" class="w3-modal">
+            <div class="w3-modal-content w3-card-4 w3-animate-top">
+                <header class="w3-container w3-theme-l1">
+        <span onclick="document.getElementById('newRelationshipModel').style.display='none'"
+              class="w3-button w3-display-topright">×</span>
+                    <h4>Create a New Relationship</h4>
+                </header>
+                <div class="w3-padding">
+                    <form class="w3-container w3-card-4 w3-padding" action="/api/send_connection_request" method="POST" target="_self">
+                        <div class="w3-section">
+                            Recipient's Public DID: <input class="w3-input" type="text" name="did" required>
+                        </div>
+                        <input class="w3-btn w3-white w3-border" style="display:block;margin:auto;" type="submit" value="Send Connection Request">
+                    </form>
+                </div>
+                <footer class="w3-container w3-theme-l1">
+                    <p></p>
+                </footer>
+            </div>
+        </div>
+
+        <!-- New Message Model -->
+        <div id="newMessageModel" class="w3-modal">
+            <div class="w3-modal-content w3-card-4 w3-animate-top">
+                <header class="w3-container w3-theme-l1">
+                    <span onclick="document.getElementById('newMessageModel').style.display='none'" class="w3-button w3-display-topright">×</span>
+                    <h4>Send a Message</h4>
+                </header>
+                <div class="w3-padding">
+                    <!--The socket message way: onsubmit="sendSovrinMessage('urn:sovrin:agent:message_type:sovrin.org/ui/send_message', this)"-->
+                    <form class="w3-container w3-card-4 w3-padding" action="/api/send_message" method="POST" target="_self" >
+                        <div class="w3-section">
+                            Recipient: <input id="send_message_form_did" class="w3-input" type="text" name="did" value="<%=publicDid%>">
+                        </div>
+                        <div class="w3-section">
+                            Message: <textarea id="send_message_form_message" class="w3-input" name="message" rows="6" >{
+    "type":"SOME_TYPE",
+    "message":"test"
+}</textarea>
+                        </div>
+                        <input class="w3-btn w3-white w3-border" style="display:block;margin:auto;" type="submit" value="Send Message">
+                    </form>
+                </div>
+                <footer class="w3-container w3-theme-l1">
+                    <p></p>
+                </footer>
+            </div>
+        </div>
+
+
+
+        <div id="menubar" class="w3-bar w3-theme">
             <a onclick="document.getElementById('aboutModel').style.display='block'" class="w3-right w3-bar-item w3-button w3-padding-16">About</a>
             <a href=""><img class="w3-left w3-bar-item" width="55px" height="55px" src="/images/sovrinIcon.png"></a>
             <a href="#credentials" id="credentials_link" class="w3-left w3-bar-item w3-button w3-padding-16 tab_link" onclick="showTab('credentials')" >Credentials</a>
-            <a href="#proofs" id="proofs_link" class="w3-left w3-bar-item w3-button w3-padding-16 tab_link" onclick="showTab('proofs')" >Proofs</a>
+            <a href="#proofs" id="proofs_link" class="w3-left w3-bar-item w3-button w3-padding-16 tab_link" onclick="showTab('proofs')" >Proof Requests</a>
             <a href="#issuing" id="issuing_link" class="w3-left w3-bar-item w3-button w3-padding-16 tab_link" onclick="showTab('issuing')" >Issuing</a>
             <a href="#relationships" id="relationships_link" class="w3-left w3-bar-item w3-button w3-padding-16 tab_link" onclick="showTab('relationships')" >Relationships</a>
             <a href="#messages" id="messages_link" class="w3-left w3-bar-item w3-button w3-padding-16 tab_link" onclick="showTab('messages')" >Messages</a>
@@ -96,7 +148,6 @@
                 }
 
                 document.getElementById(`${id}_link`).style['font-weight'] = "bold";
-
             }
 
             let tabs = document.getElementsByClassName("tab");
@@ -125,6 +176,16 @@
                     xhttp.send();
                 }
                 location.reload();
+            }
+
+            showDiv(document.getElementById('currentProofRequest').value, 'proofRequestsClass');
+            function showDiv(id, className) {
+                let tabs = document.getElementsByClassName(className);
+                for (let i = 0; i < tabs.length; i++) {
+                    tabs[i].style.display = "none";
+                }
+                console.log('showing div: ', id);
+                document.getElementById(id).style.display = "block";
             }
         </script>
         <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>

@@ -7,19 +7,18 @@ const MESSAGE_TYPES = {
     OFFER : "urn:sovrin:agent:message_type:sovrin.org/connection_offer",
     REQUEST : "urn:sovrin:agent:message_type:sovrin.org/connection_request",
     RESPONSE : "urn:sovrin:agent:message_type:sovrin.org/connection_response",
-    ACKNOWLEDGE : "urn:sovrin:agent:message_type:sovrin.org/connection_acknowledge",
-    IDENTITY_PR : "urn:sovrin:agent:message_type:sovrin.org/identity_proof_request"
+    ACKNOWLEDGE : "urn:sovrin:agent:message_type:sovrin.org/connection_acknowledge"
 };
 exports.MESSAGE_TYPES = MESSAGE_TYPES;
 
 exports.handlers = require('./handlers');
 
-exports.prepareRequest = async function (nameOfRelationship, theirPublicDid) {
+exports.prepareRequest = async function (theirPublicDid) {
     let [myNewDid, myNewVerkey] = await sdk.createAndStoreMyDid(await indy.wallet.get(), {});
     await indy.pool.sendNym(await indy.pool.get(), await indy.wallet.get(), await indy.did.getPublicDid(), myNewDid, myNewVerkey);
 
     let nonce = uuid();
-    indy.store.pendingRelationships.write(nameOfRelationship, myNewDid, theirPublicDid, nonce);
+    indy.store.pendingRelationships.write(myNewDid, theirPublicDid, nonce);
 
     return {
         type: MESSAGE_TYPES.REQUEST,
@@ -42,8 +41,6 @@ exports.acceptRequest = async function (theirPublicDid, theirDid, requestNonce) 
     });
 
     let meta = JSON.stringify({
-        theirFirstName: null,
-        theirLastName: null,
         theirPublicDid: theirPublicDid,
         verified: false // Indicates that the owner of the agent has confirmed they want to stay connected with this person.
     });
@@ -107,30 +104,16 @@ exports.acceptResponse = async function (myDid, rawMessage) {
 
 exports.sendAcknowledgement = async function (myDid, theirDid, theirPublicDid) {
     await indy.crypto.sendAnonCryptedMessage(theirPublicDid, await indy.crypto.buildAuthcryptedMessage(myDid, theirDid, MESSAGE_TYPES.ACKNOWLEDGE, "Success"));
+    await indy.proofs.sendRequest(myDid, theirDid, 'General-Identity');
 };
 
 exports.acceptAcknowledgement = async function (theirDid, encryptedMessage) {
     let myDid = await indy.pairwise.getMyDid(theirDid);
-    let theirPublicDid = await indy.did.getTheirPublicDid(theirDid);
 
     let message = await indy.crypto.authDecrypt(myDid, encryptedMessage);
     console.log(message);
 
-    let identityProofRequest = {
-        nonce: uuid(),
-        name: 'General-Identity',
-        version: '0.1',
-        requested_attributes: {
-            attr1_referent: {
-                name: 'first_name'
-            },
-            attr2_referent: {
-                name: 'last_name'
-            }
-        }
-    };
-
-    return indy.crypto.sendAnonCryptedMessage(theirPublicDid, await indy.crypto.buildAuthcryptedMessage(myDid, theirDid, MESSAGE_TYPES.IDENTITY_PR, identityProofRequest));
+    await indy.proofs.sendRequest(myDid, theirDid, 'General-Identity');
 };
 
 // accept identity proof request, send identity proof and own proof request on identity

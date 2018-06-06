@@ -49,3 +49,12 @@ exports.getCredDef = async function(poolHandle, did, credDefId) {
     let getCredDefResponse = await sdk.submitRequest(poolHandle, getCredDefRequest);
     return await sdk.parseGetCredDefResponse(getCredDefResponse);
 };
+
+exports.getCredDefByTag = async function(credDefTag) {
+    let credDefs = await indy.did.getPublicDidAttribute('credential_definitions');
+    for(let credDef of credDefs) {
+        if(credDef.tag === credDefTag) {
+            return credDef;
+        }
+    }
+};

@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const indy = require('../../indy/index');
+const auth = require('../authentication');
 
 router.get('/', function (req, res, next) {
     res.send("Success");
 });
 
-router.post('/send_message', async function (req, res) {
+router.post('/send_message', auth.isLoggedIn, async function (req, res) {
     let message = JSON.parse(req.body.message);
     message.did = req.body.did;
 
@@ -14,43 +15,42 @@ router.post('/send_message', async function (req, res) {
     res.redirect('/#messages');
 });
 
-router.post('/send_connection_request', async function (req, res) {
-    let name = req.body.name;
+router.post('/send_connection_request', auth.isLoggedIn, async function (req, res) {
     let theirPublicDid = req.body.did;
-    let connectionRequest = await indy.connections.prepareRequest(name, theirPublicDid);
+    let connectionRequest = await indy.connections.prepareRequest(theirPublicDid);
 
     await indy.crypto.sendAnonCryptedMessage(theirPublicDid, connectionRequest);
     res.redirect('/#relationships');
 });
 
-router.post('/issuer/create_schema', async function (req, res) {
+router.post('/issuer/create_schema', auth.isLoggedIn, async function (req, res) {
     await indy.issuer.createSchema(req.body.name_of_schema, req.body.version, req.body.attributes);
     res.redirect('/#issuing');
 });
 
-router.post('/issuer/create_cred_def', async function (req, res) {
+router.post('/issuer/create_cred_def', auth.isLoggedIn, async function (req, res) {
     await indy.issuer.createCredDef(req.body.schema_id, req.body.tag);
     res.redirect('/#issuing');
 });
 
-router.post('/issuer/send_credential_offer', async function (req, res) {
+router.post('/issuer/send_credential_offer', auth.isLoggedIn, async function (req, res) {
     await indy.credentials.sendOffer(req.body.their_relationship_did, req.body.cred_def_id);
     res.redirect('/#issuing');
 });
 
-router.post('/credentials/accept_offer', async function(req, res) {
+router.post('/credentials/accept_offer', auth.isLoggedIn, async function(req, res) {
     let message = indy.store.messages.getMessage(req.body.messageId);
     indy.store.messages.deleteMessage(req.body.messageId);
     await indy.credentials.sendRequest(message.message.origin, message.message.message);
     res.redirect('/#messages');
 });
 
-router.post('/credentials/reject_offer', async function(req, res) {
+router.post('/credentials/reject_offer', auth.isLoggedIn, async function(req, res) {
     indy.store.messages.deleteMessage(req.body.messageId);
     res.redirect('/');
 });
 
-router.put('/connections/request', async function (req, res) {
+router.put('/connections/request', auth.isLoggedIn, async function (req, res) {
     let name = req.body.name;
     let messageId = req.body.messageId;
     let message = indy.store.messages.getMessage(messageId);
@@ -59,12 +59,28 @@ router.put('/connections/request', async function (req, res) {
     res.redirect('/#relationships');
 });
 
-router.delete('connections/request', async function (req, res) {
+router.delete('/connections/request', auth.isLoggedIn, async function (req, res) {
     // FIXME: Are we actually passing in the messageId yet?
     if (req.body.messageId) {
         indy.store.messages.deleteMessage(req.body.messageId);
     }
     res.redirect('/#relationships');
+});
+
+router.post('/messages/delete', auth.isLoggedIn, function(req, res) {
+    indy.store.messages.deleteMessage(req.body.messageId);
+    res.redirect('/#messages');
+});
+
+router.post('/proofs/accept', auth.isLoggedIn, async function(req, res) {
+    await indy.proofs.acceptRequest(req.body.messageId);
+    res.redirect('/#messages');
+});
+
+router.post('/proofs/send_request', auth.isLoggedIn, async function(req, res) {
+    let myDid = await indy.pairwise.getMyDid(req.body.their_relationship_did);
+    await indy.proofs.sendRequest(myDid, req.body.their_relationship_did, req.body.proof_request_id);
+    res.redirect('/#proofs');
 });
 
 module.exports = router;

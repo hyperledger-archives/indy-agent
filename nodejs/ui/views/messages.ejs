@@ -1,11 +1,15 @@
 <div id="messages" class="tab" style="display:none;">
-    <div id="messages" class="w3-half" style="width:50%; height:700px; overflow:scroll;">
+    <button class="w3-right w3-btn w3-white w3-border" style="margin:15px 20px;" onclick="document.getElementById('newMessageModel').style.display='block'">Send a Message</button>
+    <div id="messages" class="" style="display:block;margin:auto;width:50%; height:700px; overflow:scroll;">
         <%for(var message of messages) {%>
         <div class="center w3-padding">
             <div class="w3-card w3-container" >
-                <p>From: <%=message.message.did%></p>
+                <button class="w3-btn w3-white w3-right" onclick="request('/api/messages/delete', 'POST', JSON.stringify({messageId: '<%=message.id%>'}))"><i class="fa fa-close"></i></button>
+                <%if(message.relationshipName) {%>
+                    <p><b>From: <%=message.relationshipName%></b></p>
+                <%}%>
                 <p>Type: <%=message.message.type%></p>
-                <p>Received <%=message.timestamp%></p>
+                <p>Received: <%=message.timestamp%></p>
                 <div>
                     <%if (message.message.type === messageTypes.connections.REQUEST) {%>
                         <form>
@@ -19,6 +23,15 @@
                             <%}%>
                             <br><br>
                         </form>
+                    <%} else if(message.message.type === messageTypes.proofs.REQUEST) {%>
+                    <p><b>Requested Attributes:</b></p>
+                            <%for(let attr of Object.keys(message.message.message.proofRequest.requested_attributes)) {%>
+                                <p><%=message.message.message.proofRequest.requested_attributes[attr].name%></p>
+                            <%}%>
+                        <%for(let link of message.links) {%>
+                            <button class="w3-btn w3-white w3-border" type="submit" onclick="request('<%=link.href%>', '<%=link.method%>', '<%=link.message%>')"><%=link.name%></button>
+                        <%}%>
+                        <br><br>
                     <%} else {%>
                         <%if(message.links) {%>
                             <%for(let link of message.links) {%>
@@ -32,31 +45,7 @@
                     <%}%>
                 </div>
             </div>
-
         </div>
         <%}%>
-    </div>
-    <div class="w3-half w3-right">
-        <form class="w3-container w3-card-4 w3-padding" onsubmit="sendSovrinMessage('urn:sovrin:agent:message_type:sovrin.org/ui/send_message', this)">
-            <div class="w3-section">
-                Recipient: <input id="send_message_form_did" class="w3-input" type="text" name="did" value="<%=publicDid%>">
-            </div>
-            <div class="w3-section">
-                Message: <textarea id="send_message_form_message" class="w3-input" name="message" rows="6" >{
-    "type":"SOME_TYPE",
-    "message":"test"
-}</textarea>
-            </div>
-            <input class="w3-btn w3-white w3-border" type="submit">
-        </form>
-        <!--<br><br>-->
-        <!--<div class="w3-container w3-card-4 w3-padding">-->
-            <!--<div><ul id="testMessages"></ul></div>-->
-            <!--<br>-->
-            <!--<form id="socketTestForm" action="">-->
-                <!--Socket message: <input id="m" autocomplete="off" /><button>Send</button>-->
-            <!--</form>-->
-        <!--</div>-->
-
     </div>
 </div>

@@ -7,6 +7,7 @@ let publicVerkey;
 let stewardDid;
 let stewardKey;
 let stewardWallet;
+let govIdCredDefId;
 
 exports.createDid = async function (didInfoParam) {
     let didInfo = didInfoParam || {};
@@ -111,13 +112,17 @@ async function issueGovernmentIdCredential() {
     ]);
 
     await indy.issuer.sendSchema(await indy.pool.get(), stewardWallet, stewardDid, govIdSchema);
+    govIdSchema = await indy.issuer.getSchema(govIdSchemaId);
 
-    let [govIdCredDefId, govIdCredDef] = await sdk.issuerCreateAndStoreCredentialDef(stewardWallet, stewardDid, govIdSchema, 'GOVID', signatureType, '{"support_revocation": false}');
+    let govIdCredDef;
+    [govIdCredDefId, govIdCredDef] = await sdk.issuerCreateAndStoreCredentialDef(stewardWallet, stewardDid, govIdSchema, 'GOVID', signatureType, '{"support_revocation": false}');
+    exports.setPublicDidAttribute('govIdCredDefId', govIdCredDefId);
 
     await indy.issuer.sendCredDef(await indy.pool.get(), stewardWallet, stewardDid, govIdCredDef);
 
     let govIdCredOffer = await sdk.issuerCreateCredentialOffer(stewardWallet, govIdCredDefId);
     let [govIdCredRequest, govIdRequestMetadata] = await sdk.proverCreateCredentialReq(await indy.wallet.get(), publicDid, govIdCredOffer, govIdCredDef, await indy.did.getPublicDidAttribute('master_secret_id'));
+
 
     let govIdValues = {
         "first_name": {"raw": config.personalInformation.first_name, "encoded": "12345678987654321"},
@@ -128,6 +133,16 @@ async function issueGovernmentIdCredential() {
         "ssn": {"raw": config.personalInformation.ssn, "encoded": "12345678987654321"}
     };
 
+
+    // let govIdValues = {
+    //     "first_name": {"raw": "Alice", "encoded": "1139481716457488690172217916278103335"},
+    //     "last_name": {"raw": "Garcia", "encoded": "5321642780241790123587902456789123452"}
+    // };
+
     let [govIdCredential] = await sdk.issuerCreateCredential(stewardWallet, govIdCredOffer, govIdCredRequest, govIdValues);
     await sdk.proverStoreCredential(await indy.wallet.get(), null, govIdRequestMetadata, govIdCredential, govIdCredDef);
 }
+
+exports.getGovIdCredDefId = async function() {
+    return await exports.getPublicDidAttribute('govIdCredDefId');
+};

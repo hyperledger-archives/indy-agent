@@ -1,12 +1,14 @@
 const createError = require('http-errors');
 const express = require('express');
+const session = require('express-session');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const config = require('./config');
 
 const indexRouter = require('./ui/routes/index');
 const apiRouter = require('./ui/routes/api');
-const indyHandler = require('./indy/src/handler')({ defaultHandlers: true }); // () executes the function so that we can potentially have multiple indy handlers;
+const indyHandler = require('./indy/src/handler')({ defaultHandlers: true, eventHandlers: [] }); // () executes the function so that we can potentially have multiple indy handlers;
 // const uiMessageHandlers = require('./ui/uiMessageHandlers');
 // uiMessageHandlers.enableDefaultHandlers(indyHandler);
 
@@ -15,6 +17,16 @@ const app = express();
 // view engine setup
 app.set('views', path.join(__dirname, 'ui/views'));
 app.set('view engine', 'ejs');
+
+const FileStore = require('session-file-store')(session);
+app.use(session({
+    name: `server-session-cookie-id-for-${config.walletName}`,
+    secret: config.sessionSecret,
+    saveUninitialized: true,
+    resave: true,
+    rolling: true,
+    store: new FileStore()
+}));
 
 app.use(logger('dev'));
 app.use(express.json());

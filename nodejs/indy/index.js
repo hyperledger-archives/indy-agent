@@ -13,6 +13,7 @@ exports.pairwise = require('./src/pairwise');
 exports.pool = require('./src/pool');
 exports.proofs = require('./src/proofs');
 exports.store = require('./src/store');
+exports.utils = require('./src/utils');
 
 exports.setupAgent = async function () {
     await exports.pool.setup();

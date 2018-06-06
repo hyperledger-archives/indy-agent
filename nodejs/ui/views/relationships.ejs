@@ -1,31 +1,48 @@
 <div id="relationships" class="tab" style="display:none;" >
-    <div class="w3-half">
-        <div class="center w3-padding">
+    <button class="w3-right w3-btn w3-white w3-border" style="margin:15px 20px;" onclick="document.getElementById('newRelationshipModel').style.display='block'">Send New Connection Request</button>
+    <div class="w3-padding">
+        <div class="w3-third w3-border" style="width:33%; height:85vh; overflow:scroll;">
             <%for(let relationship of relationships) {%>
-            <div class="w3-card w3-container w3-cell-row" >
-                <div class="w3-cell-middle" style="width:25%">
-                    <svg width="120" height="120" data-jdenticon-value="<%=relationship.their_did%>"></svg>
+            <a onclick="showDiv('<%=relationship.their_did%>', 'relationshipsClass')">
+                <div class="w3-bar w3-btn w3-white w3-border" style="width:100%;">
+                    <svg class="w3-bar-item" width="50" height="50" data-jdenticon-value="<%=relationship.their_did%>"></svg>
+                    <p class="w3-bar-item"><%=relationship.metadata.name%></p>
                 </div>
-                <div class="w3-cell" style="width:75%">
-                    <p>My Relationship with <%=relationship.metadata.name%></p>
-                    <p>My Did: <%=relationship.my_did%></p>
-                    <p>Their Did: <%=relationship.their_did%></p>
-                </div>
-            </div>
+            </a>
             <br>
             <%}%>
         </div>
-    </div>
-    <div class="w3-half w3-right">
-        <form class="w3-container w3-card-4 w3-padding" action="/api/send_connection_request" method="POST" target="_self">
-            <h4>Create a New Relationship</h4>
-            <div class="w3-section">
-                Name of New Relationship: <input class="w3-input" type="text" name="name" value="John Doe" required>
+        <%for(let relationship of relationships) {%>
+            <div id="<%=relationship.their_did%>" class="w3-padding relationshipsClass" style="float:left;width:66%;margin-bottom: 100px;display:none;">
+                <div class="w3-border w3-container" style="margin:10px 50px;">
+                    <div class="w3-cell-middle" style="display: block;margin: auto;">
+                        <svg width="320" height="320" data-jdenticon-value="<%=relationship.their_did%>"></svg>
+                    </div>
+                    <div class="w3-cell" style="display: block;margin: auto;">
+                        <%if(relationship.metadata.name) {%>
+                        <p><b><%=relationship.metadata.name%></b></p>
+                        <%}%>
+                        <p>My Did: <%=relationship.my_did%></p>
+                        <p>Their Did: <%=relationship.their_did%></p>
+                        <p>Their Public Did: <%=relationship.metadata.theirPublicDid%></p>
+                        <p><b>Proofs:</b></p>
+                        <%if(relationship.metadata.proofs) {%>
+                            <%for(let proof of relationship.metadata.proofs) {%>
+                                <div class="w3-bar w3-card">
+                                    <div class="w3-bar-item">
+                                        <p style="text-decoration: underline;"><%=proof.request.name%></p>
+                                        <%for(let attr of Object.keys(proof.request.requested_attributes)) {%>
+                                            <p><%=proof.request.requested_attributes[attr].name%>: <%=proof.requested_proof.revealed_attrs[attr].raw%></p>
+                                        <%}%>
+                                    </div>
+                                    <button class="w3-btn w3-white w3-border" style="display:block;margin: 20px 20px;height: 100px;width:100px;" type="submit">Validate</button>
+                                </div>
+                                <br><br>
+                            <%}%>
+                        <%}%>
+                    </div>
+                </div>
             </div>
-            <div class="w3-section">
-                Recipient's Public DID: <input class="w3-input" type="text" name="did" value="<%=publicDid%>" required>
-            </div>
-            <input class="w3-btn w3-white w3-border" type="submit" value="Send Connection Request">
-        </form>
+        <%}%>
     </div>
 </div>

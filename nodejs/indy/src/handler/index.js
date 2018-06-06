@@ -67,6 +67,8 @@ module.exports = function(config) { //factory function creates object and return
         factory.defineHandler(indy.connections.MESSAGE_TYPES.ACKNOWLEDGE, indy.connections.handlers.acknowledge);
         factory.defineHandler(indy.credentials.MESSAGE_TYPES.REQUEST, indy.credentials.handlers.request);
         factory.defineHandler(indy.credentials.MESSAGE_TYPES.CREDENTIAL, indy.credentials.handlers.credential);
+        factory.defineHandler(indy.proofs.MESSAGE_TYPES.REQUEST, indy.proofs.handlers.request);
+        factory.defineHandler(indy.proofs.MESSAGE_TYPES.PROOF, indy.proofs.handlers.proof);
     }
 
     return factory;

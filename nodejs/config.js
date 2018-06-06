@@ -19,13 +19,20 @@ const config = {
 
     // This information is used to issue your "Government ID"
     personalInformation: {
-        first_name: "Bugs",
-        middle_name: "Bunny",
-        last_name: "Ithaca",
-        age: "42",
-        gender: "M",
+        first_name: process.env.FIRST_NAME || "Alice",
+        middle_name: process.env.MIDDLE_NAME || "Rebecca",
+        last_name: process.env.LAST_NAME || "Garcia",
+        age: process.env.AGE || "38",
+        gender: process.env.GENDER || "F",
         ssn: "123-45-6789"
-    }
+    },
+
+    loginInformation: {
+        username: 'test',
+        password: 'abc'
+    },
+
+    sessionSecret: "YUYFDISYFSIUOFYERTEWRTEWTWETRNNNMNJHKHFASDdyfiudayDAYIUSDFYASIOFOOASIUDFYEREAHLSKJFE57894502354354HJKAFDDFS"
 };
 
 module.exports = config;

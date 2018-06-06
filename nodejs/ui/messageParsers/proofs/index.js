@@ -1,13 +1,13 @@
 'use strict';
 const indy = require('../../../indy');
 
-exports.credentialOffer = async function (message) {
+exports.request = async function(message) {
     let theirDid = message.message.origin;
-    message.relationshipName = `${await indy.pairwise.getAttr(theirDid, 'first_name')} ${await indy.pairwise.getAttr(theirDid, 'last_name')}`
+    message.relationshipName = `${await indy.pairwise.getAttr(theirDid, 'first_name')} ${await indy.pairwise.getAttr(theirDid, 'last_name')}`;
     message.links = [
         {
             name: "Accept",
-            href: "/api/credentials/accept_offer",
+            href: "/api/proofs/accept",
             method: "POST",
             message: JSON.stringify({
                 messageId: message.id
@@ -15,7 +15,7 @@ exports.credentialOffer = async function (message) {
         },
         {
             name: "Reject",
-            href: "/api/credentials/reject_offer",
+            href: "/api/messages/delete",
             method: "POST",
             message: JSON.stringify({
                 messageId: message.id
@@ -23,5 +23,5 @@ exports.credentialOffer = async function (message) {
         }
     ];
 
-    return message;
+    return Promise.resolve(message);
 };

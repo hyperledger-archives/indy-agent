@@ -57,3 +57,7 @@ exports.buildAuthcryptedMessage = async function (myDid, theirDid, messageType, 
         message: await exports.authCrypt(myDid, theirDid, JSON.stringify(message))
     }
 };
+
+exports.getMasterSecretId = async function() {
+    return await indy.did.getPublicDidAttribute('master_secret_id');
+}

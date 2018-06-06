@@ -71,19 +71,17 @@ exports.getEndpointForDid = async function (did) {
     return JSON.parse(res.result.data).endpoint.ha;
 };
 
-exports.proverGetEntitiesFromLedger = async function(poolHandle, did, identifiers, actor) {
+exports.proverGetEntitiesFromLedger = async function(identifiers) {
     let schemas = {};
     let credDefs = {};
     let revStates = {};
 
     for(let referent of Object.keys(identifiers)) {
         let item = identifiers[referent];
-        console.log(`\"${actor}\" -> Get Schema from Ledger`);
-        let [receivedSchemaId, receivedSchema] = await indy.issuer.getSchema(item['schema_id']);
-        schemas[receivedSchemaId] = receivedSchema;
+        let receivedSchema = await indy.issuer.getSchema(item['schema_id']);
+        schemas[receivedSchema.id] = receivedSchema;
 
-        console.log(`\"${actor}\" -> Get Claim Definition from Ledger`);
-        let [receivedCredDefId, receivedCredDef] = await indy.issuer.getCredDef(poolHandle, did, item['cred_def_id']);
+        let [receivedCredDefId, receivedCredDef] = await indy.issuer.getCredDef(await indy.pool.get(), await indy.did.getPublicDid(), item['cred_def_id']);
         credDefs[receivedCredDefId] = receivedCredDef;
 
         if (item.rev_reg_seq_no) {
@@ -94,7 +92,7 @@ exports.proverGetEntitiesFromLedger = async function(poolHandle, did, identifier
     return [schemas, credDefs, revStates];
 };
 
-exports.verifierGetEntitiesFromLedger = async function(poolHandle, did, identifiers, actor) {
+exports.verifierGetEntitiesFromLedger = async function(identifiers) {
     let schemas = {};
     let credDefs = {};
     let revRegDefs = {};
@@ -102,20 +100,16 @@ exports.verifierGetEntitiesFromLedger = async function(poolHandle, did, identifi
 
     for(let referent of Object.keys(identifiers)) {
         let item = identifiers[referent];
-        console.log(`"${actor}" -> Get Schema from Ledger`);
-        let [receivedSchemaId, receivedSchema] = await indy.issuer.getSchema(item['schema_id']);
-        schemas[receivedSchemaId] = receivedSchema;
+        let receivedSchema = await indy.issuer.getSchema(item['schema_id']);
+        schemas[receivedSchema.id] = receivedSchema;
 
-        console.log(`"${actor}" -> Get Claim Definition from Ledger`);
-        let [receivedCredDefId, receivedCredDef] = await indy.issuer.getCredDef(poolHandle, did, item['cred_def_id']);
+        let [receivedCredDefId, receivedCredDef] = await indy.issuer.getCredDef(await indy.pool.get(), await indy.did.getPublicDid(), item['cred_def_id']);
         credDefs[receivedCredDefId] = receivedCredDef;
 
         if (item.rev_reg_seq_no) {
             // TODO Get Revocation Definitions and Revocation Registries
         }
     }
-
-    console.log('before return');
     return [schemas, credDefs, revRegDefs, revRegs];
 };
 
@@ -123,12 +117,6 @@ exports.sendNym = async function(poolHandle, walletHandle, Did, newDid, newKey, 
     let nymRequest = await sdk.buildNymRequest(Did, newDid, newKey, null, role);
     await sdk.signAndSubmitRequest(poolHandle, walletHandle, Did, nymRequest);
 };
-
-function sleep(ms) {
-    return new Promise(function (resolve) {
-        setTimeout(resolve, ms)
-    })
-}
 
 async function waitUntilApplied(ph, req, cond) {
     for (let i = 0; i < 3; i++) {
@@ -138,6 +126,6 @@ async function waitUntilApplied(ph, req, cond) {
             return res;
         }
 
-        await sleep(5 * 1000);
+        await indy.utils.sleep(5 * 1000);
     }
 }

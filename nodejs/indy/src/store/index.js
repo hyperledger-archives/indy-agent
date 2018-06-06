@@ -9,7 +9,8 @@ const BASE = JSON.stringify({
     pendingMessages: [],
     pendingRelationships: [],
     pendingCredentialOffers: [],
-    pendingCredentialRequests: []
+    pendingCredentialRequests: [],
+    pendingProofRequests: []
 });
 
 let store;
@@ -79,12 +80,11 @@ exports.pendingRelationships = {
     init();
     return store.pendingRelationships;
   },
-  write: function (name, myNewDid, theirPublicDid, nonce) {
+  write: function (myNewDid, theirPublicDid, nonce) {
     init();
     store.pendingRelationships.push({
       id: uuid(),
       timestamp: new Date(),
-      name: name,
       myNewDid: myNewDid,
       theirPublicDid: theirPublicDid,
       nonce: nonce
@@ -183,6 +183,46 @@ exports.pendingCredentialRequests = {
         for (let i = 0; i < store.pendingCredentialRequests.length; i++) {
             if (store.pendingCredentialRequests[i].id === id) {
                 store.pendingCredentialRequests.splice(i, 1);
+            }
+        }
+        syncChanges();
+    }
+};
+
+exports.pendingProofRequests = {
+    getAll: function () {
+        init();
+        return store.pendingProofRequests;
+    },
+    write: function (proofRequest) {
+        init();
+        let id = uuid();
+        store.pendingProofRequests.push({
+            id: id,
+            proofRequest: proofRequest
+        });
+        syncChanges();
+        return id;
+    },
+    clear: function () {
+        init();
+        store.pendingProofRequests = [];
+        syncChanges();
+    },
+    get: function (id) {
+        init();
+        for (let message of store.pendingProofRequests) {
+            if (message.id === id) {
+                return message;
+            }
+        }
+        return null;
+    },
+    delete: function (id) {
+        init();
+        for (let i = 0; i < store.pendingProofRequests.length; i++) {
+            if (store.pendingProofRequests[i].id === id) {
+                store.pendingProofRequests.splice(i, 1);
             }
         }
         syncChanges();
