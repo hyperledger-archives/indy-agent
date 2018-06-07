@@ -36,11 +36,3 @@ GENDER=F
 ```
 
 Where PUBLIC_DID_ENDPOINT refers to the host and port your agent is running at, and the TEST_POOL_IP refers to the ip address of the running ledger.
-
-## Basic Design Overview
-The agent is a simple http server that can receive messages [POST](https://en.wikipedia.org/wiki/POST_(HTTP))ed to the /indy endpoint.  Those messages are stored for the user to make decisions on later through the UI. The UI is used to:
-
-* Create new relationships
-* Decide to accept new relationship requests
-* Send and manage Credentials
-* Make and request proofs
