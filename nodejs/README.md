@@ -1,5 +1,4 @@
 # node.js implementation of the indy-agent
-#### Note: The indy-agent is a work in progress and is not ready for use.
 
 ## Quick start guide
 * `git clone https://github.com/hyperledger/indy-sdk.git` and follow [the instructions](https://github.com/hyperledger/indy-sdk/tree/master/doc) to build libindy for your system.
@@ -21,6 +20,23 @@ npm start # Starts the node.js express server
 ```
 * Then go to http://localhost:3000
 
+## Agent Configuration
+The agent can be configured using the following environment variables, or the values can be edited directly in `config.js`
+
+```
+PUBLIC_DID_ENDPOINT=10.0.0.2:3000
+TEST_POOL_IP=10.0.0.2
+PORT=3000
+WALLET_NAME=wallet_3000
+FIRST_NAME=Alice
+MIDDLE_NAME=Rebecca
+LAST_NAME=Garcia
+AGE=22
+GENDER=F
+```
+
+Where PUBLIC_DID_ENDPOINT refers to the host and port your agent is running at, and the TEST_POOL_IP refers to the ip address of the running ledger.
+
 ## Basic Design Overview
 The agent is a simple http server that can receive messages [POST](https://en.wikipedia.org/wiki/POST_(HTTP))ed to the /indy endpoint.  Those messages are stored for the user to make decisions on later through the UI. The UI is used to:
 
@@ -28,15 +44,3 @@ The agent is a simple http server that can receive messages [POST](https://en.wi
 * Decide to accept new relationship requests
 * Send and manage Credentials
 * Make and request proofs
-
-## Notes
-* The Issuer page could be simplified.  Why not let the only action be issue credential and have them pick a schema. If the cred def doesn't exist, just create it.
-* They will need the ability to create schemas. That could be a separate tab. Schema Explorer.
-
-### Object Definitions
-
-#### Credential Offer
-
-#### Credential Definition
-
-#### Credential Request
