@@ -20,7 +20,11 @@
                     </div>
                     <div class="w3-cell" style="display: block;margin: auto;">
                         <%if(relationship.metadata.name) {%>
-                        <p><b><%=relationship.metadata.name%></b></p>
+                        <p><b><%=relationship.metadata.name%></b>
+                            <!--<a class="w3-btn w3-white" onclick="startChat(<%=relationship.their_did%>)">-->
+                                <!--<i class="fa fa-comments fa-2x"></i>-->
+                            <!--</a>-->
+                        </p>
                         <%}%>
                         <p>My Did: <%=relationship.my_did%></p>
                         <p>Their Did: <%=relationship.their_did%></p>
@@ -35,7 +39,9 @@
                                             <p><%=proof.request.requested_attributes[attr].name%>: <%=proof.requested_proof.revealed_attrs[attr].raw%></p>
                                         <%}%>
                                     </div>
-                                    <button class="w3-btn w3-white w3-border" style="display:block;margin: 20px 20px;height: 100px;width:100px;" type="submit">Validate</button>
+                                    <div class="w3-bar-item">
+                                        <button class="w3-btn w3-white w3-border" style="display:block;margin: 20px 20px;height: 100px;width:100px;" type="submit" onclick="validateProof(this.parentNode, <%=JSON.stringify(proof)%>)">Validate</button>
+                                    </div>
                                 </div>
                                 <br><br>
                             <%}%>

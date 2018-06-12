@@ -187,6 +187,26 @@
                 console.log('showing div: ', id);
                 document.getElementById(id).style.display = "block";
             }
+
+            function validateProof(div, proof) {
+                div.innerHTML = '<i class="fa fa-spinner fa-spin" style="font-size:100px;"></i>'
+                let xhttp = new XMLHttpRequest();
+                xhttp.open('POST', '/api/proofs/validate', true);
+                xhttp.setRequestHeader('Content-Type', 'application/json');
+                console.log(proof);
+                xhttp.send(JSON.stringify(proof));
+                xhttp.onload = function() {
+                    console.log(xhttp);
+                    if(xhttp.status === 200) {
+                        console.log("Validation succeeded");
+                        div.innerHTML = '<i class="fa fa-check" style="color:green;font-size:120px;"></i>'
+                    } else {
+                        div.innerHTML = '<i class="fa fa-times" style="color:red;font-size:120px;"></i>'
+                        console.log("Validation failed");
+                    }
+                }
+            }
+
         </script>
         <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
         <script src="https://code.jquery.com/jquery-1.11.1.js"></script>

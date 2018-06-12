@@ -141,6 +141,11 @@ exports.validateAndStoreProof = async function(message) {
     }
 };
 
+exports.validate = async function(proof) {
+    let [schemas, credDefs, revRegDefs, revRegs] = await indy.pool.verifierGetEntitiesFromLedger(proof.identifiers);
+    return await sdk.verifierVerifyProof(proof.request, proof, schemas, credDefs, revRegDefs, revRegs);
+};
+
 function randomNonce() {
     return Math.floor(Math.random() * Math.floor(Number.MAX_SAFE_INTEGER)).toString() + Math.floor(Math.random() * Math.floor(Number.MAX_SAFE_INTEGER)).toString();
 }
