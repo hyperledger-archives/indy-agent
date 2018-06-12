@@ -6,6 +6,7 @@
         <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-black.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.min.css">
         <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="/res/sovrin.css">
     </head>
     <body>
         <!-- Header -->
@@ -55,33 +56,27 @@
 
               <!-- relationships page -->
             <div id="relationships" class="tab" >
-                <p>My Connections</p>
+                <h3 id="agent_name_header"></h3>
+                <div id='wrapper'>
+                    <div id='connections-wrapper'></div>
 
-                <h3 id="agent_name_header">{{ agent_name }}</h3>
+                    <form action="/indy/request" method="post">
+                       Name:
+                        <input id="send_name" type="text" name="agent_name" value="Default">
+                        Endpoint:<br>
+                      <input id="send_endpoint" type="text" name="endpoint" value="http://localhost:8080">
+                      <br><br>
+                      <button id="send_request" type="button">Send Request</button>
+                    </form>
 
-                <form action="/indy/request" method="post">
-                   Name:
-                    <input type="text" name="agent_name" value="Default">
-                    Endpoint:<br>
-                  <input id="send_endpoint" type="text" name="endpoint" value="http://localhost:8080">
-                  <br><br>
-                  <button id="send_request" type="button">Send Request</button>
-                </form>
-                <h4>Connections</h4>
-                <ul>
-                    {% for conn in connections %}
-                        <li>{{ conn }}</li>
-                    {% endfor %}
-                </ul>
-                <br> <br>
-                <h4>Requests</h4>
-                <ul>
-                    {% for req in requests %}
-                    <li>{{ req }} <a href="/indy/accept/{{ req }}">accept</a></li>
-                    {% endfor %}
-                </ul>
+                    <h4>Requests</h4>
+                    <ul>
+                        {% for req in requests %}
+                        <li>{{ req }} <a href="/indy/accept/{{ req }}">accept</a></li>
+                        {% endfor %}
+                    </ul>
 
-
+                </div>
             </div>
 
               <!-- messages page -->
@@ -127,6 +122,17 @@
 
 
         </script>
+        <script id="connection-template" type="text/x-handlebars-template">
+            <div id='connections'>
+            {{#each connections}}
+                <div class='connection {{status}}'>
+                  <span class='avatar circle'></span>
+                  <p class='name'>{{name}}</p>
+                </div>
+            {{/each}}
+            </div>
+        </script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.11/handlebars.min.js"></script>
         <script src="/res/indy-agent.js"></script>
     </body>
 </html>

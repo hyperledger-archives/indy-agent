@@ -61,7 +61,7 @@ ROUTES = [
     web.get('/indy/accept/{did}', connection.handle_request_accepted),
     #web.get('/indy/requests', site_handlers.requests),
     web.post('/indy/init', init.initialize_agent),
-    web.static('/res', 'view/res')
+    web.static('/res', 'view/res', show_index=True)
 ]
 
 AGENT.add_routes(ROUTES)

@@ -15,6 +15,12 @@ async def handle_request_received(msg, agent):
     """ Handle reception of request, storing to be accepted later.
     """
     agent.received_requests[msg.did] = Serializer.pack(msg)
+    return {
+            'type': 'CONN_REQ_RECV',
+            'data': {
+                    'owner': msg.data['owner']
+                }
+            }
 
 
 async def handle_response(msg, agent):
@@ -122,6 +128,7 @@ async def send_request(msg, agent):
 
     req_data = msg.data
 
+    conn_name = req_data['name']
     our_endpoint = agent.endpoint
     endpoint = req_data['endpoint']
     wallet_handle = agent.wallet_handle
@@ -148,7 +155,8 @@ async def send_request(msg, agent):
     )
 
     # add to queue
-    agent.connections[endpoint] = {
+    agent.connections[my_did] = {
+        "name": conn_name,
         "endpoint": endpoint,
         "time": str(datetime.datetime.now()).split(' ')[1].split('.')[0],
         "status": "pending"

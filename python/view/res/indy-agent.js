@@ -4,9 +4,9 @@
     var msg_router = {
         routes: [],
         route:
-            function(msg) {
+            function(socket, msg) {
                 if (msg.type in this.routes) {
-                    this.routes[msg.type](msg.data);
+                    this.routes[msg.type](socket, msg.data);
                 } else {
                     console.log('Message from server without registered route: ' + JSON.stringify(msg));
                 }
@@ -18,7 +18,9 @@
     };
     // }}}
 
-    function ui_connect(event) {
+    const connection_template = Handlebars.compile(document.getElementById('connection-template').innerHTML);
+
+    function ui_connect(socket, msg) {
         socket.send(JSON.stringify(
             {
                 "type": "UI_CONNECT",
@@ -28,11 +30,12 @@
         ));
     }
 
-    function send_request(event) {
+    function send_request(socket, event) {
         send_req_msg = {
             type: "SEND_REQ",
             did: null,
             data: {
+                name: document.getElementById('send_name').value,
                 endpoint: document.getElementById('send_endpoint').value
             }
         }
@@ -40,7 +43,7 @@
         event.stopPropagation();
     }
 
-    function agent_init(event) {
+    function agent_init(socket, event) {
         init_message = {
             type: "AGENT_INIT",
             did: null,
@@ -54,34 +57,54 @@
         event.stopPropagation();
     }
 
-    function recv_state(state) {
-        document.getElementById('agent_name').value = state.agent_name;
-        document.getElementById('agent_name_header').value = state.agent_name;
+    function conn_req_recv(socket, msg) {
+        document.getElementById('connections').innerHTML += '<li>' + msg.owner + '</li>';
     }
+
+    function recv_state(socket, state) {
+        document.getElementById('agent_name').value = state.agent_name;
+        document.getElementById('agent_name_header').innerHTML = state.agent_name;
+        conn_wrapper = document.getElementById('connections-wrapper');
+        console.log(state.connections);
+        console.log(connection_template);
+        context = {'connections': state.connections};
+        console.log(context);
+        content = connection_template(context);
+        console.log(content);
+        conn_wrapper.innerHTML = content;
+
+    }
+
     msg_router.register('AGENT_STATE', recv_state);
-
-    document.getElementById('send_request').addEventListener(
-        "click",
-        send_request
-    );
-
-    document.getElementById('agent_init').addEventListener(
-        "click",
-        agent_init
-    );
-
+    msg_router.register('CONN_REQ_RECV', conn_req_recv);
 
     // Create WebSocket connection.
     const socket = new WebSocket('ws://localhost:8080/ws');
 
     // Connection opened
-    socket.addEventListener('open', ui_connect);
+    socket.addEventListener('open', function(event) {
+        ui_connect(socket, event);
+    });
 
     // Listen for messages
     socket.addEventListener('message', function (event) {
         console.log('Routing: ' + event.data);
         msg = JSON.parse(event.data);
-        msg_router.route(msg);
+        msg_router.route(socket, msg);
     });
+
+    document.getElementById('send_request').addEventListener(
+        "click",
+        function (event) {
+            send_request(socket, event);
+        }
+    );
+
+    document.getElementById('agent_init').addEventListener(
+        "click",
+        function (event) {
+            agent_init(socket, event);
+        }
+    );
 
 })();

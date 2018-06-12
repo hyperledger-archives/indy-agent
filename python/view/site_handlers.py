@@ -7,27 +7,12 @@ import aiohttp_jinja2
 from aiohttp import web
 import aiohttp
 
-@aiohttp_jinja2.template('index.html')
 def index(request):
     """ Handler for GET /
 
         Uses template index.html
     """
-    agent = request.app['agent']
-    conns = agent.connections
-    reqs = agent.received_requests
-    owner = agent.owner
-    first = False
-    if owner is None or owner == '':
-        owner = 'Default'
-        first = True
-
-    return {
-        "agent_name": owner,
-        "connections": conns,
-        "requests": reqs,
-        "first": first
-    }
+    raise web.HTTPFound('/res/index.bootstrap.html')
 
 async def websocket_handler(request):
 
