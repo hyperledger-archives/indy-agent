@@ -11,6 +11,7 @@
 import asyncio
 import os
 import sys
+import json
 from aiohttp import web
 from aiohttp_index import IndexMiddleware
 import jinja2
@@ -76,6 +77,7 @@ async def message_process(agent):
     """
     msg_router = agent['msg_router']
     msg_receiver = agent['msg_receiver']
+    ui_event_queue = agent['ui_event_queue']
 
     await msg_router.register("CONN_REQ", connection.handle_request_received)
     await msg_router.register("CONN_RES", connection.handle_response)
@@ -87,14 +89,16 @@ async def message_process(agent):
         except Exception as e:
             print('Failed to unpack message: {}\n\nError: {}'.format(msg_bytes, e))
             continue
-        await msg_router.route(msg, agent['agent'])
+        res = await msg_router.route(msg, agent['agent'])
+        if res is not None:
+            await ui_event_queue.send(json.dumps(res))
 
 async def ui_event_process(agent):
     ui_router = agent['ui_router']
     ui_event_queue = agent['ui_event_queue']
 
     await ui_router.register("SEND_REQ", connection.send_request)
-    await ui_router.register("EDGE_CONNECT", ui.edge_connect)
+    await ui_router.register("UI_CONNECT", ui.ui_connect)
     await ui_router.register("AGENT_INIT", init.initialize_agent)
 
     while True:
@@ -107,7 +111,7 @@ async def ui_event_process(agent):
         msg = Serializer.unpack(msg_bytes)
         res = await ui_router.route(msg, agent['agent'])
         if res is not None:
-            await ui_event_queue.send(res)
+            await ui_event_queue.send(json.dumps(res))
 
 try:
     print('===== Starting Server on: http://localhost:{} ====='.format(PORT))

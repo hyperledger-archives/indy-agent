@@ -18,10 +18,10 @@
     };
     // }}}
 
-    function edge_connect(event) {
+    function ui_connect(event) {
         socket.send(JSON.stringify(
             {
-                "type": "EDGE_CONNECT",
+                "type": "UI_CONNECT",
                 "did": null,
                 "data": null
             }
@@ -75,7 +75,7 @@
     const socket = new WebSocket('ws://localhost:8080/ws');
 
     // Connection opened
-    socket.addEventListener('open', edge_connect);
+    socket.addEventListener('open', ui_connect);
 
     // Listen for messages
     socket.addEventListener('message', function (event) {
