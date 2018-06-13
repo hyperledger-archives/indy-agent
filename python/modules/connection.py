@@ -169,6 +169,8 @@ async def send_request(msg, agent):
             print(resp.status)
             print(await resp.text())
 
+    return {'type': 'CONN_REQ_SENT', 'did': None, 'data': agent.connections[my_did]}
+
 async def send_response(to_did, agent):
     """ sends a connection response should be anon_encrypted.
 

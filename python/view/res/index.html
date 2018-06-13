@@ -6,7 +6,7 @@
         <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-black.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.min.css">
         <link rel="stylesheet" href="style.css">
-        <link rel="stylesheet" href="/res/sovrin.css">
+        <link rel="stylesheet" href="/sovrin.css">
     </head>
     <body>
         <!-- Header -->
@@ -122,7 +122,7 @@
 
 
         </script>
-        <script id="connection-template" type="text/x-handlebars-template">
+        <script id="connections-template" type="text/x-handlebars-template">
             <div id='connections'>
             {{#each connections}}
                 <div class='connection {{status}}'>
@@ -132,7 +132,13 @@
             {{/each}}
             </div>
         </script>
+        <script id="connection-template" type="text/x-handlebars-template">
+            <div class='connection {{status}}'>
+              <span class='avatar circle'></span>
+              <p class='name'>{{name}}</p>
+            </div>
+        </script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.11/handlebars.min.js"></script>
-        <script src="/res/indy-agent.js"></script>
+        <script src="/indy-agent.js"></script>
     </body>
 </html>

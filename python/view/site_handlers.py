@@ -12,7 +12,7 @@ def index(request):
 
         Uses template index.html
     """
-    raise web.HTTPFound('/res/index.bootstrap.html')
+    raise web.HTTPFound('/index.bootstrap.html')
 
 async def websocket_handler(request):
 

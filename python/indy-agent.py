@@ -53,15 +53,14 @@ aiohttp_jinja2.setup(
 )
 
 ROUTES = [
-    web.get('/', site_handlers.index),
     web.get('/ws', AGENT['ui_event_queue'].ws_handler),
+    web.static('/', 'view/res', show_index=True),
     web.post('/indy', AGENT['msg_receiver'].handle_message),
     web.post('/indy/request', connection.send_request),
     #web.get('/indy/connections', site_handlers.connections),
     web.get('/indy/accept/{did}', connection.handle_request_accepted),
     #web.get('/indy/requests', site_handlers.requests),
-    web.post('/indy/init', init.initialize_agent),
-    web.static('/res', 'view/res', show_index=True)
+    web.post('/indy/init', init.initialize_agent)
 ]
 
 AGENT.add_routes(ROUTES)
