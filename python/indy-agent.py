@@ -44,22 +44,11 @@ AGENT['ui_router'] = Router()
 
 AGENT['agent'] = Agent()
 
-# template engine setup
-aiohttp_jinja2.setup(
-    AGENT,
-    loader=jinja2.FileSystemLoader(
-        os.path.realpath('view/templates/')
-    )
-)
-
 ROUTES = [
     web.get('/ws', AGENT['ui_event_queue'].ws_handler),
-    web.static('/', 'view/res', show_index=True),
+    web.get('/', ui.root),
+    web.static('/res', 'view/res'),
     web.post('/indy', AGENT['msg_receiver'].handle_message),
-    web.post('/indy/request', connection.send_request),
-    #web.get('/indy/connections', site_handlers.connections),
-    web.get('/indy/accept/{did}', connection.handle_request_accepted),
-    #web.get('/indy/requests', site_handlers.requests),
     web.post('/indy/init', init.initialize_agent)
 ]
 

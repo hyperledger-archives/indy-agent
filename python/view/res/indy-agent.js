@@ -32,12 +32,17 @@
         },
         update:
         function (socket, state) {
-            document.getElementById('agent_name').value = state.agent_name;
-            document.getElementById('agent_name_header').innerHTML = state.agent_name;
-            conn_wrapper = document.getElementById('connections-wrapper');
-            context = {'connections': state.connections};
-            content = connections_template(context);
-            conn_wrapper.innerHTML = content;
+            if (state.initialized == false) {
+                showTab('login');
+            } else {
+                document.getElementById('agent_name').value = state.agent_name;
+                document.getElementById('agent_name_header').innerHTML = state.agent_name;
+                conn_wrapper = document.getElementById('connections-wrapper');
+                context = {'connections': state.connections};
+                content = connections_template(context);
+                conn_wrapper.innerHTML = content;
+                showTab('relationships');
+            }
         },
         inititialize:
         function (socket) {
@@ -46,14 +51,22 @@
                 did: null,
                 data: {
                     name: document.getElementById('agent_name').value,
-                    endpoint: document.getElementById('agent_endpoint').value
+                    passphrase: document.getElementById('passphrase').value
                 }
             };
             socket.send(JSON.stringify(init_message));
-            document.getElementById('id01').style.display = 'none';
         },
     };
     // }}}
+
+    function showTab(id) {
+        let i;
+        let x = document.getElementsByClassName("tab");
+        for (i = 0; i < x.length; i++) {
+            x[i].style.display = "none";
+        }
+        document.getElementById(id).style.display = "block";
+    }
 
     // Connections {{{
     var connections = {
