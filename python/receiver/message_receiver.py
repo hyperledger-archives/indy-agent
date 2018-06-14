@@ -13,8 +13,9 @@ class MessageReceiver():
     async def handle_message(self, request):
         """ Put to message queue and return 202 to client.
         """
-        if request.app['agent'].initialized:
+        if not request.app['agent'].initialized:
             raise web.HTTPUnauthorized()
+
         msg = await request.read()
         await self.msg_queue.put(msg)
         raise web.HTTPAccepted()

@@ -58,44 +58,47 @@
 
         <!-- relationships page -->
         <div id="relationships" class="tab" >
-            <h3 id="agent_name_header"></h3>
-            <div id='wrapper'>
-                <!-- Button trigger modal -->
-                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#send_req_modal">
-                    Send Connection Request
-                </button>
-
-                <!-- Modal -->
-                <div class="modal fade" id="send_req_modal" tabindex="-1" role="dialog" aria-labelledby="send_req_modal_label" aria-hidden="true">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="send_req_modal_label">Send Connection Request</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                <form>
-                                    <div class="form-group">
-                                        <label for="send_name">Connection Name</label>
-                                        <input type="text" class="form-control" id="send_name" aria-describedby="emailHelp" placeholder="Name">
-                                        <small id="emailHelp" class="form-text text-muted">This will name will be used to identify the connection.</small>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="send_endpoint">Endpoint</label>
-                                        <input type="text" class="form-control" id="send_endpoint" placeholder="Endpoint">
-                                    </div>
-                                </form>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                                <button id="send_request" type="button" class="btn btn-primary">Send Request</button>
-                            </div>
+            <!-- Modal -->
+            <div class="modal fade" id="send_req_modal" tabindex="-1" role="dialog" aria-labelledby="send_req_modal_label" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="send_req_modal_label">Send Connection Request</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form>
+                                <div class="form-group">
+                                    <label for="send_name">Connection Name</label>
+                                    <input type="text" class="form-control" id="send_name" aria-describedby="emailHelp" placeholder="Name">
+                                    <small id="emailHelp" class="form-text text-muted">This will name will be used to identify the connection.</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="send_endpoint">Endpoint</label>
+                                    <input type="text" class="form-control" id="send_endpoint" placeholder="Endpoint">
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button id="send_request" type="button" class="btn btn-primary" data-dismiss="modal">Send Request</button>
                         </div>
                     </div>
                 </div>
-                <div id='connections-wrapper'></div>
+            </div>
+            <h3 id="agent_name_header"></h3>
+            <div id='wrapper' class="row">
+                <div class="col-3">
+                    <div id='connections-wrapper'></div>
+                    <!-- Button trigger modal -->
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#send_req_modal">
+                        Send Connection Request
+                    </button>
+                </div>
+                <div class="col-8">
+                </div>
             </div>
         </div>
     </main>
@@ -116,9 +119,9 @@
     <script>
     </script>
     <script id="connections-template" type="text/x-handlebars-template">
-        <div id='connections'>
+        <div id='connections' class='list-group-flush'>
         {{#each connections}}
-            <div class='connection {{status}}'>
+            <div class='list-group-item flex-column disabled'>
               <span class='avatar circle'></span>
               <p class='name'>{{name}}</p>
             </div>
@@ -126,7 +129,7 @@
         </div>
     </script>
     <script id="connection-template" type="text/x-handlebars-template">
-        <div class='connection {{status}}'>
+        <div class='list-group-item flex-column disabled'>
           <span class='avatar circle'></span>
           <p class='name'>{{name}}</p>
         </div>
