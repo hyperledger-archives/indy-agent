@@ -40,9 +40,10 @@ router.get('/', auth.isLoggedIn, async function (req, res) {
         relationships: relationships,
         credentials: credentials,
         schemas: await indy.issuer.getSchemas(),
-        credentialDefinitions: await indy.did.getPublicDidAttribute('credential_definitions'),
-        publicDid: await indy.did.getPublicDid(),
-        proofRequests: proofRequests
+        credentialDefinitions: await indy.did.getEndpointDidAttribute('credential_definitions'),
+        endpointDid: await indy.did.getEndpointDid(),
+        proofRequests: proofRequests,
+        name: config.userInformation.name
     });
 
     for(let prKey of Object.keys(proofRequests)) {
@@ -51,12 +52,14 @@ router.get('/', auth.isLoggedIn, async function (req, res) {
 });
 
 router.get('/login', function(req, res) {
-   res.render('login');
+   res.render('login', {
+       name: config.userInformation.name
+   });
 });
 
 router.post('/login', async function(req, res) {
-    if(req.body.username === config.loginInformation.username &&
-    req.body.password === config.loginInformation.password) {
+    if(req.body.username === config.userInformation.username &&
+    req.body.password === config.userInformation.password) {
         let token = uuid();
         req.session.token = token;
         req.session.save((err) => {

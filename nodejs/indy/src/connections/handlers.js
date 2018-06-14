@@ -10,5 +10,5 @@ exports.acknowledge = function (message) {
 };
 
 exports.request = function(message) {
-    return indy.connections.acceptRequest(message.message.publicDid, message.message.did, message.message.nonce);
+    return indy.connections.acceptRequest(message.message.endpointDid, message.message.did, message.message.nonce);
 };

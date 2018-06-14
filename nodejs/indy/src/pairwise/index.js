@@ -11,14 +11,9 @@ exports.getAll = async function () {
     let relationships = await sdk.listPairwise(await indy.wallet.get());
     for (let relationship of relationships) {
         relationship.metadata = JSON.parse(relationship.metadata);
-        if(relationship.metadata.first_name && relationship.metadata.last_name) {
-            relationship.metadata.name = `${relationship.metadata.first_name} ${relationship.metadata.last_name}`;
-        } else if(relationship.metadata.theirPublicDid) {
-            relationship.metadata.name = `Public DID: ${relationship.metadata.theirPublicDid}`;
-        } else {
-            relationship.metadata.name = null;
+        if(!relationship.metadata.name) {
+            relationship.metadata.name = `Endpoint DID: ${relationship.metadata.theirEndpointDid}`;
         }
-
     }
     return relationships;
 };
@@ -42,9 +37,18 @@ exports.addProof = async function(theirDid, proof, proofRequest) {
     proof.request = proofRequest;
     metadata.proofs.push(proof);
 
-    metadata = setAttr('first_name', metadata, proof, proofRequest);
-    metadata = setAttr('last_name', metadata, proof, proofRequest);
+    metadata = setAttr('name', metadata, proof, proofRequest);
 
+    await sdk.setPairwiseMetadata(await indy.wallet.get(), theirDid, JSON.stringify(metadata));
+};
+
+exports.pushAttribute = async function(theirDid, attribute, value) {
+    let pairwise = await exports.get(theirDid);
+    let metadata = JSON.parse(pairwise.metadata);
+    if(!metadata[attribute]) {
+        metadata[attribute] = [];
+    }
+    metadata[attribute].push(value);
     await sdk.setPairwiseMetadata(await indy.wallet.get(), theirDid, JSON.stringify(metadata));
 };
 

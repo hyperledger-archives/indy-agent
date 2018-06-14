@@ -2,7 +2,7 @@
 const sdk = require('indy-sdk');
 const indy = require('../../index.js');
 const config = require('../../../config');
-let publicDid;
+let endpointDid;
 let publicVerkey;
 let stewardDid;
 let stewardKey;
@@ -14,68 +14,68 @@ exports.createDid = async function (didInfoParam) {
     return await sdk.createAndStoreMyDid(await indy.wallet.get(), didInfo);
 };
 
-exports.getPublicDid = async function() {
-    if(!publicDid) {
+exports.getEndpointDid = async function() {
+    if(!endpointDid) {
         let dids = await sdk.listMyDidsWithMeta(await indy.wallet.get());
         for (let didinfo of dids) {
             let meta = JSON.parse(didinfo.metadata);
             if (meta && meta.primary) {
-                publicDid = didinfo.did;
+                endpointDid = didinfo.did;
             }
         }
-        if(!publicDid) {
-            await exports.createPublicDid();
+        if(!endpointDid) {
+            await exports.createEndpointDid();
         }
     }
-    return publicDid;
+    return endpointDid;
 };
 
-exports.createPublicDid = async function () {
+exports.createEndpointDid = async function () {
     await setupSteward();
 
-    [publicDid, publicVerkey] = await sdk.createAndStoreMyDid(await indy.wallet.get(), {});
+    [endpointDid, publicVerkey] = await sdk.createAndStoreMyDid(await indy.wallet.get(), {});
     let didMeta = JSON.stringify({
         primary: true,
         schemas: [],
         credential_definitions: []
     });
-    await sdk.setDidMetadata(await indy.wallet.get(), publicDid, didMeta);
+    await sdk.setDidMetadata(await indy.wallet.get(), endpointDid, didMeta);
 
-    await indy.pool.sendNym(await indy.pool.get(), stewardWallet, stewardDid, publicDid, publicVerkey, "TRUST_ANCHOR");
-    await indy.pool.setEndpointForDid(publicDid, config.publicDidEndpoint);
+    await indy.pool.sendNym(await indy.pool.get(), stewardWallet, stewardDid, endpointDid, publicVerkey, "TRUST_ANCHOR");
+    await indy.pool.setEndpointForDid(endpointDid, config.endpointDidEndpoint);
     await indy.crypto.createMasterSecret();
 
     await issueGovernmentIdCredential();
 };
 
-exports.setPublicDidAttribute = async function (attribute, item) {
-    let metadata = await sdk.getDidMetadata(await indy.wallet.get(), publicDid);
+exports.setEndpointDidAttribute = async function (attribute, item) {
+    let metadata = await sdk.getDidMetadata(await indy.wallet.get(), endpointDid);
     metadata = JSON.parse(metadata);
     metadata[attribute] = item;
-    await sdk.setDidMetadata(await indy.wallet.get(), publicDid, JSON.stringify(metadata));
+    await sdk.setDidMetadata(await indy.wallet.get(), endpointDid, JSON.stringify(metadata));
 };
 
 
-exports.pushPublicDidAttribute = async function (attribute, item) {
-    let metadata = await sdk.getDidMetadata(await indy.wallet.get(), publicDid);
+exports.pushEndpointDidAttribute = async function (attribute, item) {
+    let metadata = await sdk.getDidMetadata(await indy.wallet.get(), endpointDid);
     metadata = JSON.parse(metadata);
     if (!metadata[attribute]) {
         metadata[attribute] = [];
     }
     metadata[attribute].push(item);
-    await sdk.setDidMetadata(await indy.wallet.get(), publicDid, JSON.stringify(metadata));
+    await sdk.setDidMetadata(await indy.wallet.get(), endpointDid, JSON.stringify(metadata));
 };
 
-exports.getPublicDidAttribute = async function (attribute) {
-    let metadata = await sdk.getDidMetadata(await indy.wallet.get(), publicDid);
+exports.getEndpointDidAttribute = async function (attribute) {
+    let metadata = await sdk.getDidMetadata(await indy.wallet.get(), endpointDid);
     metadata = JSON.parse(metadata);
     return metadata[attribute];
 };
 
-exports.getTheirPublicDid = async function (theirDid) {
+exports.getTheirEndpointDid = async function (theirDid) {
     let pairwise = await sdk.getPairwise(await indy.wallet.get(), theirDid);
     let metadata = JSON.parse(pairwise.metadata);
-    return metadata.theirPublicDid;
+    return metadata.theirEndpointDid;
 };
 
 async function setupSteward() {
@@ -100,49 +100,48 @@ async function setupSteward() {
 
 async function issueGovernmentIdCredential() {
     let schemaName = 'Government-ID';
-    let schemaVersion = '1.0';
+    let schemaVersion = '1.1';
     let signatureType = 'CL';
-    let [govIdSchemaId, govIdSchema] = await sdk.issuerCreateSchema(stewardDid, schemaName, schemaVersion, [
-        'first_name',
-        'middle_name',
-        'last_name',
-        'age',
-        'gender',
-        'ssn'
-    ]);
+    let govIdSchema;
+    let govIdSchemaId = `${stewardDid}:2:${schemaName}:${schemaVersion}`;
+    try {
+        govIdSchema = await indy.issuer.getSchema(govIdSchemaId);
+    } catch(e) {
+        [govIdSchemaId, govIdSchema] = await sdk.issuerCreateSchema(stewardDid, schemaName, schemaVersion, [
+            'name',
+            'email',
+            'tax_id'
+        ]);
 
-    await indy.issuer.sendSchema(await indy.pool.get(), stewardWallet, stewardDid, govIdSchema);
-    govIdSchema = await indy.issuer.getSchema(govIdSchemaId);
+        await indy.issuer.sendSchema(await indy.pool.get(), stewardWallet, stewardDid, govIdSchema);
+        govIdSchema = await indy.issuer.getSchema(govIdSchemaId);
+    }
 
     let govIdCredDef;
-    [govIdCredDefId, govIdCredDef] = await sdk.issuerCreateAndStoreCredentialDef(stewardWallet, stewardDid, govIdSchema, 'GOVID', signatureType, '{"support_revocation": false}');
-    exports.setPublicDidAttribute('govIdCredDefId', govIdCredDefId);
+    try {
+        govIdCredDef = await indy.issuer.getCredDef(await indy.pool.get(), await indy.did.getEndpointDid(), `blah`);
+    } catch(e) {
+        [govIdCredDefId, govIdCredDef] = await sdk.issuerCreateAndStoreCredentialDef(stewardWallet, stewardDid, govIdSchema, 'GOVID', signatureType, '{"support_revocation": false}');
+        await indy.issuer.sendCredDef(await indy.pool.get(), stewardWallet, stewardDid, govIdCredDef);
+    }
 
-    await indy.issuer.sendCredDef(await indy.pool.get(), stewardWallet, stewardDid, govIdCredDef);
+    exports.setEndpointDidAttribute('govIdCredDefId', govIdCredDefId);
+
 
     let govIdCredOffer = await sdk.issuerCreateCredentialOffer(stewardWallet, govIdCredDefId);
-    let [govIdCredRequest, govIdRequestMetadata] = await sdk.proverCreateCredentialReq(await indy.wallet.get(), publicDid, govIdCredOffer, govIdCredDef, await indy.did.getPublicDidAttribute('master_secret_id'));
+    let [govIdCredRequest, govIdRequestMetadata] = await sdk.proverCreateCredentialReq(await indy.wallet.get(), endpointDid, govIdCredOffer, govIdCredDef, await indy.did.getEndpointDidAttribute('master_secret_id'));
 
 
     let govIdValues = {
-        "first_name": {"raw": config.personalInformation.first_name, "encoded": "12345678987654321"},
-        "middle_name": {"raw": config.personalInformation.middle_name, "encoded": "12345678987654321"},
-        "last_name": {"raw": config.personalInformation.last_name, "encoded": "12345678987654321"},
-        "age": {"raw": config.personalInformation.age, "encoded": "12345678987654321"},
-        "gender": {"raw": config.personalInformation.gender, "encoded": "12345678987654321"},
-        "ssn": {"raw": config.personalInformation.ssn, "encoded": "12345678987654321"}
+        name: {"raw": config.userInformation.name, "encoded": indy.credentials.encode(config.userInformation.name)},
+        email: {"raw": config.userInformation.email, "encoded": indy.credentials.encode(config.userInformation.email)},
+        tax_id: {"raw": config.userInformation.tax_id, "encoded": indy.credentials.encode(config.userInformation.tax_id)},
     };
 
-
-    // let govIdValues = {
-    //     "first_name": {"raw": "Alice", "encoded": "1139481716457488690172217916278103335"},
-    //     "last_name": {"raw": "Garcia", "encoded": "5321642780241790123587902456789123452"}
-    // };
-
     let [govIdCredential] = await sdk.issuerCreateCredential(stewardWallet, govIdCredOffer, govIdCredRequest, govIdValues);
-    await sdk.proverStoreCredential(await indy.wallet.get(), null, govIdRequestMetadata, govIdCredential, govIdCredDef);
+    let res = await sdk.proverStoreCredential(await indy.wallet.get(), null, govIdRequestMetadata, govIdCredential, govIdCredDef);
 }
 
 exports.getGovIdCredDefId = async function() {
-    return await exports.getPublicDidAttribute('govIdCredDefId');
+    return await exports.getEndpointDidAttribute('govIdCredDefId');
 };

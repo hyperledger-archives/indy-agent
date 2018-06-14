@@ -61,12 +61,12 @@ async function mkdir(filePath) {
 }
 
 exports.setEndpointForDid = async function (did, endpoint) {
-    let attributeRequest = await sdk.buildAttribRequest(await indy.did.getPublicDid(), did, null, {endpoint: {ha: endpoint}}, null);
-    await sdk.signAndSubmitRequest(await indy.pool.get(), await indy.wallet.get(), await indy.did.getPublicDid(), attributeRequest);
+    let attributeRequest = await sdk.buildAttribRequest(await indy.did.getEndpointDid(), did, null, {endpoint: {ha: endpoint}}, null);
+    await sdk.signAndSubmitRequest(await indy.pool.get(), await indy.wallet.get(), await indy.did.getEndpointDid(), attributeRequest);
 };
 
 exports.getEndpointForDid = async function (did) {
-    let getAttrRequest = await sdk.buildGetAttribRequest(await indy.did.getPublicDid(), did, 'endpoint', null, null);
+    let getAttrRequest = await sdk.buildGetAttribRequest(await indy.did.getEndpointDid(), did, 'endpoint', null, null);
     let res = await waitUntilApplied(pool, getAttrRequest, data => data['result']['data'] != null);
     return JSON.parse(res.result.data).endpoint.ha;
 };
@@ -81,7 +81,7 @@ exports.proverGetEntitiesFromLedger = async function(identifiers) {
         let receivedSchema = await indy.issuer.getSchema(item['schema_id']);
         schemas[receivedSchema.id] = receivedSchema;
 
-        let [receivedCredDefId, receivedCredDef] = await indy.issuer.getCredDef(await indy.pool.get(), await indy.did.getPublicDid(), item['cred_def_id']);
+        let [receivedCredDefId, receivedCredDef] = await indy.issuer.getCredDef(await indy.pool.get(), await indy.did.getEndpointDid(), item['cred_def_id']);
         credDefs[receivedCredDefId] = receivedCredDef;
 
         if (item.rev_reg_seq_no) {
@@ -103,7 +103,7 @@ exports.verifierGetEntitiesFromLedger = async function(identifiers) {
         let receivedSchema = await indy.issuer.getSchema(item['schema_id']);
         schemas[receivedSchema.id] = receivedSchema;
 
-        let [receivedCredDefId, receivedCredDef] = await indy.issuer.getCredDef(await indy.pool.get(), await indy.did.getPublicDid(), item['cred_def_id']);
+        let [receivedCredDefId, receivedCredDef] = await indy.issuer.getCredDef(await indy.pool.get(), await indy.did.getEndpointDid(), item['cred_def_id']);
         credDefs[receivedCredDefId] = receivedCredDef;
 
         if (item.rev_reg_seq_no) {

@@ -16,10 +16,10 @@ router.post('/send_message', auth.isLoggedIn, async function (req, res) {
 });
 
 router.post('/send_connection_request', auth.isLoggedIn, async function (req, res) {
-    let theirPublicDid = req.body.did;
-    let connectionRequest = await indy.connections.prepareRequest(theirPublicDid);
+    let theirEndpointDid = req.body.did;
+    let connectionRequest = await indy.connections.prepareRequest(theirEndpointDid);
 
-    await indy.crypto.sendAnonCryptedMessage(theirPublicDid, connectionRequest);
+    await indy.crypto.sendAnonCryptedMessage(theirEndpointDid, connectionRequest);
     res.redirect('/#relationships');
 });
 
@@ -55,7 +55,7 @@ router.put('/connections/request', auth.isLoggedIn, async function (req, res) {
     let messageId = req.body.messageId;
     let message = indy.store.messages.getMessage(messageId);
     indy.store.messages.deleteMessage(messageId);
-    await indy.connections.acceptRequest(name, message.message.message.publicDid, message.message.message.did, message.message.message.nonce);
+    await indy.connections.acceptRequest(name, message.message.message.endpointDid, message.message.message.did, message.message.message.nonce);
     res.redirect('/#relationships');
 });
 
@@ -73,13 +73,13 @@ router.post('/messages/delete', auth.isLoggedIn, function(req, res) {
 });
 
 router.post('/proofs/accept', auth.isLoggedIn, async function(req, res) {
-    await indy.proofs.acceptRequest(req.body.messageId);
-    res.redirect('/#messages');
+        await indy.proofs.acceptRequest(req.body.messageId);
+        res.redirect('/#messages');
 });
 
 router.post('/proofs/send_request', auth.isLoggedIn, async function(req, res) {
     let myDid = await indy.pairwise.getMyDid(req.body.their_relationship_did);
-    await indy.proofs.sendRequest(myDid, req.body.their_relationship_did, req.body.proof_request_id);
+    await indy.proofs.sendRequest(myDid, req.body.their_relationship_did, req.body.proof_request_id, req.body.manual_entry);
     res.redirect('/#proofs');
 });
 

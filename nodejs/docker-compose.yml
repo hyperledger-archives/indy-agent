@@ -1,0 +1,88 @@
+version: '3'
+services:
+  #
+  # Agents
+  #
+  alice:
+    image: indy-agentjs
+    command: 'bash -c ''npm start'''
+    environment:
+      - PORT=3000
+      - NAME=Alice
+      - EMAIL=alice@faber.edu
+      - PASSWORD=123
+      - USERNAME=alice
+      - PUBLIC_DID_ENDPOINT=${DOCKERHOST}:3000
+      - DOCKERHOST=${DOCKERHOST}
+      - RUST_LOG=${RUST_LOG}
+      - TEST_POOL_IP=${TEST_POOL_IP}
+    ports:
+      - 3000:3000
+
+  #
+  # 
+  bob:
+    image: indy-agentjs
+    command: 'bash -c ''npm start'''
+    environment:
+      - PORT=3001
+      - NAME=Bob
+      - EMAIL=bob@byu.edu
+      - PASSWORD=123
+      - USERNAME=bob
+      - PUBLIC_DID_ENDPOINT=${DOCKERHOST}:3001
+      - DOCKERHOST=${DOCKERHOST}
+      - RUST_LOG=${RUST_LOG}
+      - TEST_POOL_IP=${TEST_POOL_IP}
+    ports:
+      - 3001:3001
+
+  faber:
+      image: indy-agentjs
+      command: 'bash -c ''npm start'''
+      environment:
+        - PORT=3002
+        - NAME=Faber University
+        - EMAIL=admin@faber.edu
+        - PASSWORD=123
+        - USERNAME=faber
+        - PUBLIC_DID_ENDPOINT=${DOCKERHOST}:3002
+        - DOCKERHOST=${DOCKERHOST}
+        - RUST_LOG=${RUST_LOG}
+        - TEST_POOL_IP=${TEST_POOL_IP}
+      ports:
+        - 3002:3002
+
+
+  acme:
+      image: indy-agentjs
+      command: 'bash -c ''npm start'''
+      environment:
+        - PORT=3003
+        - NAME=Acme Corporation
+        - EMAIL=boss@acme.com
+        - PASSWORD=123
+        - USERNAME=acme
+        - PUBLIC_DID_ENDPOINT=${DOCKERHOST}:3003
+        - DOCKERHOST=${DOCKERHOST}
+        - RUST_LOG=${RUST_LOG}
+        - TEST_POOL_IP=${TEST_POOL_IP}
+      ports:
+        - 3003:3003
+
+
+  thrift:
+      image: indy-agentjs
+      command: 'bash -c ''npm start'''
+      environment:
+        - PORT=3004
+        - NAME=Thrift Bank
+        - EMAIL=owner@thrift.com
+        - PASSWORD=123
+        - USERNAME=thrift
+        - PUBLIC_DID_ENDPOINT=${DOCKERHOST}:3004
+        - DOCKERHOST=${DOCKERHOST}
+        - RUST_LOG=${RUST_LOG}
+        - TEST_POOL_IP=${TEST_POOL_IP}
+      ports:
+        - 3004:3004
