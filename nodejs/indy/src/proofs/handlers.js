@@ -9,4 +9,4 @@ exports.request = async function(message) {
 
 exports.proof = async function(message) {
     await indy.proofs.validateAndStoreProof(message);
-}
+};

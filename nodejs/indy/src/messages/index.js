@@ -4,7 +4,7 @@ const indy = require('../../index.js');
 const config = require('../../../config');
 const request = require('request-promise');
 
-// FIXME: Assumption: Their public did has an endpoint attribute
+// FIXME: Assumption: Their endpoint did has an endpoint attribute
 exports.sendMessage = function (endpoint, message) {
     let requestOptions = {
         uri: `http://${endpoint}/indy`,

@@ -9,6 +9,8 @@ export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-indy-agentjs}"
 
 export RUST_LOG=${RUST_LOG:-trace}
 
+export TEST_POOL_IP=${TEST_POOL_IP:-DOCKERHOST}
+
 # =================================================================================================================
 # Usage:
 # -----------------------------------------------------------------------------------------------------------------
@@ -24,9 +26,11 @@ usage () {
 
   start - Creates the application containers from the built images
           and starts the services based on the docker-compose.yml file.
-          Examples - first starts both agents, starts only "agent2"
+          Examples - first starts both agents, starts only "alice"
           $0 start
-          $0 start agent2
+          $0 start alice
+
+  open - Opens the necessary browser tabs for all 5 of the services
 
   stop - Stops the services.  This is a non-destructive process.  The containers
          are not deleted so they will be reused the next time you run start.
@@ -64,12 +68,28 @@ pushd ${SCRIPT_HOME} >/dev/null
 case "$1" in
   start)
       if [ -z "$2" ]; then
-        SVCS='agent1 agent2'
+        SVCS='alice bob faber acme thrift'
       else
         shift
         SVCS="$@"
       fi
       docker-compose up ${SVCS}
+    ;;
+  open)
+      if which open > /dev/null ; then
+         OPEN=open
+      elif which xdg-open > /dev/null ; then
+         OPEN=xdg-open
+      elif which gnome-open > /dev/null ; then
+         OPEN=gnome-open
+      else
+         echo "Could not find a suitable tool to open your browser.\nYou will need to manually open 5 browser tabs for localhost:3000 through localhost:3004"
+      fi
+      $OPEN http://localhost:3000
+      $OPEN http://localhost:3001
+      $OPEN http://localhost:3002
+      $OPEN http://localhost:3003
+      $OPEN http://localhost:3004
     ;;
   stop)
       docker-compose stop

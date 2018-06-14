@@ -80,13 +80,13 @@ exports.pendingRelationships = {
     init();
     return store.pendingRelationships;
   },
-  write: function (myNewDid, theirPublicDid, nonce) {
+  write: function (myNewDid, theirEndpointDid, nonce) {
     init();
     store.pendingRelationships.push({
       id: uuid(),
       timestamp: new Date(),
       myNewDid: myNewDid,
-      theirPublicDid: theirPublicDid,
+      theirEndpointDid: theirEndpointDid,
       nonce: nonce
     });
     syncChanges();

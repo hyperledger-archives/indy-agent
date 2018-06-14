@@ -2,8 +2,8 @@
 
 const config = {
 
-    // Change to your public did's endpoint
-    publicDidEndpoint: process.env.PUBLIC_DID_ENDPOINT,
+    // Change to your endpoint did's endpoint
+    endpointDidEndpoint: process.env.PUBLIC_DID_ENDPOINT,
 
     // IP Address of the running ledger
     testPoolIp: process.env.TEST_POOL_IP || '127.0.0.1',
@@ -12,24 +12,18 @@ const config = {
     port: process.env.PORT || 3000,
 
     // Optional: Give your wallet a unique name
-    walletName: process.env.WALLET_NAME || 'wallet',
+    walletName: `${process.env.USERNAME || 'alice'}_wallet`,
 
     // Optional: Give your pool config a unique name
     poolName: process.env.POOL_NAME || 'pool1',
 
     // This information is used to issue your "Government ID"
-    personalInformation: {
-        first_name: process.env.FIRST_NAME || "Alice",
-        middle_name: process.env.MIDDLE_NAME || "Rebecca",
-        last_name: process.env.LAST_NAME || "Garcia",
-        age: process.env.AGE || "38",
-        gender: process.env.GENDER || "F",
-        ssn: "123-45-6789"
-    },
-
-    loginInformation: {
-        username: 'test',
-        password: 'abc'
+    userInformation: {
+        name: process.env.NAME || 'Alice Garcia',
+        email: process.env.EMAIL || 'alice@faber.edu',
+        tax_id: process.env.TAX_ID || '123-45-6789',
+        username: process.env.USERNAME || 'alice',
+        password: process.env.PASSWORD || '123'
     },
 
     sessionSecret: "YUYFDISYFSIUOFYERTEWRTEWTWETRNNNMNJHKHFASDdyfiudayDAYIUSDFYASIOFOOASIUDFYEREAHLSKJFE57894502354354HJKAFDDFS"

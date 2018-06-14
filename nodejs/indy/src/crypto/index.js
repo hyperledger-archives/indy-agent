@@ -4,16 +4,16 @@ const indy = require('../../index.js');
 const uuid = require('uuid');
 
 exports.createMasterSecret = async function () {
-    let masterSecretId = await indy.did.getPublicDidAttribute('master_secret_id');
+    let masterSecretId = await indy.did.getEndpointDidAttribute('master_secret_id');
     if(!masterSecretId) {
         masterSecretId = uuid();
         await sdk.proverCreateMasterSecret(await indy.wallet.get(), masterSecretId);
-        await indy.did.setPublicDidAttribute('master_secret_id', masterSecretId);
+        await indy.did.setEndpointDidAttribute('master_secret_id', masterSecretId);
     }
 };
 
 exports.publicKeyAnonDecrypt = async function (message) {
-    return await exports.anonDecrypt(await indy.did.getPublicDid(), message);
+    return await exports.anonDecrypt(await indy.did.getEndpointDid(), message);
 };
 
 exports.anonCrypt = async function (did, message) {
@@ -59,5 +59,5 @@ exports.buildAuthcryptedMessage = async function (myDid, theirDid, messageType, 
 };
 
 exports.getMasterSecretId = async function() {
-    return await indy.did.getPublicDidAttribute('master_secret_id');
+    return await indy.did.getEndpointDidAttribute('master_secret_id');
 }

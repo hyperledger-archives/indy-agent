@@ -47,10 +47,10 @@ exports[MESSAGE_TYPES.SEND_MESSAGE] = async function(formElements) {
 exports[MESSAGE_TYPES.SEND_CONNECTION_REQUEST] = async function(req, res) {
     try {
         let name = req.body.name;
-        let theirPublicDid = req.body.did;
-        let connectionRequest = await indy.connections.prepareRequest(name, theirPublicDid);
+        let theirEndpointDid = req.body.did;
+        let connectionRequest = await indy.connections.prepareRequest(name, theirEndpointDid);
 
-        await indy.crypto.sendAnonCryptedMessage(theirPublicDid, connectionRequest);
+        await indy.crypto.sendAnonCryptedMessage(theirEndpointDid, connectionRequest);
         res.status(202).send();
     } catch(e) {
         res.status(500).send();
@@ -110,7 +110,7 @@ exports[MESSAGE_TYPES.CONNECTIONS_ACCEPT_REQUEST] = async function(req, res) {
         let messageId = req.body.messageId;
         let message = indy.store.messages.getMessage(messageId);
         indy.store.messages.deleteMessage(messageId);
-        await indy.connections.acceptRequest(name, message.message.message.publicDid, message.message.message.did, message.message.message.nonce);
+        await indy.connections.acceptRequest(name, message.message.message.endpointDid, message.message.message.did, message.message.message.nonce);
         res.status(202).send();
     } catch(e) {
         res.status(500).send();

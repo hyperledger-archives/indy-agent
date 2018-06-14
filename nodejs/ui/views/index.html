@@ -150,7 +150,7 @@
                     Name of New Relationship: <input class="w3-input" type="text" name="name" value="John Doe" required>
                 </div>
                 <div class="w3-section">
-                    Recipient's Public DID: <input class="w3-input" type="text" name="did" value="<%=publicDid%>" required>
+                    Recipient's Endpoint DID: <input class="w3-input" type="text" name="did" value="<%=endpointDid%>" required>
                 </div>
                 <input class="w3-btn w3-white w3-border" type="submit" value="Send Connection Request">
             </form>
@@ -163,7 +163,7 @@
         <div class="w3-half w3-right">
             <form class="w3-container w3-card-4 w3-padding" onsubmit="sendSovrinMessage('urn:sovrin:agent:message_type:sovrin.org/ui/send_message', this)">
                 <div class="w3-section">
-                    Recipient: <input id="send_message_form_did" class="w3-input" type="text" name="did" value="<%=publicDid%>">
+                    Recipient: <input id="send_message_form_did" class="w3-input" type="text" name="did" value="<%=endpointDid%>">
                 </div>
                 <div class="w3-section">
                     Message: <textarea id="send_message_form_message" class="w3-input" name="message" rows="6" >{
@@ -177,7 +177,7 @@
     </div>
 </div>
 <footer style="position:fixed;bottom:0;background: black;width: 100%;">
-    <p style="text-align: center;color: white;">My Public DID: <%=publicDid%></p>
+    <p style="text-align: center;color: white;">My Endpoint DID: <%=endpointDid%></p>
 </footer>
 <script>
 

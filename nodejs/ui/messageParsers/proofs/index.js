@@ -3,13 +3,12 @@ const indy = require('../../../indy');
 
 exports.request = async function(message) {
     let theirDid = message.message.origin;
-    let firstName = await indy.pairwise.getAttr(theirDid, 'first_name');
-    let lastName = await indy.pairwise.getAttr(theirDid, 'last_name');
-    let publicDid = await indy.did.getTheirPublicDid(theirDid);
-    if(firstName && lastName) {
-        message.relationshipName = `${firstName} ${lastName}`;
-    } else if (publicDid) {
-        message.relationshipName = `Public DID: ${publicDid}`
+    let name = await indy.pairwise.getAttr(theirDid, 'name');
+    let endpointDid = await indy.did.getTheirEndpointDid(theirDid);
+    if(name) {
+        message.relationshipName = name;
+    } else if (endpointDid) {
+        message.relationshipName = `Endpoint DID: ${endpointDid}`
     }
     message.links = [
         {

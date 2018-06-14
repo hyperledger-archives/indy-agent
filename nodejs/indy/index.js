@@ -18,8 +18,8 @@ exports.utils = require('./src/utils');
 exports.setupAgent = async function () {
     await exports.pool.setup();
     await exports.wallet.setup();
-    let publicDid = await exports.did.getPublicDid(); // Creates it if it doesn't exist
-    await exports.pool.setEndpointForDid(publicDid, config.publicDidEndpoint);
+    let endpointDid = await exports.did.getEndpointDid(); // Creates it if it doesn't exist
+    await exports.pool.setEndpointForDid(endpointDid, config.endpointDidEndpoint);
     return Promise.resolve();
 };
 

@@ -5,7 +5,7 @@
             <%for(let relationship of relationships) {%>
             <a onclick="showDiv('<%=relationship.their_did%>', 'relationshipsClass')">
                 <div class="w3-bar w3-btn w3-white w3-border" style="width:100%;">
-                    <svg class="w3-bar-item" width="50" height="50" data-jdenticon-value="<%=relationship.their_did%>"></svg>
+                    <svg class="w3-bar-item" width="70" height="70" data-jdenticon-value="<%=relationship.their_did%>"></svg>
                     <p class="w3-bar-item"><%=relationship.metadata.name%></p>
                 </div>
             </a>
@@ -26,9 +26,14 @@
                             <!--</a>-->
                         </p>
                         <%}%>
-                        <p>My Did: <%=relationship.my_did%></p>
-                        <p>Their Did: <%=relationship.their_did%></p>
-                        <p>Their Public Did: <%=relationship.metadata.theirPublicDid%></p>
+                        <div style="display:block;width:50%;margin:auto;">
+                            <fieldset>
+                                <legend class="" style="border:none;margin:10px;">Relationship DIDs</legend>
+                                <p>My Did: <%=relationship.my_did%></p>
+                                <p>Their Did: <%=relationship.their_did%></p>
+                            </fieldset>
+                        </div>
+                        <p>Their Public Did: <%=relationship.metadata.theirEndpointDid%></p>
                         <p><b>Proofs:</b></p>
                         <%if(relationship.metadata.proofs) {%>
                             <%for(let proof of relationship.metadata.proofs) {%>

@@ -19,14 +19,10 @@ exports.getProofRequests = async function(force) {
         proofRequests = {};
         proofRequests['General-Identity'] = {
             name: 'General-Identity',
-            version: '0.1',
+            version: '0.2',
             requested_attributes: {
                 attr1_referent: {
-                    name: 'first_name',
-                    restrictions: [{'cred_def_id': await indy.did.getGovIdCredDefId()}]
-                },
-                attr2_referent: {
-                    name: 'last_name',
+                    name: 'name',
                     restrictions: [{'cred_def_id': await indy.did.getGovIdCredDefId()}]
                 }
             },
@@ -57,14 +53,19 @@ exports.getProofRequests = async function(force) {
     }
     return proofRequests;
 };
-exports.sendRequest = async function(myDid, theirDid, proofRequestId) {
-    await exports.getProofRequests(); // loads data into proofRequests if not already there.
-    let proofRequest = proofRequests[proofRequestId];
+exports.sendRequest = async function(myDid, theirDid, proofRequestId, otherProofRequest) {
+    let proofRequest;
+    if(proofRequestId === "proofRequestOther") {
+        proofRequest = JSON.parse(otherProofRequest);
+    } else {
+        await exports.getProofRequests(); // loads data into proofRequests if not already there.
+        proofRequest = proofRequests[proofRequestId];
+    }
     proofRequest.nonce = randomNonce();
 
     indy.store.pendingProofRequests.write(proofRequest);
 
-    return indy.crypto.sendAnonCryptedMessage(await indy.did.getTheirPublicDid(theirDid), await indy.crypto.buildAuthcryptedMessage(myDid, theirDid, MESSAGE_TYPES.REQUEST, proofRequest));
+    return indy.crypto.sendAnonCryptedMessage(await indy.did.getTheirEndpointDid(theirDid), await indy.crypto.buildAuthcryptedMessage(myDid, theirDid, MESSAGE_TYPES.REQUEST, proofRequest));
 };
 
 /*
@@ -113,8 +114,8 @@ exports.acceptRequest = async function(messageId) {
     let [schemas, credDefs, revocStates] = await indy.pool.proverGetEntitiesFromLedger(message.message.message.credsForProof);
     let proof = await sdk.proverCreateProof(await indy.wallet.get(), message.message.message.proofRequest, message.message.message.requestedCreds, await indy.crypto.getMasterSecretId(), schemas, credDefs, revocStates);
     proof.nonce = message.message.message.proofRequest.nonce;
-    let theirPublicDid = await indy.did.getTheirPublicDid(message.message.origin);
-    await indy.crypto.sendAnonCryptedMessage(theirPublicDid, await indy.crypto.buildAuthcryptedMessage(pairwise.my_did, message.message.origin, MESSAGE_TYPES.PROOF, proof));
+    let theirEndpointDid = await indy.did.getTheirEndpointDid(message.message.origin);
+    await indy.crypto.sendAnonCryptedMessage(theirEndpointDid, await indy.crypto.buildAuthcryptedMessage(pairwise.my_did, message.message.origin, MESSAGE_TYPES.PROOF, proof));
 };
 
 exports.validateAndStoreProof = async function(message) {

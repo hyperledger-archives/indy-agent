@@ -22,26 +22,26 @@ exports.sendOffer = async function (theirDid, credentialDefinitionId) {
     let myDid = pairwise.my_did;
     let message = await indy.crypto.buildAuthcryptedMessage(myDid, theirDid, MESSAGE_TYPES.OFFER, credOffer);
     let meta = JSON.parse(pairwise.metadata);
-    let theirPublicDid = meta.theirPublicDid;
-    return indy.crypto.sendAnonCryptedMessage(theirPublicDid, message);
+    let theirEndpointDid = meta.theirEndpointDid;
+    return indy.crypto.sendAnonCryptedMessage(theirEndpointDid, message);
 };
 
 exports.sendRequest = async function (theirDid, encryptedMessage) {
     let myDid = await indy.pairwise.getMyDid(theirDid);
     let credentialOffer = await indy.crypto.authDecrypt(myDid, encryptedMessage);
-    let [, credentialDefinition] = await indy.issuer.getCredDef(await indy.pool.get(), myDid, credentialOffer.cred_def_id);
-    let masterSecretId = await indy.did.getPublicDidAttribute('master_secret_id');
+    let [, credentialDefinition] = await indy.issuer.getCredDef(await indy.pool.get(), await indy.did.getEndpointDid(), credentialOffer.cred_def_id); // FIXME: Was passing in myDid. Why?
+    let masterSecretId = await indy.did.getEndpointDidAttribute('master_secret_id');
     let [credRequestJson, credRequestMetadataJson] = await sdk.proverCreateCredentialReq(await indy.wallet.get(), myDid, credentialOffer, credentialDefinition, masterSecretId);
     indy.store.pendingCredentialRequests.write(credRequestJson, credRequestMetadataJson);
     let message = await indy.crypto.buildAuthcryptedMessage(myDid, theirDid, MESSAGE_TYPES.REQUEST, credRequestJson);
-    let theirPublicDid = await indy.did.getTheirPublicDid(theirDid);
-    return indy.crypto.sendAnonCryptedMessage(theirPublicDid, message);
+    let theirEndpointDid = await indy.did.getTheirEndpointDid(theirDid);
+    return indy.crypto.sendAnonCryptedMessage(theirEndpointDid, message);
 };
 
 exports.acceptRequest = async function(theirDid, encryptedMessage) {
     let myDid = await indy.pairwise.getMyDid(theirDid);
     let credentialRequest = await indy.crypto.authDecrypt(myDid, encryptedMessage,);
-    let [, credDef] = await indy.issuer.getCredDef(await indy.pool.get(), await indy.did.getPublicDid(), credentialRequest.cred_def_id);
+    let [, credDef] = await indy.issuer.getCredDef(await indy.pool.get(), await indy.did.getEndpointDid(), credentialRequest.cred_def_id);
 
     let credentialOffer;
     let pendingCredOfferId;
@@ -57,38 +57,35 @@ exports.acceptRequest = async function(theirDid, encryptedMessage) {
     for(let attr of schema.attrNames) {
         let value;
         switch(attr) {
-            case "first_name":
-                value = {"raw": await indy.pairwise.getAttr(theirDid, 'first_name') || "Alice", "encoded": "1139481716457488690172217916278103335"};
-                break;
-            case "last_name":
-                value = {"raw": await indy.pairwise.getAttr(theirDid, 'last_name') || "Alice", "encoded": "5321642780241790123587902456789123452"};
+            case "name":
+                value = await indy.pairwise.getAttr(theirDid, 'name') || "Alice";
                 break;
             case "degree":
-                value = {"raw": "Bachelor of Science, Marketing", "encoded": "12434523576212321"};
+                value = "Bachelor of Science, Marketing";
                 break;
             case "status":
-                value = {"raw": "graduated", "encoded": "2213454313412354"};
+                value = "graduated";
                 break;
             case "ssn":
-                value = {"raw": "123-45-6789", "encoded": "3124141231422543541"};
+                value = "123-45-6789";
                 break;
             case "year":
-                value = {"raw": "2015", "encoded": "2015"};
+                value = "2015";
                 break;
             case "average":
-                value = {"raw": "5", "encoded": "5"};
+                value = "5";
                 break;
             default:
-                value = {"raw": "someValue", "encoded": "someValue"};
+                value = "someValue";
         }
-        credentialValues[attr] = value;
+        credentialValues[attr] = {raw: value, encoded: exports.encode(value)};
     }
     console.log(credentialValues);
 
     let [credential] = await sdk.issuerCreateCredential(await indy.wallet.get(), credentialOffer, credentialRequest, credentialValues);
     let message = await indy.crypto.buildAuthcryptedMessage(myDid, theirDid, MESSAGE_TYPES.CREDENTIAL, credential);
-    let theirPublicDid = await indy.did.getTheirPublicDid(theirDid);
-    await indy.crypto.sendAnonCryptedMessage(theirPublicDid, message);
+    let theirEndpointDid = await indy.did.getTheirEndpointDid(theirDid);
+    await indy.crypto.sendAnonCryptedMessage(theirEndpointDid, message);
     indy.store.pendingCredentialOffers.delete(pendingCredOfferId);
 };
 
@@ -104,8 +101,42 @@ exports.acceptCredential = async function(theirDid, encryptedMessage) {
         }
     }
 
-    let [, credentialDefinition] = await indy.issuer.getCredDef(await indy.pool.get(), await indy.did.getPublicDid(), credential.cred_def_id);
+    let [, credentialDefinition] = await indy.issuer.getCredDef(await indy.pool.get(), await indy.did.getEndpointDid(), credential.cred_def_id);
     await sdk.proverStoreCredential(await indy.wallet.get(), null, credentialRequestMetadata, credential, credentialDefinition);
     let credentials = await indy.credentials.getAll();
     console.log(credentials);
+};
+
+exports.encode = function(string) {
+    console.log(string);
+    if(!string) {
+        return string;
+    }
+    let newString = Buffer.from(string.toString(),'utf8').toString();
+    let number = "1";
+    let length = newString.length;
+    for (let i = 0; i < length; i++) {
+        let codeValue = newString.charCodeAt(i).toString(10);
+        if(codeValue.length < 3) {
+            codeValue = "0" + codeValue;
+        }
+        number += codeValue;
+    }
+    console.log(number);
+    return number;
+};
+
+exports.decode = function(number) {
+    console.log(number);
+    if(!number) return number;
+    let string = "";
+    number = number.slice(1); // remove leading 1
+    let length = number.length;
+
+    for (let i = 0; i < length;) {
+        let code = number.slice(i, i += 3);
+        string += String.fromCharCode(parseInt(code, 10));
+    }
+    console.log(string);
+    return string;
 };

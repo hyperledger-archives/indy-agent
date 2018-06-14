@@ -23,7 +23,7 @@ The next time you have to start the network and agents run the `./manage start` 
 
 If you change the nodejs code, you must run the `./manage build` command, but it will be pretty quick as the only step to be repeated is the copying of the nodejs code into the container.  If the `package.json` file changes, the build will take longer to run as the `npm install` step must be run.
 
-Both versions of the `./manage` script have other sub-commands - run `./manage` (no arguments) to see the list.  The "rm" commands are useful for restarting from scratch, including for von-network, deleting the Indy Network ledger (e.g. reverting to just having a Steward on the ledger), and for the nodejs agents to delete their wallets. If you delete the Indy Network ledger, you *MUST* delete the nodejs agent wallets. 
+Both versions of the `./manage` script have other sub-commands - run `./manage` (no arguments) to see the list.  The "rm" commands are useful for restarting from scratch, including for von-network, deleting the Indy Network ledger (e.g. reverting to just having a Steward on the ledger), and for the nodejs agents to delete their wallets. If you delete the Indy Network ledger, you *MUST* delete the nodejs agent wallets.
 
 # Running locally WITHOUT Docker
 
