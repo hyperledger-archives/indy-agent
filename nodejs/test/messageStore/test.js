@@ -3,10 +3,10 @@ const expect = require('chai').expect;
 const sinon = require('sinon');
 const homedir = require('home-dir');
 const fs = require('fs');
-const store = require('../../indy/messageStore');
-const PATH = homedir('/.indy_client/messageStore.json');
+const store = require('../../indy/src/store');
+const PATH = homedir('/.indy_client/store.json');
 
-describe('messageStore', function() {
+describe('store', function() {
     let sandbox;
 
     beforeEach(function () {
@@ -33,7 +33,7 @@ describe('messageStore', function() {
     it('getOldestMessage() should get the oldest message', function() {
         let oldestMessage = {
             id: '1',
-            timestamp: new Date(),
+            received_timestamp: new Date(),
             message: "some message"
         };
         store.writeMessage(oldestMessage);
@@ -67,7 +67,7 @@ describe('messageStore', function() {
             timestamp: new Date(),
             message: "some message"
         });
-        expect(store.getMessageById('1') === rightMessage);
+        expect(store.messages.getMessage('1') === rightMessage);
     })
 
     it('deleteMessage() should delete the right message', function() {
@@ -90,7 +90,7 @@ describe('messageStore', function() {
             timestamp: new Date(),
             message: "some message"
         });
-        store.deleteMessage('3');
+        store.messages.deleteMessage('3');
         expect(store.getMessages === rightMessages);
     })
 });

@@ -1,61 +1,39 @@
 'use strict';
-const indy = require('indy-sdk');
-const uuid = require('uuid');
-const utils = require('./utils');
-const ledgerConfig = require('./ledgerConfig');
-const common = require('./common');
-const POOL_NAME = process.env.POOL_NAME || 'pool1';
-const WALLET_NAME = process.env.WALLET_NAME || 'wallet';
+const config = require('../config');
 
-exports.indy = indy;
+exports.wallet = require('./src/wallet');
+exports.connections = require('./src/connections');
+exports.credentials = require('./src/credentials');
+exports.crypto = require('./src/crypto');
+exports.did = require('./src/did');
+exports.handler = require('./src/handler');
+exports.issuer = require('./src/issuer');
+exports.messages = require('./src/messages');
+exports.pairwise = require('./src/pairwise');
+exports.pool = require('./src/pool');
+exports.proofs = require('./src/proofs');
+exports.store = require('./src/store');
+exports.utils = require('./src/utils');
 
-exports.setupPool = async function() {
-    let poolGenesisTxnPath = await ledgerConfig.getPoolGenesisTxnPath(POOL_NAME);
-    let poolConfig = {
-        "genesis_txn": poolGenesisTxnPath
-    };
-    try {
-        await indy.createPoolLedgerConfig(POOL_NAME, poolConfig);
-    } catch(e) {
-        if(e.message !== "PoolLedgerConfigAlreadyExistsError") {
-            throw e;
-        }
-    } finally {
-        this.pool = await indy.openPoolLedger(POOL_NAME);
-    }
+exports.setupAgent = async function () {
+    await exports.pool.setup();
+    await exports.wallet.setup();
+    let publicDid = await exports.did.getPublicDid(); // Creates it if it doesn't exist
+    await exports.pool.setEndpointForDid(publicDid, config.publicDidEndpoint);
+    return Promise.resolve();
 };
 
-exports.setupWallet = async function() {
-    try {
-        await indy.createWallet(POOL_NAME, WALLET_NAME);
-    } catch(e) {
-        if(e.message !== "WalletAlreadyExistsError") {
-            throw e;
-        }
-    } finally {
-        this.wallet = indy.openWallet(WALLET_NAME);
-    }
-};
 
-exports.getWallet = function() {
-    return this.wallet;
-};
 
-exports.createAndStoreMyDid = async function(didInfoParam) {
-    let didInfo = didInfoParam || {};
-    [this.did, this.key] = indy.createAndStoreMyDid(this.wallet, didInfo);
-    return [this.did, this.key];
-};
 
-exports.connectWith = async function(host) {
-    let [myDid, myKey] = await this.createAndStoreMyDid();
-    await common.sendNym(this.pool, this.wallet, this.did, myDid, myKey, null);
 
-    let connectionRequest = {
-        did: myDid,
-        nonce: uuid()
-    };
 
-    utils.send('government', 'CONNECTION_REQUEST', connectionRequest);
 
-};
+
+
+
+
+
+
+
+

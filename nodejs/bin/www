@@ -6,30 +6,31 @@
 
 const app = require('../app');
 const debug = require('debug')('indy-agent:server');
-const http = require('http');
 const indy = require('../indy');
+const config  = require('../config');
 
 /**
  * Get port from environment and store in Express.
  */
 
-const port = normalizePort(process.env.PORT || '3000');
+const port = normalizePort(config.port);
 app.set('port', port);
 
 /**
  * Create HTTP server.
  */
 
-const server = http.createServer(app);
+const server = require('http').Server(app);
+const io = require('socket.io')(server);
+const socketHandler = require('../ui/sockets').handler;
+
+io.on('connection', socketHandler);
 
 /**
  * Listen on provided port, on all network interfaces.
  */
 
-return indy.setupPool()
-    .then(() => {
-        return indy.setupWallet();
-    })
+return indy.setupAgent()
     .then(() => {
         server.listen(port);
         server.on('error', onError);

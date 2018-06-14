@@ -3,8 +3,8 @@ const expect = require('chai').expect;
 const sinon = require('sinon');
 const homedir = require('home-dir');
 const fs = require('fs');
-const store = require('../../indy/messageStore');
-const PATH = homedir('/.indy_client/messageStore.json');
+const store = require('../../indy/src/store');
+const PATH = homedir('/.indy_client/store.json');
 
 describe('handler', function() {
     let sandbox;
