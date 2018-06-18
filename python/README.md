@@ -16,6 +16,7 @@ Quickstart
 First, create a virtual environment to install indy-agent dependencies:
 
 ```sh
+cd python/
 python -m venv env
 source env/bin/activate
 ```
