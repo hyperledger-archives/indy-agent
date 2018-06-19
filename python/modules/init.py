@@ -5,13 +5,13 @@
 
 import json
 from aiohttp import web
-from indy import wallet
+from indy import wallet, did
 import modules.ui as ui
 
 async def initialize_agent(msg, agent):
     """ Initialize agent.
     """
-    data = msg.data
+    data = msg.message
     agent.owner = data['name']
     passphrase = data['passphrase']
 
@@ -29,6 +29,8 @@ async def initialize_agent(msg, agent):
     except Exception as e:
         print(e)
         print("Could not open wallet!")
+
+    (_, agent.endpoint_vk) = await did.create_and_store_my_did(agent.wallet_handle, "{}")
 
     agent.initialized = True
     return await ui.ui_connect(None, agent)

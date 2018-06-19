@@ -14,16 +14,27 @@ class Agent:
         self.owner = None
         self.wallet_handle = None
         self.endpoint = None
+        self.endpoint_vk = None
+        self.ui_token = None
         self.pool_handle = None
-        self.received_requests = {}
         self.connections = {}
         self.ui_socket = None
         self.initialized = False
+        self.pending_offers = {}
+        self.received_offers = {}
 
 class Message(object):
     """ Data Model for messages.
     """
-    def __init__(self, msg_type, did, data):
-        self.msg_type = msg_type
-        self.did = did
-        self.data = data
+    def __init__(self, type, id, message):
+        """ Create a Message object
+
+            type: string denoting the message type. Standardization efforts are in progress.
+            id: identifier for message. Usually a nonce or a DID. This combined with the type
+                tell us how to interpret the message.
+            message: ambiguous data. Interpretation defined by type and id.
+
+        """
+        self.type = type
+        self.id = id
+        self.message = message

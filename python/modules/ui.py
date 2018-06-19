@@ -1,16 +1,18 @@
 import json
 from aiohttp import web
+from model import Message, Agent
+from message_types import UI
 
-async def ui_connect(_, agent):
-    return {
-            'type': 'AGENT_STATE',
-            'did': None,
-            'data': {
-                'initialized': agent.initialized,
-                'agent_name': agent.owner,
-                'connections': [conn for _, conn in agent.connections.items()]
-                }
-            }
+async def ui_connect(_, agent: Agent) -> Message:
+    return Message(
+        UI.STATE,
+        None, # No ID needed
+        {
+            'initialized': agent.initialized,
+            'agent_name': agent.owner,
+            'connections': [conn for _, conn in agent.connections.items()]
+        }
+    )
 
 async def root(request):
     agent = request.app['agent']
@@ -19,4 +21,4 @@ async def root(request):
         agent.endpoint += ':' + str(request.url.port) + '/indy'
     else:
         agent.endpoint += '/indy'
-    return web.FileResponse('view/res/index.bootstrap.html')
+    return web.FileResponse('view/index.html')

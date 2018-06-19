@@ -63,13 +63,17 @@
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="send_req_modal_label">Send Connection Request</h5>
+                            <h5 class="modal-title" id="send_req_modal_label">Send Connection Offer</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
                         <div class="modal-body">
                             <form>
+                                <p>This Connection Offer is sent "out-of-band" to it's destination meaning it is not sent through Sovrin.
+                                In the real world, this offer would be sent through a previously established and trusted method;
+                                for example, a QR code, text message, university communications, etc.
+                                </p>
                                 <div class="form-group">
                                     <label for="send_name">Connection Name</label>
                                     <input type="text" class="form-control" id="send_name" aria-describedby="emailHelp" placeholder="Name">
@@ -83,7 +87,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                            <button id="send_request" type="button" class="btn btn-primary" data-dismiss="modal">Send Request</button>
+                            <button id="send_offer" type="button" class="btn btn-primary" data-dismiss="modal">Send Offer</button>
                         </div>
                     </div>
                 </div>
@@ -94,7 +98,7 @@
                     <div id='connections-wrapper'></div>
                     <!-- Button trigger modal -->
                     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#send_req_modal">
-                        Send Connection Request
+                        Send Connection Offer
                     </button>
                 </div>
                 <div class="col-8">

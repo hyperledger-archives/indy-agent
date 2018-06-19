@@ -37,7 +37,6 @@ class UIEventQueue(object):
                     await self.ws.send_str('{"type":"ACK"}')
                     print('Received "{}"'.format(msg.data))
                     await self.recv_q.put(msg.data)
-                    print('Put to queue')
             elif msg.type == aiohttp.WSMsgType.ERROR:
                 print('ws connection closed with exception %s' %
                       self.ws.exception())

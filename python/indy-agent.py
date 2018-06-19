@@ -12,20 +12,18 @@ import asyncio
 import os
 import sys
 import json
+import uuid
 from aiohttp import web
-from aiohttp_index import IndexMiddleware
-import jinja2
-import aiohttp_jinja2
 
 from receiver.message_receiver import MessageReceiver as Receiver
 from router.simple_router import SimpleRouter as Router
 from ui_event import UIEventQueue
 from model import Agent
+from message_types import CONN, UI
 import modules.connection as connection
 import modules.init as init
 import modules.ui as ui
 import serializer.json_serializer as Serializer
-import view.site_handlers as site_handlers
 
 if len(sys.argv) == 2 and str.isdigit(sys.argv[1]):
     PORT = int(sys.argv[1])
@@ -34,7 +32,7 @@ else:
 
 LOOP = asyncio.get_event_loop()
 
-AGENT = web.Application(middlewares=[IndexMiddleware()])
+AGENT = web.Application()
 
 AGENT['msg_router'] = Router()
 AGENT['msg_receiver'] = Receiver()
@@ -43,13 +41,15 @@ AGENT['ui_event_queue'] = UIEventQueue(LOOP)
 AGENT['ui_router'] = Router()
 
 AGENT['agent'] = Agent()
+UI_TOKEN = uuid.uuid4().hex
+AGENT['agent'].ui_token = UI_TOKEN
 
 ROUTES = [
-    web.get('/ws', AGENT['ui_event_queue'].ws_handler),
     web.get('/', ui.root),
+    web.get('/ws', AGENT['ui_event_queue'].ws_handler),
     web.static('/res', 'view/res'),
     web.post('/indy', AGENT['msg_receiver'].handle_message),
-    web.post('/indy/init', init.initialize_agent)
+    web.post('/offer', connection.offer_recv)
 ]
 
 AGENT.add_routes(ROUTES)
@@ -63,31 +63,45 @@ async def message_process(agent):
     """ Message processing loop task.
         Message routes are also defined here through the message router.
     """
+
+
     msg_router = agent['msg_router']
     msg_receiver = agent['msg_receiver']
     ui_event_queue = agent['ui_event_queue']
 
-    await msg_router.register("CONN_REQ", connection.handle_request_received)
-    await msg_router.register("CONN_RES", connection.handle_response)
+    await msg_router.register(CONN.REQUEST, connection.handle_request_received)
+    await msg_router.register(CONN.RESPONSE, connection.handle_response)
 
     while True:
-        msg_bytes = await msg_receiver.recv()
+        encrypted_msg_bytes = await msg_receiver.recv()
+
+        try:
+            decrypted_msg_bytes = await crypto.anon_decrypt(
+                    agent.wallet_handle,
+                    agent.endpoint_vk,
+                    encrypted_msg_bytes
+                    )
+        except Exception as e:
+            print('Could not decrypt message: {}\nError: {}'.format(encrypted_msg_bytes, e))
+            continue
+
         try:
             msg = Serializer.unpack(msg_bytes)
         except Exception as e:
             print('Failed to unpack message: {}\n\nError: {}'.format(msg_bytes, e))
             continue
+
         res = await msg_router.route(msg, agent['agent'])
         if res is not None:
-            await ui_event_queue.send(json.dumps(res))
+            await ui_event_queue.send(Serializer.pack(res))
 
 async def ui_event_process(agent):
     ui_router = agent['ui_router']
     ui_event_queue = agent['ui_event_queue']
 
-    await ui_router.register("SEND_REQ", connection.send_request)
-    await ui_router.register("UI_CONNECT", ui.ui_connect)
-    await ui_router.register("AGENT_INIT", init.initialize_agent)
+    await ui_router.register(UI.SEND_OFFER, connection.send_offer)
+    await ui_router.register(UI.STATE_REQUEST, ui.ui_connect)
+    await ui_router.register(UI.INITIALIZE, init.initialize_agent)
 
     while True:
         msg_bytes = await ui_event_queue.recv()
@@ -96,13 +110,18 @@ async def ui_event_process(agent):
         except Exception as e:
             print('Failed to unpack message: {}\n\nError: {}'.format(msg_bytes, e))
             continue
-        msg = Serializer.unpack(msg_bytes)
+
+        if msg.id != UI_TOKEN:
+            print('Invalid token received, rejecting message: {}'.format(msg_bytes))
+            continue
+
         res = await ui_router.route(msg, agent['agent'])
         if res is not None:
-            await ui_event_queue.send(json.dumps(res))
+            await ui_event_queue.send(Serializer.pack(res))
 
 try:
     print('===== Starting Server on: http://localhost:{} ====='.format(PORT))
+    print('Your UI Token is: {}'.format(UI_TOKEN))
     LOOP.create_task(SERVER.start())
     LOOP.create_task(message_process(AGENT))
     LOOP.create_task(ui_event_process(AGENT))
