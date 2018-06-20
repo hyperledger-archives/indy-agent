@@ -69,7 +69,7 @@ async def message_process(agent):
     msg_receiver = agent['msg_receiver']
     ui_event_queue = agent['ui_event_queue']
 
-    await msg_router.register(CONN.REQUEST, connection.handle_request_received)
+    await msg_router.register(CONN.REQUEST, connection.handle_request)
     await msg_router.register(CONN.RESPONSE, connection.handle_response)
 
     while True:

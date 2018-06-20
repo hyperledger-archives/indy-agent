@@ -7,6 +7,8 @@
         STATE_REQUEST: "urn:sovrin:agent:message_type:sovrin.org/ui/state_request",
         SEND_OFFER: "urn:sovrin:agent:message_type:sovrin.org/ui/send_offer",
         INITIALIZE: "urn:sovrin:agent:message_type:sovrin.org/ui/initialize",
+        OFFER_RECEIVED: "urn:sovrin:agent:message_type:sovrin.org/ui/offer_received",
+        OFFER_SENT: "urn:sovrin:agent:message_type:sovrin.org/ui/offer_sent",
     }
 
     // Message Router {{{
@@ -15,7 +17,7 @@
         route:
             function(socket, msg) {
                 if (msg.type in this.routes) {
-                    this.routes[msg.type](socket, msg.message);
+                    this.routes[msg.type](socket, msg);
                 } else {
                     console.log('Message from server without registered route: ' + JSON.stringify(msg));
                 }
@@ -40,7 +42,8 @@
             ));
         },
         update:
-        function (socket, state) {
+        function (socket, msg) {
+            state = msg.message
             if (state.initialized == false) {
                 showTab('login');
             } else {
@@ -79,9 +82,9 @@
 
     // Connections {{{
     var connections = {
-        send_request:
+        send_offer:
         function (socket) {
-            send_req_msg = {
+            msg = {
                 type: MESSAGE_TYPES.SEND_OFFER,
                 id: TOKEN,
                 message: {
@@ -89,16 +92,16 @@
                     endpoint: document.getElementById('send_endpoint').value
                 }
             }
-            socket.send(JSON.stringify(send_req_msg));
+            socket.send(JSON.stringify(msg));
         },
-        connection_request_sent:
+        offer_sent:
         function (socket, msg) {
-            context = {name: msg.name, status: msg.status};
+            context = {id: msg.id, name: msg.message.name, status: 'pending'};
             document.getElementById('connections-wrapper').innerHTML += connection_template(context);
         },
-        connection_request_recieved:
+        offer_recieved:
         function (socket, msg) {
-            context = {name: msg.owner, status: msg.status};
+            context = {name: msg.message.name, status: 'pending'};
             document.getElementById('connections-wrapper').innerHTML += connection_template(context);
         }
     };
@@ -113,8 +116,8 @@
 
     // Message Routes {{{
     msg_router.register(MESSAGE_TYPES.STATE, ui_agent.update);
-    msg_router.register('CONN_REQ_SENT', connections.connection_request_sent);
-    msg_router.register('CONN_REQ_RECV', connections.connection_request_recieved);
+    msg_router.register(MESSAGE_TYPES.OFFER_SENT, connections.offer_sent);
+    msg_router.register(MESSAGE_TYPES.OFFER_RECEIVED, connections.offer_recieved);
 
     // }}}
     
@@ -137,7 +140,7 @@
     // Need reference to socket so must be after socket creation
     document.getElementById('send_offer').addEventListener(
         "click",
-        function (event) { connections.send_request(socket); }
+        function (event) { connections.send_offer(socket); }
     );
 
     document.getElementById('agent_init').addEventListener(

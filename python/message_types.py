@@ -16,3 +16,5 @@ class UI:
     STATE_REQUEST = "urn:sovrin:agent:message_type:sovrin.org/ui/state_request"
     SEND_OFFER = "urn:sovrin:agent:message_type:sovrin.org/ui/send_offer"
     INITIALIZE = "urn:sovrin:agent:message_type:sovrin.org/ui/initialize"
+    OFFER_RECEIVED = "urn:sovrin:agent:message_type:sovrin.org/ui/offer_received"
+    OFFER_SENT = "urn:sovrin:agent:message_type:sovrin.org/ui/offer_sent"

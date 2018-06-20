@@ -11,7 +11,7 @@ from aiohttp import web
 from indy import crypto, did, pairwise
 from model import Message
 import serializer.json_serializer as Serializer
-from message_types import CONN
+from message_types import CONN, UI
 
 async def send_offer(msg, agent):
     endpoint = msg.message['endpoint']
@@ -36,22 +36,24 @@ async def send_offer(msg, agent):
             print(resp.status)
             print(await resp.text())
 
+    return Message(UI.OFFER_SENT, nonce, {'name': name})
+
 async def offer_recv(request):
     agent = request.app['agent']
+    ui_event_queue = request.app['ui_event_queue']
+
     offer = Serializer.unpack(await request.read())
     agent.received_offers[offer.id] = offer
-    #await send_request(offer, agent)
-    raise web.HTTPAccepted()
 
-async def handle_request_received(msg, agent):
-    """ Handle reception of request, storing to be accepted later.
-    """
-    return {
-            'type': 'CONN_REQ_RECV',
-            'data': {
-                    'owner': msg.data['owner']
-                }
-            }
+    # Notify UI
+    offer_received_msg = Message(
+        UI.OFFER_RECEIVED,
+        offer.id,
+        {'name': offer.message['name']}
+    )
+    await ui_event_queue.send(Serializer.pack(offer_received_msg))
+
+    raise web.HTTPAccepted() # Return 202
 
 async def handle_request(msg, agent):
     """ Handle reception of accept connection request message.
