@@ -46,16 +46,12 @@
         },
         update:
         function (socket, msg) {
-            state = msg.message
+            state = msg.message;
             if (state.initialized == false) {
                 showTab('login');
             } else {
                 document.getElementById('agent_name').value = state.agent_name;
                 document.getElementById('agent_name_header').innerHTML = state.agent_name;
-                conn_wrapper = document.getElementById('connections-wrapper');
-                context = {'connections': state.connections};
-                content = connections_template(context);
-                conn_wrapper.innerHTML = content;
                 showTab('relationships');
             }
         },
@@ -94,18 +90,40 @@
                     name: document.getElementById('send_name').value,
                     endpoint: document.getElementById('send_endpoint').value
                 }
-            }
+            };
             socket.send(JSON.stringify(msg));
         },
         offer_sent:
         function (socket, msg) {
-            context = {id: msg.id, name: msg.message.name, status: 'pending'};
-            document.getElementById('connections-wrapper').innerHTML += connection_template(context);
+            var context = {name: msg.message.name};
+            var contextObj = pending_connection_template(context);
+            connections_wrapper.append(contextObj);
+
+            document.getElementById(msg.message.name + '_reject').addEventListener(
+                "click",
+                function (event) {
+                     connections.sender_send_offer_rejected(socket, msg);
+                }
+            );
         },
         offer_recieved:
         function (socket, msg) {
-            context = {name: msg.message.name, status: 'pending'};
-            document.getElementById('connections-wrapper').innerHTML += connection_template(context);
+            var context = {name: msg.message.name};
+            var contextObj = received_connection_template(context);
+            connections_wrapper.append(contextObj);
+
+            document.getElementById(msg.message.name + '_accept').addEventListener(
+                "click",
+                function (event) {
+                    connections.send_offer_accepted(socket, msg)
+                }
+            );
+            document.getElementById(msg.message.name + '_reject').addEventListener(
+                "click",
+                function (event) {
+                     connections.receiver_send_offer_rejected(socket, msg)
+                }
+            );
         }
     };
     // }}}
