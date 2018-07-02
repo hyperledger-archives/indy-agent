@@ -124,7 +124,47 @@
                      connections.receiver_send_offer_rejected(socket, msg)
                 }
             );
-        }
+        },
+        send_offer_accepted:
+        function (socket, msg) {
+            accepted_msg = {
+                type: MESSAGE_TYPES.SEND_OFFER_ACCEPTED,
+                id: TOKEN,
+                message: {
+                        name: msg.message.name,
+                        id: msg.id
+                }
+            };
+            socket.send(JSON.stringify(accepted_msg));
+        },
+        offer_accepted_sent:
+        function (socket, msg) {
+            var context = {name: msg.message.name};
+            var contextObj = connection_template(context);
+            removeElementById(msg.message.name + '_received');
+            connections_wrapper.append(contextObj);
+
+            document.getElementById(msg.message.name + '_reject').addEventListener(
+                "click",
+                function (event) {
+                     connections.send_conn_rejected(socket, msg)
+                }
+            );
+        },
+        offer_accepted:
+        function (socket, msg) {
+            var context = {name: msg.message.name};
+            var contextObj = connection_template(context);
+            removeElementById(msg.message.name + '_pending');
+            connections_wrapper.append(contextObj);
+
+            document.getElementById(msg.message.name + '_reject').addEventListener(
+                "click",
+                function (event) {
+                     connections.send_conn_rejected(socket, msg)
+                }
+            );
+        },
     };
     // }}}
 
@@ -140,6 +180,9 @@
     msg_router.register(MESSAGE_TYPES.STATE, ui_agent.update);
     msg_router.register(MESSAGE_TYPES.OFFER_SENT, connections.offer_sent);
     msg_router.register(MESSAGE_TYPES.OFFER_RECEIVED, connections.offer_recieved);
+    msg_router.register(MESSAGE_TYPES.OFFER_ACCEPTED, connections.offer_accepted);
+    msg_router.register(MESSAGE_TYPES.OFFER_ACCEPTED_SENT, connections.offer_accepted_sent);
+
 
     // }}}
     
