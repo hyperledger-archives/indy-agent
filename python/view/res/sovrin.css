@@ -15,11 +15,24 @@
 }
 
 .circle {
-    display: table-cell;
+    display: block;
     border-radius: 50%;
     width: 50px;
     height: 50px;
-    background: #c7c7c7;
+    flex-shrink: 0;
+
+}
+
+.circle.yellow {
+    background: yellow;
+}
+
+.circle.orange {
+    background: orange;
+}
+
+.circle.green {
+    background: green;
 }
 
 .pending {
@@ -28,12 +41,14 @@
 }
 
 .name {
-    display: table-cell;
-    vertical-align: middle;
-    padding-left: 5px;
+    margin: 5px 5px;
 }
 
 /* Bootstrap */
+
+.list-group-item {
+    border: 0;
+}
 
 /* Sticky footer styles
 -------------------------------------------------- */
