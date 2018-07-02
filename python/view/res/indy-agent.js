@@ -7,12 +7,18 @@
         STATE_REQUEST: "urn:sovrin:agent:message_type:sovrin.org/ui/state_request",
         SEND_OFFER: "urn:sovrin:agent:message_type:sovrin.org/ui/send_offer",
         SEND_OFFER_ACCEPTED: "urn:sovrin:agent:message_type:sovrin.org/ui/send_offer_accepted",
+        SENDER_SEND_OFFER_REJECTED: "urn:sovrin:agent:message_type:sovrin.org/ui/sender_send_offer_rejected",
+        RECEIVER_SEND_OFFER_REJECTED: "urn:sovrin:agent:message_type:sovrin.org/ui/receiver_send_offer_rejected",
+        SENDER_OFFER_REJECTED: "urn:sovrin:agent:message_type:sovrin.org/ui/sender_offer_rejected",
+        RECEIVER_OFFER_REJECTED: "urn:sovrin:agent:message_type:sovrin.org/ui/receiver_offer_rejected",
+        SEND_CONN_REJECTED: "urn:sovrin:agent:message_type:sovrin.org/ui/send_connection_rejected",
         INITIALIZE: "urn:sovrin:agent:message_type:sovrin.org/ui/initialize",
         OFFER_RECEIVED: "urn:sovrin:agent:message_type:sovrin.org/ui/offer_received",
+        OFFER_SENT: "urn:sovrin:agent:message_type:sovrin.org/ui/offer_sent",
         OFFER_ACCEPTED: "urn:sovrin:agent:message_type:sovrin.org/ui/offer_accepted",
         OFFER_ACCEPTED_SENT: "urn:sovrin:agent:message_type:sovrin.org/ui/offer_accepted_sent",
-        OFFER_SENT: "urn:sovrin:agent:message_type:sovrin.org/ui/offer_sent"
-    }
+        CONN_REJECTED: "urn:sovrin:agent:message_type:sovrin.org/ui/connection_rejected"
+    };
 
     // Message Router {{{
     var msg_router = {
