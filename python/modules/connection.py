@@ -50,6 +50,35 @@ async def offer_recv(msg, agent):
 
     return offer_received_msg
 
+async def send_offer_accepted(msg, agent):
+    receiver_nonce = msg.message['id']
+    receiver_endpoint = agent.received_offers[receiver_nonce]['endpoint']
+    conn_name = msg.message['name']
+
+    agent.connections[receiver_nonce] = dict(name=conn_name, endpoint=receiver_endpoint)
+    del agent.received_offers[receiver_nonce]
+
+    msg = Message(
+        CONN.ACKNOWLEDGE,
+        agent.ui_token,
+        {
+            'name': conn_name,
+        }
+    )
+    serialized_msg = Serializer.pack(msg)
+    async with aiohttp.ClientSession() as session:
+        async with session.post(receiver_endpoint, data=serialized_msg) as resp:
+            print(resp.status)
+            print(await resp.text())
+
+    return Message(UI.OFFER_ACCEPTED_SENT, agent.ui_token, {'name': conn_name, 'id': receiver_nonce})
+
+async def offer_accepted(msg, agent):
+    agent.connections[msg.id] = agent.pending_offers[msg.message['name']]
+    del agent.pending_offers[msg.message['name']]
+
+    return Message(UI.OFFER_ACCEPTED, agent.ui_token, {'name': msg.message['name'], 'id': msg.id})
+
 async def handle_request(msg, agent):
     """ Handle reception of accept connection request message.
     """

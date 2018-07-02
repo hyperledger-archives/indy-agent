@@ -71,6 +71,7 @@ async def message_process(agent):
     await msg_router.register(CONN.REQUEST, connection.handle_request)
     await msg_router.register(CONN.RESPONSE, connection.handle_response)
     await msg_router.register(CONN.OFFER, connection.offer_recv)
+    await msg_router.register(CONN.ACKNOWLEDGE, connection.offer_accepted)
 
     while True:
         encrypted_msg_bytes = await msg_receiver.recv()
@@ -103,6 +104,7 @@ async def ui_event_process(agent):
     await ui_router.register(UI.SEND_OFFER, connection.send_offer)
     await ui_router.register(UI.STATE_REQUEST, ui.ui_connect)
     await ui_router.register(UI.INITIALIZE, init.initialize_agent)
+    await ui_router.register(UI.SEND_OFFER_ACCEPTED, connection.send_offer_accepted)
 
     while True:
         msg_bytes = await ui_event_queue.recv()
