@@ -109,7 +109,8 @@
 
     // Templates {{{
 
-    const connections_template = Handlebars.compile(document.getElementById('connections-template').innerHTML);
+    const pending_connection_template = Handlebars.compile(document.getElementById('pending_connection-template').innerHTML);
+    const received_connection_template = Handlebars.compile(document.getElementById('received_connection-template').innerHTML);
     const connection_template = Handlebars.compile(document.getElementById('connection-template').innerHTML);
 
     // }}}
