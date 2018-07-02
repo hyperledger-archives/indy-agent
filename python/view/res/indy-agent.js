@@ -173,6 +173,53 @@
                 }
             );
         },
+        receiver_send_offer_rejected:
+        function (socket, msg) {
+            rejected_msg = {
+                type: MESSAGE_TYPES.RECEIVER_SEND_OFFER_REJECTED,
+                id: TOKEN,
+                message: {
+                        name: msg.message.name,
+                        id: msg.id
+                }
+            };
+            socket.send(JSON.stringify(rejected_msg));
+        },
+        sender_send_offer_rejected:
+        function (socket, msg) {
+            rejected_msg = {
+                type: MESSAGE_TYPES.SENDER_SEND_OFFER_REJECTED,
+                id: TOKEN,
+                message: {
+                        name: msg.message.name,
+                }
+            };
+            socket.send(JSON.stringify(rejected_msg));
+        },
+        sender_offer_rejected:
+        function (socket, msg) {
+            removeElementById(msg.message['name'] + '_pending');
+        },
+        receiver_offer_rejected:
+        function (socket, msg) {
+            removeElementById(msg.message['name'] + '_received');
+        },
+        send_conn_rejected:
+        function (socket, msg) {
+            rejected_msg = {
+                type: MESSAGE_TYPES.SEND_CONN_REJECTED,
+                id: TOKEN,
+                message: {
+                        name: msg.message.name,
+                        id: msg.message.id
+                }
+            };
+            socket.send(JSON.stringify(rejected_msg));
+        },
+        conn_rejected:
+        function (socket, msg) {
+            removeElementById(msg.message.name + '_connection')
+        }
     };
     // }}}
 
@@ -190,7 +237,9 @@
     msg_router.register(MESSAGE_TYPES.OFFER_RECEIVED, connections.offer_recieved);
     msg_router.register(MESSAGE_TYPES.OFFER_ACCEPTED, connections.offer_accepted);
     msg_router.register(MESSAGE_TYPES.OFFER_ACCEPTED_SENT, connections.offer_accepted_sent);
-
+    msg_router.register(MESSAGE_TYPES.SENDER_OFFER_REJECTED, connections.sender_offer_rejected);
+    msg_router.register(MESSAGE_TYPES.RECEIVER_OFFER_REJECTED, connections.receiver_offer_rejected);
+    msg_router.register(MESSAGE_TYPES.CONN_REJECTED, connections.conn_rejected);
 
     // }}}
     

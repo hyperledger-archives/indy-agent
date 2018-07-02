@@ -62,8 +62,6 @@ async def message_process(agent):
     """ Message processing loop task.
         Message routes are also defined here through the message router.
     """
-
-
     msg_router = agent['msg_router']
     msg_receiver = agent['msg_receiver']
     ui_event_queue = agent['ui_event_queue']
