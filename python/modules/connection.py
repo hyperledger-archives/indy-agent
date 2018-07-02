@@ -16,9 +16,9 @@ from message_types import CONN, UI
 async def send_offer(msg, agent):
     endpoint = msg.message['endpoint']
     name = msg.message['name']
+    nonce = agent.ui_token
+    agent.pending_offers[name] = dict(name=name, endpoint=endpoint)
 
-    nonce = uuid.uuid4().hex
-    agent.pending_offers[nonce] = name
     msg = Message(
         CONN.OFFER,
         nonce,
@@ -38,22 +38,17 @@ async def send_offer(msg, agent):
 
     return Message(UI.OFFER_SENT, nonce, {'name': name})
 
-async def offer_recv(request):
-    agent = request.app['agent']
-    ui_event_queue = request.app['ui_event_queue']
-
-    offer = Serializer.unpack(await request.read())
-    agent.received_offers[offer.id] = offer
+async def offer_recv(msg, agent):
+    agent.received_offers[msg.id] = dict(name=msg.message['name'], endpoint=msg.message['endpoint']['url'])
 
     # Notify UI
     offer_received_msg = Message(
         UI.OFFER_RECEIVED,
-        offer.id,
-        {'name': offer.message['name']}
+        msg.id,
+        {'name': msg.message['name']}
     )
-    await ui_event_queue.send(Serializer.pack(offer_received_msg))
 
-    raise web.HTTPAccepted() # Return 202
+    return offer_received_msg
 
 async def handle_request(msg, agent):
     """ Handle reception of accept connection request message.

@@ -49,7 +49,6 @@ ROUTES = [
     web.get('/ws', AGENT['ui_event_queue'].ws_handler),
     web.static('/res', 'view/res'),
     web.post('/indy', AGENT['msg_receiver'].handle_message),
-    web.post('/offer', connection.offer_recv)
 ]
 
 AGENT.add_routes(ROUTES)
@@ -71,24 +70,26 @@ async def message_process(agent):
 
     await msg_router.register(CONN.REQUEST, connection.handle_request)
     await msg_router.register(CONN.RESPONSE, connection.handle_response)
+    await msg_router.register(CONN.OFFER, connection.offer_recv)
 
     while True:
         encrypted_msg_bytes = await msg_receiver.recv()
-
+        # TODO: make this logic work
         try:
-            decrypted_msg_bytes = await crypto.anon_decrypt(
-                    agent.wallet_handle,
-                    agent.endpoint_vk,
-                    encrypted_msg_bytes
-                    )
+            # decrypted_msg_bytes = await crypto.anon_decrypt(
+            #         agent.wallet_handle,
+            #         agent.endpoint_vk,
+            #         encrypted_msg_bytes
+            #         )
+            pass
         except Exception as e:
             print('Could not decrypt message: {}\nError: {}'.format(encrypted_msg_bytes, e))
             continue
 
         try:
-            msg = Serializer.unpack(msg_bytes)
+            msg = Serializer.unpack(encrypted_msg_bytes)
         except Exception as e:
-            print('Failed to unpack message: {}\n\nError: {}'.format(msg_bytes, e))
+            print('Failed to unpack message: {}\n\nError: {}'.format(encrypted_msg_bytes, e))
             continue
 
         res = await msg_router.route(msg, agent['agent'])
