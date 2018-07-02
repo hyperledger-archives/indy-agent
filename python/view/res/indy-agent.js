@@ -20,6 +20,8 @@
         CONN_REJECTED: "urn:sovrin:agent:message_type:sovrin.org/ui/connection_rejected"
     };
 
+    var connections_wrapper = $('#connections-wrapper');
+
     // Message Router {{{
     var msg_router = {
         routes: [],
