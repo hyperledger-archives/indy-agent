@@ -7,17 +7,19 @@ import json
 import uuid
 import datetime
 import aiohttp
-from aiohttp import web
-from indy import crypto, did, pairwise
-from model import Message
+
 import serializer.json_serializer as Serializer
+
+from indy import crypto, did, pairwise
+
+from model import Message
 from message_types import CONN, UI
 
 async def send_offer(msg, agent):
     endpoint = msg.message['endpoint']
     name = msg.message['name']
-    nonce = agent.ui_token
-    agent.pending_offers[name] = dict(name=name, endpoint=endpoint)
+    nonce = uuid.uuid4().hex
+    agent.pending_offers[nonce] = dict(name=name, endpoint=endpoint)
 
     msg = Message(
         CONN.OFFER,
@@ -36,31 +38,34 @@ async def send_offer(msg, agent):
             print(resp.status)
             print(await resp.text())
 
-    return Message(UI.OFFER_SENT, nonce, {'name': name})
+    return Message(UI.OFFER_SENT, agent.ui_token, {'name': name, 'id': nonce})
 
 async def offer_recv(msg, agent):
-    agent.received_offers[msg.id] = dict(name=msg.message['name'], endpoint=msg.message['endpoint']['url'])
-
+    conn_name = msg.message['name']
+    nonce = msg.id
+    agent.received_offers[nonce] = dict(name=conn_name,
+                                         endpoint=msg.message['endpoint']['url'])
     # Notify UI
     offer_received_msg = Message(
         UI.OFFER_RECEIVED,
-        msg.id,
-        {'name': msg.message['name']}
+        agent.ui_token,
+        {'name': conn_name,
+         'id': nonce}
     )
 
     return offer_received_msg
 
 async def send_offer_accepted(msg, agent):
-    receiver_nonce = msg.message['id']
-    receiver_endpoint = agent.received_offers[receiver_nonce]['endpoint']
+    nonce = msg.message['id']
+    receiver_endpoint = agent.received_offers[nonce]['endpoint']
     conn_name = msg.message['name']
 
-    agent.connections[receiver_nonce] = dict(name=conn_name, endpoint=receiver_endpoint)
-    del agent.received_offers[receiver_nonce]
+    agent.connections[nonce] = dict(name=conn_name, endpoint=receiver_endpoint)
+    del agent.received_offers[nonce]
 
     msg = Message(
         CONN.ACKNOWLEDGE,
-        agent.ui_token,
+        nonce,
         {
             'name': conn_name,
         }
@@ -71,49 +76,53 @@ async def send_offer_accepted(msg, agent):
             print(resp.status)
             print(await resp.text())
 
-    return Message(UI.OFFER_ACCEPTED_SENT, agent.ui_token, {'name': conn_name, 'id': receiver_nonce})
+    return Message(UI.OFFER_ACCEPTED_SENT, agent.ui_token, {'name': conn_name,
+                                                            'id': nonce})
 
 async def offer_accepted(msg, agent):
-    agent.connections[msg.id] = agent.pending_offers[msg.message['name']]
-    del agent.pending_offers[msg.message['name']]
+    nonce = msg.id
+    agent.connections[nonce] = agent.pending_offers[nonce]
+    del agent.pending_offers[nonce]
 
-    return Message(UI.OFFER_ACCEPTED, agent.ui_token, {'name': msg.message['name'], 'id': msg.id})
+    return Message(UI.OFFER_ACCEPTED, agent.ui_token, {'name': msg.message['name'],
+                                                       'id': nonce})
 
 async def sender_send_offer_rejected(msg, agent):
     conn_name = msg.message['name']
+    nonce = msg.message['id']
 
-    receiver_endpoint = agent.pending_offers[conn_name]['endpoint']
-    del agent.pending_offers[conn_name]
+    receiver_endpoint = agent.pending_offers[nonce]['endpoint']
+    del agent.pending_offers[nonce]
 
-    msg = Message(
+    rej_msg = Message(
         CONN.SENDER_REJECTION,
-        agent.ui_token,
+        nonce,
         {
-            'name': conn_name,
+            'name': conn_name
         }
     )
-    serialized_msg = Serializer.pack(msg)
+    serialized_msg = Serializer.pack(rej_msg)
     async with aiohttp.ClientSession() as session:
         async with session.post(receiver_endpoint, data=serialized_msg) as resp:
             print(resp.status)
             print(await resp.text())
 
-    return Message(UI.SENDER_OFFER_REJECTED, agent.ui_token, {'name': conn_name})
+    return Message(UI.SENDER_OFFER_REJECTED, agent.ui_token, {'name': conn_name,
+                                                              'id': nonce})
 
 
 async def receiver_send_offer_rejected(msg, agent):
     conn_name = msg.message['name']
-    receiver_nonce = msg.message['id']
-    receiver_endpoint = agent.received_offers[receiver_nonce]['endpoint']
+    nonce = msg.message['id']
+    receiver_endpoint = agent.received_offers[nonce]['endpoint']
 
-    del agent.received_offers[receiver_nonce]
+    del agent.received_offers[nonce]
 
     msg = Message(
         CONN.RECEIVER_REJECTION,
-        agent.ui_token,
+        nonce,
         {
             'name': conn_name,
-            'id': receiver_nonce
         }
     )
     serialized_msg = Serializer.pack(msg)
@@ -122,43 +131,46 @@ async def receiver_send_offer_rejected(msg, agent):
             print(resp.status)
             print(await resp.text())
 
-    return Message(UI.RECEIVER_OFFER_REJECTED, agent.ui_token, {'name': conn_name})
+    return Message(UI.RECEIVER_OFFER_REJECTED, agent.ui_token, {'name': conn_name,
+                                                                'id': nonce})
 
 async def sender_offer_rejected(msg, agent):
-    conn_name = msg.message['name']
-
-    del agent.pending_offers[conn_name]
+    nonce = msg.id
+    del agent.pending_offers[nonce]
 
     # Notify UI
     offer_reject_msg = Message(
         UI.SENDER_OFFER_REJECTED,
         agent.ui_token,
-        {'name': msg.message['name']}
+        {'name': msg.message['name'],
+         'id': nonce}
     )
 
     return offer_reject_msg
 
 async def receiver_offer_rejected(msg, agent):
-    del agent.received_offers[msg.id]
+    nonce = msg.id
+    del agent.received_offers[nonce]
 
     # Notify UI
     offer_reject_msg = Message(
         UI.RECEIVER_OFFER_REJECTED,
         agent.ui_token,
-        {'name': msg.message['name']}
+        {'name': msg.message['name'],
+         'id': nonce}
     )
 
     return offer_reject_msg
 
 async def send_conn_rejected(msg, agent):
     conn_name = msg.message['name']
-    receiver_nonce = msg.message['id']
-    receiver_endpoint = agent.connections[receiver_nonce]['endpoint']
-    del agent.connections[receiver_nonce]
+    nonce = msg.message['id']
+    receiver_endpoint = agent.connections[nonce]['endpoint']
+    del agent.connections[nonce]
 
     conn_rej_msg = Message(
         CONN.REJECTION,
-        agent.ui_token,
+        nonce,
         {
             'name': conn_name,
         }
@@ -170,8 +182,8 @@ async def send_conn_rejected(msg, agent):
             print(resp.status)
             print(await resp.text())
 
-    return Message(UI.CONN_REJECTED, agent.ui_token,
-                   {'name': conn_name})
+    return Message(UI.CONN_REJECTED, agent.ui_token, {'name': conn_name,
+                                                      'id': nonce})
 
 
 async def conn_rejected(msg, agent):
@@ -181,7 +193,8 @@ async def conn_rejected(msg, agent):
     conn_rej_msg = Message(
         UI.CONN_REJECTED,
         agent.ui_token,
-        {'name': msg.message['name']}
+        {'name': msg.message['name'],
+         'id': msg.id}
     )
 
     return conn_rej_msg

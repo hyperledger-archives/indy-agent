@@ -140,7 +140,7 @@
                 id: TOKEN,
                 message: {
                         name: msg.message.name,
-                        id: msg.id
+                        id: msg.message.id
                 }
             };
             socket.send(JSON.stringify(accepted_msg));
@@ -180,7 +180,7 @@
                 id: TOKEN,
                 message: {
                         name: msg.message.name,
-                        id: msg.id
+                        id: msg.message.id
                 }
             };
             socket.send(JSON.stringify(rejected_msg));
@@ -192,6 +192,7 @@
                 id: TOKEN,
                 message: {
                         name: msg.message.name,
+                        id: msg.message.id
                 }
             };
             socket.send(JSON.stringify(rejected_msg));
