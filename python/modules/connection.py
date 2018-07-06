@@ -29,7 +29,8 @@ async def send_offer(msg, agent):
             'endpoint': {
                 'url': agent.endpoint,
                 'verkey': agent.endpoint_vk,
-            }
+            },
+            'offer_endpoint': agent.offer_endpoint
         }
     )
     serialized_msg = Serializer.pack(msg)
@@ -44,7 +45,7 @@ async def offer_recv(msg, agent):
     conn_name = msg.message['name']
     nonce = msg.id
     agent.received_offers[nonce] = dict(name=conn_name,
-                                         endpoint=msg.message['endpoint']['url'])
+                                         endpoint=msg.message['offer_endpoint'])
     # Notify UI
     offer_received_msg = Message(
         UI.OFFER_RECEIVED,
