@@ -7,23 +7,28 @@
     connectionsTable = document.getElementById("conns-new");
 
     const MESSAGE_TYPES = {
-        STATE: "urn:sovrin:agent:message_type:sovrin.org/ui/state",
-        STATE_REQUEST: "urn:sovrin:agent:message_type:sovrin.org/ui/state_request",
-        INITIALIZE: "urn:sovrin:agent:message_type:sovrin.org/ui/initialize",
+        CONN_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/",
+        UI_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/sovrin.org/ui/1.0/"};
 
-        UI: {
-            SEND_INVITE: "urn:sovrin:agent:message_type:sovrin.org/ui/send_invite",
-            INVITE_SENT: "urn:sovrin:agent:message_type:sovrin.org/ui/invite_sent",
-            INVITE_RECEIVED: "urn:sovrin:agent:message_type:sovrin.org/ui/invite_received",
+    const UI_MESSAGE = {
+        STATE: MESSAGE_TYPES.UI_BASE + "state",
+        STATE_REQUEST: MESSAGE_TYPES.UI_BASE + "state_request",
+        INITIALIZE: MESSAGE_TYPES.UI_BASE + "initialize",
 
-            SEND_REQUEST: "urn:sovrin:agent:message_type:sovrin.org/ui/send_request",
-            REQUEST_SENT: "urn:sovrin:agent:message_type:sovrin.org/ui/request_sent",
-            REQUEST_RECEIVED: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/request",
+        SEND_INVITE: MESSAGE_TYPES.UI_BASE + "send_invite",
+        INVITE_SENT: MESSAGE_TYPES.UI_BASE + "invite_sent",
+        INVITE_RECEIVED: MESSAGE_TYPES.UI_BASE + "invite_received",
 
-            SEND_RESPONSE: "urn:sovrin:agent:message_type:sovrin.org/ui/send_response",
-            RESPONSE_SENT: "urn:sovrin:agent:message_type:sovrin.org/ui/response_sent",
-            RESPONSE_RECEIVED: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/response"
-        }
+        SEND_REQUEST: MESSAGE_TYPES.UI_BASE + "send_request",
+        REQUEST_SENT: MESSAGE_TYPES.UI_BASE + "request_sent",
+
+        SEND_RESPONSE: MESSAGE_TYPES.UI_BASE + "send_response",
+        RESPONSE_SENT: MESSAGE_TYPES.UI_BASE + "response_sent",
+    };
+
+    const CONN_MESSAGE = {
+        REQUEST_RECEIVED:MESSAGE_TYPES.CONN_BASE + "request",
+        RESPONSE_RECEIVED: MESSAGE_TYPES.CONN_BASE + "response"
     };
 
     // Message Router {{{
@@ -50,7 +55,7 @@
         function (socket) {
             socket.send(JSON.stringify(
                 {
-                    type: MESSAGE_TYPES.STATE_REQUEST,
+                    type: UI_MESSAGE.STATE_REQUEST,
                     id: TOKEN,
                     content: null
                 }
@@ -70,7 +75,7 @@
         inititialize:
         function (socket) {
             init_message = {
-                type: MESSAGE_TYPES.INITIALIZE,
+                type: UI_MESSAGE.INITIALIZE,
                 id: TOKEN,
                 content: {
                     name: document.getElementById('agent_name').value,
@@ -88,7 +93,7 @@
         send_invite:
         function (socket) {
             msg = {
-                type: MESSAGE_TYPES.UI.SEND_INVITE,
+                type: UI_MESSAGE.SEND_INVITE,
                 id: TOKEN,
                 content: {
                     name: document.getElementById('send_name').value,
@@ -114,7 +119,7 @@
         send_request:
         function (socket, prevMsg) {
             msg = {
-                type: MESSAGE_TYPES.UI.SEND_REQUEST,
+                type: UI_MESSAGE.SEND_REQUEST,
                 id: TOKEN,
                 content: {
                         name: prevMsg.content.name,
@@ -142,7 +147,7 @@
         send_response:
         function (socket, prevMsg) {
             msg = {
-                type: MESSAGE_TYPES.UI.SEND_RESPONSE,
+                type: UI_MESSAGE.SEND_RESPONSE,
                 id: TOKEN,
                 content: {
                         name: prevMsg.content.name,
@@ -171,15 +176,13 @@
     // }}}
 
     // Message Routes {{{
-    msg_router.register(MESSAGE_TYPES.STATE, ui_agent.update);
-
-
-    msg_router.register(MESSAGE_TYPES.UI.INVITE_SENT, connections.invite_sent);
-    msg_router.register(MESSAGE_TYPES.UI.INVITE_RECEIVED, connections.invite_received);
-    msg_router.register(MESSAGE_TYPES.UI.REQUEST_SENT, connections.request_sent);
-    msg_router.register(MESSAGE_TYPES.UI.RESPONSE_RECEIVED, connections.response_received);
-    msg_router.register(MESSAGE_TYPES.UI.REQUEST_RECEIVED, connections.request_received);
-    msg_router.register(MESSAGE_TYPES.UI.RESPONSE_SENT, connections.response_sent);
+    msg_router.register(UI_MESSAGE.STATE, ui_agent.update);
+    msg_router.register(UI_MESSAGE.INVITE_SENT, connections.invite_sent);
+    msg_router.register(UI_MESSAGE.INVITE_RECEIVED, connections.invite_received);
+    msg_router.register(UI_MESSAGE.REQUEST_SENT, connections.request_sent);
+    msg_router.register(CONN_MESSAGE.RESPONSE_RECEIVED, connections.response_received);
+    msg_router.register(CONN_MESSAGE.REQUEST_RECEIVED, connections.request_received);
+    msg_router.register(UI_MESSAGE.RESPONSE_SENT, connections.response_sent);
 
     // }}}
 

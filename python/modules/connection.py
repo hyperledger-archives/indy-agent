@@ -10,7 +10,7 @@ from indy import crypto, did
 
 import serializer.json_serializer as Serializer
 from model import Message
-from message_types import UI_NEW, CONN_NEW
+from message_types import UI, CONN, FORWARD
 from helpers import serialize_bytes_json, bytes_to_str, str_to_bytes
 
 
@@ -19,7 +19,7 @@ async def send_invite(msg: Message, agent) -> Message:
     conn_name = msg.content['name']
 
     msg = Message(
-        type=CONN_NEW.SEND_INVITE,
+        type=CONN.SEND_INVITE,
         content={
             'name': conn_name,
             'endpoint': {
@@ -35,7 +35,7 @@ async def send_invite(msg: Message, agent) -> Message:
             print(await resp.text())
 
     return Message(
-        type=UI_NEW.INVITE_SENT,
+        type=UI.INVITE_SENT,
         id=agent.ui_token,
         content={'name': conn_name})
 
@@ -44,7 +44,7 @@ async def invite_received(msg: Message, agent) -> Message:
     conn_name = msg.content['name']
 
     return Message(
-        type=UI_NEW.INVITE_RECEIVED,
+        type=UI.INVITE_RECEIVED,
         content={'name': conn_name,
                  'endpoint': msg.content['endpoint'],
                  'history': msg}
@@ -79,14 +79,14 @@ async def send_request(msg: Message, agent) -> Message:
     await did.set_did_metadata(agent.wallet_handle, endpoint_did_str, meta_json)
 
     inner_msg = Message(
-        type= "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/request",
+        type= CONN.SEND_REQUEST,
         key= agent.endpoint_vk,
         endpoint= my_endpoint_uri,
         content= serialize_bytes_json(await crypto.auth_crypt(agent.wallet_handle, endpoint_key, connection_key, endpoint_did_bytes))
     )
 
     outer_msg = Message(
-        type='did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/routing/1.0/forward_to_key',
+        type=FORWARD.FORWARD_TO_KEY,
         key=agent.endpoint_vk,
         content=inner_msg
     )
@@ -96,13 +96,15 @@ async def send_request(msg: Message, agent) -> Message:
     serialized_outer_msg_bytes = str_to_bytes(serialized_outer_msg)
 
     all_message = Message(
-        type=CONN_NEW.SEND_REQUEST,
+        type=CONN.SEND_REQUEST,
         content=serialize_bytes_json(
             await crypto.anon_crypt(connection_key,
                                     serialized_outer_msg_bytes))
     )
 
     serialized_msg = Serializer.pack(all_message)
+    print(200, serialized_msg, 250)
+    print(their_endpoint, 300)
 
     async with aiohttp.ClientSession() as session:
         async with session.post(their_endpoint, data=serialized_msg) as resp:
@@ -110,13 +112,14 @@ async def send_request(msg: Message, agent) -> Message:
             print(await resp.text())
 
     return Message(
-        type=UI_NEW.REQUEST_SENT,
+        type=UI.REQUEST_SENT,
         id=agent.ui_token,
         content={'name': conn_name}
     )
 
 
 async def request_received(msg: Message, agent) -> Message:
+    print('req_received')
     sender_endpoint_uri = msg.endpoint
     endpoint_key = msg.key
 
@@ -148,9 +151,9 @@ async def request_received(msg: Message, agent) -> Message:
     )
 
     await did.set_did_metadata(agent.wallet_handle, sender_did_str, meta_json)
-
+    print(200, UI.REQUEST_RECEIVED)
     return Message(
-        type=UI_NEW.REQUEST_RECEIVED,
+        type=UI.REQUEST_RECEIVED,
         content={
             'name': conn_name,
             'endpoint_uri': sender_endpoint_uri,
@@ -168,13 +171,13 @@ async def send_response(msg: Message, agent) -> Message:
     receiver_endpoint_did_bytes = str_to_bytes(receiver_endpoint_did)
 
     inner_msg = Message(
-        type="did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/response",
+        type=CONN.SEND_RESPONSE,
         to="did:sov:ABC",
         content=serialize_bytes_json(await crypto.auth_crypt(agent.wallet_handle, agent.endpoint_vk, receiver_endpoint_key, receiver_endpoint_did_bytes))
     )
 
     outer_msg = Message(
-        type="did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/routing/1.0/forward",
+        type=FORWARD.FORWARD,
         to="ABC",
         content=inner_msg
     )
@@ -199,7 +202,7 @@ async def send_response(msg: Message, agent) -> Message:
                                                  receiver_endpoint_did))
     conn_name = meta['conn_name']
 
-    return Message(type=UI_NEW.RESPONSE_SENT,
+    return Message(type=UI.RESPONSE_SENT,
                    id=agent.ui_token,
                    content={'name': conn_name})
 
@@ -216,7 +219,7 @@ async def response_received(msg: Message, agent) -> Message:
     conn_name = meta['conn_name']
 
     return Message(
-        type=UI_NEW.RESPONSE_RECEIVED,
+        type=UI.RESPONSE_RECEIVED,
         id=agent.ui_token,
         content={'name': conn_name,
                  'history': msg}

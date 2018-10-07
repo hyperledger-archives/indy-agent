@@ -26,7 +26,7 @@ from receiver.message_receiver import MessageReceiver as Receiver
 from router.simple_router import SimpleRouter as Router
 from ui_event import UIEventQueue
 from model import Agent
-from message_types import CONN, UI, UI_NEW, CONN_NEW
+from message_types import CONN, UI, UI, CONN
 from model import Message
 
 
@@ -75,7 +75,7 @@ async def conn_process(agent):
     conn_receiver = agent['conn_receiver']
     ui_event_queue = agent['ui_event_queue']
 
-    await conn_router.register(CONN_NEW.SEND_INVITE, connection.invite_received)
+    await conn_router.register(CONN.SEND_INVITE, connection.invite_received)
 
     while True:
         msg_bytes = await conn_receiver.recv()
@@ -98,8 +98,8 @@ async def message_process(agent):
     msg_receiver = agent['msg_receiver']
     ui_event_queue = agent['ui_event_queue']
 
-    await msg_router.register(CONN_NEW.SEND_REQUEST, connection.request_received)
-    await msg_router.register(CONN_NEW.SEND_RESPONSE, connection.response_received)
+    await msg_router.register(CONN.SEND_REQUEST, connection.request_received)
+    await msg_router.register(CONN.SEND_RESPONSE, connection.response_received)
 
     while True:
         encrypted_msg_bytes = await msg_receiver.recv()
@@ -111,7 +111,6 @@ async def message_process(agent):
             continue
 
         encrypted_msg_bytes = base64.b64decode(encrypted_msg_str.content.encode('utf-8'))
-
         try:
             decrypted_msg = await crypto.anon_decrypt(
                     AGENT['agent'].wallet_handle,
@@ -140,16 +139,18 @@ async def ui_event_process(agent):
     ui_router = agent['ui_router']
     ui_event_queue = agent['ui_event_queue']
 
-    await ui_router.register(UI_NEW.SEND_INVITE, connection.send_invite)
-    await ui_router.register(UI_NEW.INVITE_RECEIVED, connection.invite_received)
-    await ui_router.register(UI_NEW.SEND_REQUEST, connection.send_request)
-    await ui_router.register(UI_NEW.SEND_RESPONSE, connection.send_response)
+    await ui_router.register(UI.SEND_INVITE, connection.send_invite)
+    await ui_router.register(UI.INVITE_RECEIVED, connection.invite_received)
+    await ui_router.register(UI.SEND_REQUEST, connection.send_request)
+    await ui_router.register(UI.SEND_RESPONSE, connection.send_response)
 
     await ui_router.register(UI.STATE_REQUEST, ui.ui_connect)
     await ui_router.register(UI.INITIALIZE, init.initialize_agent)
 
     while True:
         msg = await ui_event_queue.recv()
+
+
 
         if not isinstance(msg, Message):
             try:
