@@ -67,7 +67,7 @@ AGENT.add_routes(ROUTES)
 RUNNER = web.AppRunner(AGENT)
 LOOP.run_until_complete(RUNNER.setup())
 
-SERVER = web.TCPSite(RUNNER, 'localhost', PORT)
+SERVER = web.TCPSite(runner=RUNNER, port=PORT)
 
 
 async def conn_process(agent):
