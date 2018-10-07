@@ -103,8 +103,6 @@ async def send_request(msg: Message, agent) -> Message:
     )
 
     serialized_msg = Serializer.pack(all_message)
-    print(200, serialized_msg, 250)
-    print(their_endpoint, 300)
 
     async with aiohttp.ClientSession() as session:
         async with session.post(their_endpoint, data=serialized_msg) as resp:
@@ -119,7 +117,6 @@ async def send_request(msg: Message, agent) -> Message:
 
 
 async def request_received(msg: Message, agent) -> Message:
-    print('req_received')
     sender_endpoint_uri = msg.endpoint
     endpoint_key = msg.key
 
@@ -151,7 +148,6 @@ async def request_received(msg: Message, agent) -> Message:
     )
 
     await did.set_did_metadata(agent.wallet_handle, sender_did_str, meta_json)
-    print(200, UI.REQUEST_RECEIVED)
     return Message(
         type=UI.REQUEST_RECEIVED,
         content={
