@@ -14,9 +14,10 @@ import uuid
 import aiohttp_jinja2
 import jinja2
 import base64
+import json
 
 from aiohttp import web
-from indy import crypto
+from indy import crypto, did, error, IndyError
 
 import modules.connection as connection
 import modules.init as init
@@ -26,7 +27,7 @@ from receiver.message_receiver import MessageReceiver as Receiver
 from router.simple_router import SimpleRouter as Router
 from ui_event import UIEventQueue
 from model import Agent
-from message_types import CONN, UI, UI, CONN
+from message_types import UI, CONN
 from model import Message
 
 
@@ -100,10 +101,10 @@ async def message_process(agent):
 
     await msg_router.register(CONN.SEND_REQUEST, connection.request_received)
     await msg_router.register(CONN.SEND_RESPONSE, connection.response_received)
+    await msg_router.register(CONN.SEND_MESSAGE, connection.message_received)
 
     while True:
         encrypted_msg_bytes = await msg_receiver.recv()
-
         try:
             encrypted_msg_str = Serializer.unpack(encrypted_msg_bytes)
         except Exception as e:
@@ -111,14 +112,38 @@ async def message_process(agent):
             continue
 
         encrypted_msg_bytes = base64.b64decode(encrypted_msg_str.content.encode('utf-8'))
-        try:
-            decrypted_msg = await crypto.anon_decrypt(
+
+        agent_dids_str = await did.list_my_dids_with_meta(AGENT['agent'].wallet_handle)
+
+        agent_dids_json = json.loads(agent_dids_str)
+
+        this_did = ""
+
+        #  trying to find verkey for encryption
+        for agent_did_data in agent_dids_json:
+            try:
+                decrypted_msg = await crypto.anon_decrypt(
                     AGENT['agent'].wallet_handle,
-                    AGENT['agent'].endpoint_vk,
+                    agent_did_data['verkey'],
                     encrypted_msg_bytes
-                    )
-        except Exception as e:
-            print('Could not decrypt message: {}\nError: {}'.format(encrypted_msg_bytes, e))
+                )
+                this_did = agent_did_data['did']
+                #  decrypted -> found key, stop loop
+                break
+
+            except IndyError as e:
+                #  key did not work
+                if e.error_code == error.ErrorCode.CommonInvalidStructure:
+                    print('Key did not work')
+                    continue
+                else:
+                    #  something else happened
+                    print('Could not decrypt message: {}\nError: {}'.format(
+                        encrypted_msg_bytes, e))
+                    continue
+
+        if not decrypted_msg:
+            "Agent doesn't have needed verkey for anon_decrypt"
             continue
 
         try:
@@ -127,6 +152,8 @@ async def message_process(agent):
             print('Failed to unpack message: {}\n\nError: {}'.format(decrypted_msg, e))
             continue
 
+        #  pass this connections did with the message
+        msg.content['did'] = this_did
         msg = Serializer.unpack_dict(msg.content)
 
         res = await msg_router.route(msg, agent['agent'])
@@ -143,14 +170,13 @@ async def ui_event_process(agent):
     await ui_router.register(UI.INVITE_RECEIVED, connection.invite_received)
     await ui_router.register(UI.SEND_REQUEST, connection.send_request)
     await ui_router.register(UI.SEND_RESPONSE, connection.send_response)
+    await ui_router.register(UI.SEND_MESSAGE, connection.send_message)
 
     await ui_router.register(UI.STATE_REQUEST, ui.ui_connect)
     await ui_router.register(UI.INITIALIZE, init.initialize_agent)
 
     while True:
         msg = await ui_event_queue.recv()
-
-
 
         if not isinstance(msg, Message):
             try:
