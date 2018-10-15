@@ -24,11 +24,15 @@
 
         SEND_RESPONSE: MESSAGE_TYPES.UI_BASE + "send_response",
         RESPONSE_SENT: MESSAGE_TYPES.UI_BASE + "response_sent",
+
+        SEND_MESSAGE: MESSAGE_TYPES.UI_BASE + "send_message",
+        MESSAGE_SENT: MESSAGE_TYPES.UI_BASE + "message_sent"
     };
 
     const CONN_MESSAGE = {
         REQUEST_RECEIVED:MESSAGE_TYPES.CONN_BASE + "request",
-        RESPONSE_RECEIVED: MESSAGE_TYPES.CONN_BASE + "response"
+        RESPONSE_RECEIVED: MESSAGE_TYPES.CONN_BASE + "response",
+        MESSAGE_RECEIVED: MESSAGE_TYPES.CONN_BASE + "message"
     };
 
     // Message Router {{{
@@ -124,7 +128,7 @@
                 content: {
                         name: prevMsg.content.name,
                         endpoint: prevMsg.content.endpoint.url,
-                        key: prevMsg.content.endpoint.verkey,
+                        key: prevMsg.content.connection_key,
                 }
             };
             socket.send(JSON.stringify(msg));
@@ -151,8 +155,8 @@
                 id: TOKEN,
                 content: {
                         name: prevMsg.content.name,
-                        endpoint_key: prevMsg.content.endpoint_key,
-                        endpoint_uri: prevMsg.content.endpoint_uri,
+                        // endpoint_key: prevMsg.content.endpoint_key,
+                        // endpoint_uri: prevMsg.content.endpoint_uri,
                         endpoint_did: prevMsg.content.endpoint_did
                 }
             };
@@ -169,8 +173,38 @@
         function (socket, msg) {
             document.getElementById("history_body").innerText += getTodayDate() + ": " + displayObject(msg.content.history);
             removeRow(msg.content.name);
-            displayConnection(msg.content.name, [], 'Response received');
+
+            displayConnection(msg.content.name, [['Send Message', connections.send_message, socket, msg]], 'Response received');
         },
+
+        send_message:
+        function (socket, prevMsg) {
+            msg = {
+                type: UI_MESSAGE.SEND_MESSAGE,
+                id: TOKEN,
+                content: {
+                        name: prevMsg.content.name,
+                        message: 'Hello, world!',
+                        their_did: prevMsg.content.their_did
+                }
+            };
+            socket.send(JSON.stringify(msg));
+        },
+
+        message_sent:
+        function (socket, msg) {
+            removeRow(msg.content.name);
+            displayConnection(msg.content.name, [], 'Message sent');
+        },
+
+        message_received:
+        function (socket, msg) {
+            document.getElementById("history_body").innerText += getTodayDate() + ": " + displayObject(msg.content.history);
+            removeRow(msg.content.name);
+
+            displayConnection(msg.content.name, [['Send Message', connections.send_message, socket, msg]], 'Message received');
+        },
+
 
     };
     // }}}
@@ -180,9 +214,12 @@
     msg_router.register(UI_MESSAGE.INVITE_SENT, connections.invite_sent);
     msg_router.register(UI_MESSAGE.INVITE_RECEIVED, connections.invite_received);
     msg_router.register(UI_MESSAGE.REQUEST_SENT, connections.request_sent);
-    msg_router.register(CONN_MESSAGE.RESPONSE_RECEIVED, connections.response_received);
-    msg_router.register(CONN_MESSAGE.REQUEST_RECEIVED, connections.request_received);
     msg_router.register(UI_MESSAGE.RESPONSE_SENT, connections.response_sent);
+    msg_router.register(UI_MESSAGE.MESSAGE_SENT, connections.message_sent);
+
+    msg_router.register(CONN_MESSAGE.REQUEST_RECEIVED, connections.request_received);
+    msg_router.register(CONN_MESSAGE.RESPONSE_RECEIVED, connections.response_received);
+    msg_router.register(CONN_MESSAGE.MESSAGE_RECEIVED, connections.message_received);
 
     // }}}
 
