@@ -16,10 +16,12 @@ async def initialize_agent(msg, agent):
     data = msg.content
     agent.owner = data['name']
     passphrase = data['passphrase']
-    wallet_config = json.dumps({"id": "wallet"})
-    wallet_credentials = json.dumps({"key": "wallet_key"})
 
+    #set wallet name from msg contents
     wallet_name = '%s-wallet' % agent.owner
+
+    wallet_config = json.dumps({"id": wallet_name})
+    wallet_credentials = json.dumps({"key": passphrase})
 
     # pylint: disable=bare-except
     # TODO: better handle potential exceptions.
