@@ -30,10 +30,10 @@ class UI:
 class CONN:
     BASE = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/"
 
-    SEND_INVITE = BASE + "send_invite"
-    SEND_REQUEST = BASE + "request"
-    SEND_RESPONSE = BASE + "response"
-    SEND_MESSAGE = BASE + "message"
+    INVITE = BASE + "invite"
+    REQUEST = BASE + "request"
+    RESPONSE = BASE + "response"
+    MESSAGE = BASE + "message"
 
 
 class FORWARD:

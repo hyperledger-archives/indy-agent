@@ -82,7 +82,7 @@ async def conn_process(agent):
     ui_event_queue = agent['ui_event_queue']
     connection = agent['modules']['connection']
 
-    await conn_router.register(CONN.SEND_INVITE, connection.invite_received)
+    await conn_router.register(CONN.INVITE, connection.invite_received)
 
     while True:
         msg_bytes = await conn_receiver.recv()
@@ -106,9 +106,9 @@ async def message_process(agent):
     ui_event_queue = agent['ui_event_queue']
     connection = agent['modules']['connection']
 
-    await msg_router.register(CONN.SEND_REQUEST, connection.request_received)
-    await msg_router.register(CONN.SEND_RESPONSE, connection.response_received)
-    await msg_router.register(CONN.SEND_MESSAGE, connection.message_received)
+    await msg_router.register(CONN.REQUEST, connection.request_received)
+    await msg_router.register(CONN.RESPONSE, connection.response_received)
+    await msg_router.register(CONN.MESSAGE, connection.message_received)
 
     while True:
         encrypted_msg_bytes = await msg_receiver.recv()

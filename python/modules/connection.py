@@ -34,7 +34,7 @@ class Connection(Module):
         await did.set_did_metadata(self.agent.wallet_handle, endpoint_did_str, meta_json)
 
         msg = Message(
-            type=CONN.SEND_INVITE,
+            type=CONN.INVITE,
             content={
                 'name': conn_name,
                 'endpoint': {
@@ -97,7 +97,7 @@ class Connection(Module):
         await did.set_did_metadata(self.agent.wallet_handle, my_endpoint_did_str, meta_json)
 
         inner_msg = Message(
-            type=CONN.SEND_REQUEST,
+            type=CONN.REQUEST,
             to="did:sov:ABC",
             endpoint=my_endpoint_uri,
             content=serialize_bytes_json(await crypto.auth_crypt(self.agent.wallet_handle, my_connection_key, their_connection_key, data_to_send_bytes))
@@ -114,7 +114,7 @@ class Connection(Module):
         serialized_outer_msg_bytes = str_to_bytes(serialized_outer_msg)
 
         all_message = Message(
-            type=CONN.SEND_REQUEST,
+            type=CONN.REQUEST,
             content=serialize_bytes_json(
                 await crypto.anon_crypt(their_connection_key,
                                         serialized_outer_msg_bytes))
@@ -216,7 +216,7 @@ class Connection(Module):
         my_verkey_str = my_did_info_json['verkey']
 
         inner_msg = Message(
-            type=CONN.SEND_RESPONSE,
+            type=CONN.RESPONSE,
             to="did:sov:ABC",
             content=serialize_bytes_json(await crypto.auth_crypt(
                 self.agent.wallet_handle, my_verkey_str, their_verkey_str, data_to_send_bytes))
@@ -329,7 +329,7 @@ class Connection(Module):
         my_verkey_str = my_did_info_json['verkey']
 
         inner_msg = Message(
-            type=CONN.SEND_MESSAGE,
+            type=CONN.MESSAGE,
             to="did:sov:ABC",
             content=serialize_bytes_json(
                 await crypto.auth_crypt(self.agent.wallet_handle, my_verkey_str,
