@@ -9,36 +9,40 @@ from indy import wallet, did
 
 import modules.ui as ui
 
+class Init(Module):
 
-async def initialize_agent(msg, agent):
-    """ Initialize agent.
-    """
-    data = msg.content
-    agent.owner = data['name']
-    passphrase = data['passphrase']
+    def __init__(agent):
+        self.agent = agent
 
-    #set wallet name from msg contents
-    wallet_name = '%s-wallet' % agent.owner
+    async def initialize_agent(self, msg, agent):
+        """ Initialize agent.
+        """
+        data = msg.content
+        agent.owner = data['name']
+        passphrase = data['passphrase']
 
-    wallet_config = json.dumps({"id": wallet_name})
-    wallet_credentials = json.dumps({"key": passphrase})
+        #set wallet name from msg contents
+        wallet_name = '%s-wallet' % agent.owner
 
-    # pylint: disable=bare-except
-    # TODO: better handle potential exceptions.
-    try:
-        await wallet.create_wallet(wallet_config, wallet_credentials)
-    except Exception as e:
-        print(e)
+        wallet_config = json.dumps({"id": wallet_name})
+        wallet_credentials = json.dumps({"key": passphrase})
 
-    try:
-        agent.wallet_handle = await wallet.open_wallet(wallet_config,
-                                                       wallet_credentials)
-    except Exception as e:
-        print(e)
-        print("Could not open wallet!")
+        # pylint: disable=bare-except
+        # TODO: better handle potential exceptions.
+        try:
+            await wallet.create_wallet(wallet_config, wallet_credentials)
+        except Exception as e:
+            print(e)
 
-    (_, agent.endpoint_vk) = await did.create_and_store_my_did(
-        agent.wallet_handle, "{}")
+        try:
+            agent.wallet_handle = await wallet.open_wallet(wallet_config,
+                                                           wallet_credentials)
+        except Exception as e:
+            print(e)
+            print("Could not open wallet!")
 
-    agent.initialized = True
-    return await ui.ui_connect(None, agent)
+        (_, agent.endpoint_vk) = await did.create_and_store_my_did(
+            agent.wallet_handle, "{}")
+
+        agent.initialized = True
+        return await ui.ui_connect(None, agent)

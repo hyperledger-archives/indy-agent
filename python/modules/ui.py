@@ -4,16 +4,20 @@ import jinja2
 from model import Message, Agent
 from message_types import UI
 
+class Ui(Module):
 
-async def ui_connect(_, agent: Agent) -> Message:
+    def __init__(agent):
+        self.agent = agent
 
-    return Message(
-        type=UI.STATE,
-        content={
-            'initialized': agent.initialized,
-            'agent_name': agent.owner
-        }
-    )
+    async def ui_connect(_) -> Message:
+
+        return Message(
+            type=UI.STATE,
+            content={
+                'initialized': self.agent.initialized,
+                'agent_name': self.agent.owner
+            }
+        )
 
 
 @aiohttp_jinja2.template('index.html')

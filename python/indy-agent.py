@@ -19,7 +19,7 @@ import json
 from aiohttp import web
 from indy import crypto, did, error, IndyError
 
-import modules.connection as connection
+from modules.connection import Connection
 import modules.init as init
 import modules.ui as ui
 import serializer.json_serializer as Serializer
@@ -52,6 +52,7 @@ AGENT['conn_router'] = Router()
 AGENT['conn_receiver'] = Receiver()
 
 AGENT['agent'] = Agent()
+AGENT['connection'] = Connection(AGENT['agent'])
 UI_TOKEN = uuid.uuid4().hex
 AGENT['agent'].ui_token = UI_TOKEN
 
@@ -75,6 +76,7 @@ async def conn_process(agent):
     conn_router = agent['conn_router']
     conn_receiver = agent['conn_receiver']
     ui_event_queue = agent['ui_event_queue']
+    connection = agent['connection']
 
     await conn_router.register(CONN.SEND_INVITE, connection.invite_received)
 
@@ -98,6 +100,7 @@ async def message_process(agent):
     msg_router = agent['msg_router']
     msg_receiver = agent['msg_receiver']
     ui_event_queue = agent['ui_event_queue']
+    connection = agent['connection']
 
     await msg_router.register(CONN.SEND_REQUEST, connection.request_received)
     await msg_router.register(CONN.SEND_RESPONSE, connection.response_received)
@@ -165,6 +168,7 @@ async def message_process(agent):
 async def ui_event_process(agent):
     ui_router = agent['ui_router']
     ui_event_queue = agent['ui_event_queue']
+    connection = agent['connection']
 
     await ui_router.register(UI.SEND_INVITE, connection.send_invite)
     await ui_router.register(UI.INVITE_RECEIVED, connection.invite_received)
