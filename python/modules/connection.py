@@ -16,10 +16,10 @@ from helpers import serialize_bytes_json, bytes_to_str, str_to_bytes
 
 class Connection(Module):
 
-    def __init__(agent):
+    def __init__(self, agent):
         self.agent = agent
 
-    async def send_invite(msg: Message -> Message:
+    async def send_invite(self, msg: Message) -> Message:
         their_endpoint = msg.content['endpoint']
         conn_name = msg.content['name']
 
@@ -55,7 +55,7 @@ class Connection(Module):
             content={'name': conn_name})
 
 
-    async def invite_received(msg: Message -> Message:
+    async def invite_received(self, msg: Message) -> Message:
         conn_name = msg.content['name']
         their_endpoint = msg.content['endpoint']
         their_connection_key = msg.content['connection_key']
@@ -69,14 +69,14 @@ class Connection(Module):
         )
 
 
-    async def send_request(msg: Message, agent) -> Message:
+    async def send_request(self, msg: Message) -> Message:
         their_endpoint = msg.content['endpoint']
         conn_name = msg.content['name']
         their_connection_key = msg.content['key']
 
-        my_endpoint_uri = agent.endpoint
+        my_endpoint_uri = self.agent.endpoint
 
-        (my_endpoint_did_str, my_connection_key) = await did.create_and_store_my_did(agent.wallet_handle, "{}")
+        (my_endpoint_did_str, my_connection_key) = await did.create_and_store_my_did(self.agent.wallet_handle, "{}")
 
         data_to_send = json.dumps(
             {
@@ -94,13 +94,13 @@ class Connection(Module):
             }
         )
 
-        await did.set_did_metadata(agent.wallet_handle, my_endpoint_did_str, meta_json)
+        await did.set_did_metadata(self.agent.wallet_handle, my_endpoint_did_str, meta_json)
 
         inner_msg = Message(
             type=CONN.SEND_REQUEST,
             to="did:sov:ABC",
             endpoint=my_endpoint_uri,
-            content=serialize_bytes_json(await crypto.auth_crypt(agent.wallet_handle, my_connection_key, their_connection_key, data_to_send_bytes))
+            content=serialize_bytes_json(await crypto.auth_crypt(self.agent.wallet_handle, my_connection_key, their_connection_key, data_to_send_bytes))
         )
 
         outer_msg = Message(
@@ -129,12 +129,12 @@ class Connection(Module):
 
         return Message(
             type=UI.REQUEST_SENT,
-            id=agent.ui_token,
+            id=self.agent.ui_token,
             content={'name': conn_name}
         )
 
 
-    async def request_received(msg: Message -> Message:
+    async def request_received(self, msg: Message) -> Message:
         their_endpoint_uri = msg.endpoint
 
         my_did_str = msg.did
@@ -190,7 +190,7 @@ class Connection(Module):
         )
 
 
-    async def send_response(msg: Message -> Message:
+    async def send_response(self, msg: Message) -> Message:
         their_did_str = msg.content['endpoint_did']
 
         pairwise_conn_info_str = await pairwise.get_pairwise(self.agent.wallet_handle, their_did_str)
@@ -249,7 +249,7 @@ class Connection(Module):
                        content={'name': conn_name})
 
 
-    async def response_received(msg: Message -> Message:
+    async def response_received(self, msg: Message) -> Message:
         my_did_str = msg.did
 
         my_did_info_str = await did.get_my_did_with_meta(self.agent.wallet_handle, my_did_str)
@@ -301,7 +301,7 @@ class Connection(Module):
         )
 
 
-    async def send_message(msg: Message -> Message:
+    async def send_message(self, msg: Message) -> Message:
         their_did_str = msg.content['their_did']
         message_to_send = msg.content['message']
 
@@ -363,7 +363,7 @@ class Connection(Module):
                        content={'name': conn_name})
 
 
-    async def message_received(msg: Message -> Message:
+    async def message_received(self, msg: Message) -> Message:
         my_did_str = msg.did
         their_did_str = ""
         conn_name = ""
