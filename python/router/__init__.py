@@ -26,3 +26,6 @@ class RouteAlreadyRegisteredException(Exception):
         Raised by router.register
     """
     pass
+
+class UnparsableMessageFamilyException(Exception):
+    pass

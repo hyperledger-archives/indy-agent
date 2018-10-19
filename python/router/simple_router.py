@@ -13,7 +13,7 @@ class SimpleRouter(BaseRouter):
     def __init__(self):
         self.routes = {}
 
-    async def register(self, msg_type: str, handler: Callable[[Message], None]):
+    def register(self, msg_type: str, handler: Callable[[Message], None]):
         """ Register a callback for messages with a given type.
         """
         if msg_type in self.routes.keys():

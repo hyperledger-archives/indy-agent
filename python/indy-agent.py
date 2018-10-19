@@ -24,10 +24,10 @@ from modules.ui import Ui
 import modules.ui
 import serializer.json_serializer as Serializer
 from receiver.message_receiver import MessageReceiver as Receiver
-from router.simple_router import SimpleRouter as Router
+from router.family_router import FamilyRouter as Router
 from ui_event import UIEventQueue
 from model import Agent
-from message_types import UI, CONN
+from message_types import UI, CONN, CONN_UI
 from model import Message
 
 
@@ -82,7 +82,7 @@ async def conn_process(agent):
     ui_event_queue = agent['ui_event_queue']
     connection = agent['modules']['connection']
 
-    await conn_router.register(CONN.INVITE, connection.invite_received)
+    conn_router.register(CONN.FAMILY, connection)
 
     while True:
         msg_bytes = await conn_receiver.recv()
@@ -106,9 +106,7 @@ async def message_process(agent):
     ui_event_queue = agent['ui_event_queue']
     connection = agent['modules']['connection']
 
-    await msg_router.register(CONN.REQUEST, connection.request_received)
-    await msg_router.register(CONN.RESPONSE, connection.response_received)
-    await msg_router.register(CONN.MESSAGE, connection.message_received)
+    msg_router.register(CONN.FAMILY, connection)
 
     while True:
         encrypted_msg_bytes = await msg_receiver.recv()
@@ -175,14 +173,8 @@ async def ui_event_process(agent):
     connection = agent['modules']['connection']
     ui = agent['modules']['ui']
 
-    await ui_router.register(UI.SEND_INVITE, connection.send_invite)
-    await ui_router.register(UI.INVITE_RECEIVED, connection.invite_received)
-    await ui_router.register(UI.SEND_REQUEST, connection.send_request)
-    await ui_router.register(UI.SEND_RESPONSE, connection.send_response)
-    await ui_router.register(UI.SEND_MESSAGE, connection.send_message)
-
-    await ui_router.register(UI.STATE_REQUEST, ui.ui_connect)
-    await ui_router.register(UI.INITIALIZE, ui.initialize_agent)
+    ui_router.register(CONN_UI.FAMILY, connection)
+    ui_router.register(UI.FAMILY, ui)
 
     while True:
         msg = await ui_event_queue.recv()

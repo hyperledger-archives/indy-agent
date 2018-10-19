@@ -3,6 +3,7 @@ import jinja2
 import json
 from indy import did, wallet
 
+from router.simple_router import SimpleRouter
 from model import Message, Agent
 from message_types import UI
 from . import Module
@@ -11,6 +12,12 @@ class Ui(Module):
 
     def __init__(self, agent):
         self.agent = agent
+        self.router = SimpleRouter()
+        self.router.register(UI.STATE_REQUEST, self.ui_connect)
+        self.router.register(UI.INITIALIZE, self.initialize_agent)
+
+    async def route(self, msg: Message) -> Message:
+        return await self.router.route(msg)
 
     async def ui_connect(self, _) -> Message:
 

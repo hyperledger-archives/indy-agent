@@ -9,17 +9,34 @@ import aiohttp
 from indy import crypto, did, pairwise
 
 import serializer.json_serializer as Serializer
+from router.simple_router import SimpleRouter
 from . import Module
 from model import Message
-from message_types import UI, CONN, FORWARD
+from message_types import CONN_UI, CONN, FORWARD
 from helpers import serialize_bytes_json, bytes_to_str, str_to_bytes
 
 class Connection(Module):
 
     def __init__(self, agent):
         self.agent = agent
+        self.router = SimpleRouter()
+        self.router.register(CONN.INVITE, self.invite_received)
+        self.router.register(CONN.REQUEST, self.request_received)
+        self.router.register(CONN.RESPONSE, self.response_received)
+        self.router.register(CONN.MESSAGE, self.message_received)
+        self.router.register(CONN_UI.SEND_INVITE, self.send_invite)
+        self.router.register(CONN_UI.SEND_REQUEST, self.send_request)
+        self.router.register(CONN_UI.SEND_RESPONSE, self.send_response)
+        self.router.register(CONN_UI.SEND_MESSAGE, self.send_message)
+
+    async def route(self, msg: Message) -> Message:
+        return await self.router.route(msg)
+        
 
     async def send_invite(self, msg: Message) -> Message:
+        """ UI activated method.
+        """
+
         their_endpoint = msg.content['endpoint']
         conn_name = msg.content['name']
 
@@ -50,7 +67,7 @@ class Connection(Module):
                 print(await resp.text())
 
         return Message(
-            type=UI.INVITE_SENT,
+            type=CONN_UI.INVITE_SENT,
             id=self.agent.ui_token,
             content={'name': conn_name})
 
@@ -61,7 +78,7 @@ class Connection(Module):
         their_connection_key = msg.content['connection_key']
 
         return Message(
-            type=UI.INVITE_RECEIVED,
+            type=CONN_UI.INVITE_RECEIVED,
             content={'name': conn_name,
                      'endpoint': their_endpoint,
                      'connection_key': their_connection_key,
@@ -70,6 +87,9 @@ class Connection(Module):
 
 
     async def send_request(self, msg: Message) -> Message:
+        """ UI activated method.
+        """
+
         their_endpoint = msg.content['endpoint']
         conn_name = msg.content['name']
         their_connection_key = msg.content['key']
@@ -128,7 +148,7 @@ class Connection(Module):
                 print(await resp.text())
 
         return Message(
-            type=UI.REQUEST_SENT,
+            type=CONN_UI.REQUEST_SENT,
             id=self.agent.ui_token,
             content={'name': conn_name}
         )
@@ -181,7 +201,7 @@ class Connection(Module):
         await pairwise.create_pairwise(self.agent.wallet_handle, their_did_str, my_did_str, meta_json)
 
         return Message(
-            type=UI.REQUEST_RECEIVED,
+            type=CONN_UI.REQUEST_RECEIVED,
             content={
                 'name': conn_name,
                 'endpoint_did': their_did_str,
@@ -191,6 +211,9 @@ class Connection(Module):
 
 
     async def send_response(self, msg: Message) -> Message:
+        """ UI activated method.
+        """
+
         their_did_str = msg.content['endpoint_did']
 
         pairwise_conn_info_str = await pairwise.get_pairwise(self.agent.wallet_handle, their_did_str)
@@ -244,7 +267,7 @@ class Connection(Module):
                 print(resp.status)
                 print(await resp.text())
 
-        return Message(type=UI.RESPONSE_SENT,
+        return Message(type=CONN_UI.RESPONSE_SENT,
                        id=self.agent.ui_token,
                        content={'name': conn_name})
 
@@ -293,7 +316,7 @@ class Connection(Module):
 
         #  pairwise connection between agents is established to this point
         return Message(
-            type=UI.RESPONSE_RECEIVED,
+            type=CONN_UI.RESPONSE_RECEIVED,
             id=self.agent.ui_token,
             content={'name': conn_name,
                      'their_did': their_did_str,
@@ -302,6 +325,9 @@ class Connection(Module):
 
 
     async def send_message(self, msg: Message) -> Message:
+        """ UI activated method.
+        """
+
         their_did_str = msg.content['their_did']
         message_to_send = msg.content['message']
 
@@ -358,7 +384,7 @@ class Connection(Module):
                 print(resp.status)
                 print(await resp.text())
 
-        return Message(type=UI.MESSAGE_SENT,
+        return Message(type=CONN_UI.MESSAGE_SENT,
                        id=self.agent.ui_token,
                        content={'name': conn_name})
 
@@ -392,7 +418,7 @@ class Connection(Module):
         their_data_json = json.loads(bytes_to_str(their_data_bytes))
 
         return Message(
-            type=UI.MESSAGE_RECEIVED,
+            type=CONN_UI.MESSAGE_RECEIVED,
             id=self.agent.ui_token,
             content={'name': conn_name,
                      'their_did': their_did_str,
