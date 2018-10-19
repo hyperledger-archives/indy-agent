@@ -31,7 +31,7 @@ class Connection(Module):
 
     async def route(self, msg: Message) -> Message:
         return await self.router.route(msg)
-        
+
 
     async def send_invite(self, msg: Message) -> Message:
         """ UI activated method.
