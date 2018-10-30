@@ -3,31 +3,33 @@
 
     const MESSAGE_TYPES = {
         CONN_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/",
-        UI_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/sovrin.org/ui/1.0/"};
+        CONN_UI_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections_ui/1.0/",
+        UI_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/ui/1.0/"
+    };
 
     const UI_MESSAGE = {
         STATE: MESSAGE_TYPES.UI_BASE + "state",
         STATE_REQUEST: MESSAGE_TYPES.UI_BASE + "state_request",
         INITIALIZE: MESSAGE_TYPES.UI_BASE + "initialize",
 
-        SEND_INVITE: MESSAGE_TYPES.UI_BASE + "send_invite",
-        INVITE_SENT: MESSAGE_TYPES.UI_BASE + "invite_sent",
-        INVITE_RECEIVED: MESSAGE_TYPES.UI_BASE + "invite_received",
-
-        SEND_REQUEST: MESSAGE_TYPES.UI_BASE + "send_request",
-        REQUEST_SENT: MESSAGE_TYPES.UI_BASE + "request_sent",
-
-        SEND_RESPONSE: MESSAGE_TYPES.UI_BASE + "send_response",
-        RESPONSE_SENT: MESSAGE_TYPES.UI_BASE + "response_sent",
-
-        SEND_MESSAGE: MESSAGE_TYPES.UI_BASE + "send_message",
-        MESSAGE_SENT: MESSAGE_TYPES.UI_BASE + "message_sent"
     };
 
-    const CONN_MESSAGE = {
-        REQUEST_RECEIVED:MESSAGE_TYPES.CONN_BASE + "request",
-        RESPONSE_RECEIVED: MESSAGE_TYPES.CONN_BASE + "response",
-        MESSAGE_RECEIVED: MESSAGE_TYPES.CONN_BASE + "message"
+    const CONN_UI_MESSAGE = {
+        SEND_INVITE: MESSAGE_TYPES.CONN_UI_BASE + "send_invite",
+        INVITE_SENT: MESSAGE_TYPES.CONN_UI_BASE + "invite_sent",
+        INVITE_RECEIVED: MESSAGE_TYPES.CONN_UI_BASE + "invite_received",
+
+        SEND_REQUEST: MESSAGE_TYPES.CONN_UI_BASE + "send_request",
+        REQUEST_SENT: MESSAGE_TYPES.CONN_UI_BASE + "request_sent",
+        REQUEST_RECEIVED:MESSAGE_TYPES.CONN_UI_BASE + "request_received",
+
+        SEND_RESPONSE: MESSAGE_TYPES.CONN_UI_BASE + "send_response",
+        RESPONSE_SENT: MESSAGE_TYPES.CONN_UI_BASE + "response_sent",
+        RESPONSE_RECEIVED: MESSAGE_TYPES.CONN_UI_BASE + "response_received",
+
+        SEND_MESSAGE: MESSAGE_TYPES.CONN_UI_BASE + "send_message",
+        MESSAGE_SENT: MESSAGE_TYPES.CONN_UI_BASE + "message_sent",
+        MESSAGE_RECEIVED: MESSAGE_TYPES.CONN_UI_BASE + "message_received"
     };
 
     // Message Router {{{
@@ -82,7 +84,7 @@
         methods: {
             send_invite: function () {
                 msg = {
-                    type: UI_MESSAGE.SEND_INVITE,
+                    type: CONN_UI_MESSAGE.SEND_INVITE,
                     id: TOKEN,
                     content: {
                         name: this.new_connection_offer.name,
@@ -109,7 +111,7 @@
 
             send_request: function (invitation_msg) {
                 msg = {
-                    type: UI_MESSAGE.SEND_REQUEST,
+                    type: CONN_UI_MESSAGE.SEND_REQUEST,
                     id: TOKEN,
                     content: {
                             name: invitation_msg.name,
@@ -132,7 +134,7 @@
             },
             send_response: function (prevMsg) {
                 msg = {
-                    type: UI_MESSAGE.SEND_RESPONSE,
+                    type: CONN_UI_MESSAGE.SEND_RESPONSE,
                     id: TOKEN,
                     content: {
                             name: prevMsg.name,
@@ -162,7 +164,7 @@
             },
             send_message: function (c) {
                 msg = {
-                    type: UI_MESSAGE.SEND_MESSAGE,
+                    type: CONN_UI_MESSAGE.SEND_MESSAGE,
                     id: TOKEN,
                     content: {
                             name: c.name,
@@ -247,15 +249,14 @@
 
     // Message Routes {{{
     msg_router.register(UI_MESSAGE.STATE, ui_agent.update);
-    msg_router.register(UI_MESSAGE.INVITE_SENT, ui_relationships.invite_sent);
-    msg_router.register(UI_MESSAGE.INVITE_RECEIVED, ui_relationships.invite_received);
-    msg_router.register(UI_MESSAGE.REQUEST_SENT, ui_relationships.request_sent);
-    msg_router.register(UI_MESSAGE.RESPONSE_SENT, ui_relationships.response_sent);
-    msg_router.register(UI_MESSAGE.MESSAGE_SENT, ui_relationships.message_sent);
-
-    msg_router.register(CONN_MESSAGE.RESPONSE_RECEIVED, ui_relationships.response_received);
-    msg_router.register(CONN_MESSAGE.REQUEST_RECEIVED, ui_relationships.request_received);
-    msg_router.register(CONN_MESSAGE.MESSAGE_RECEIVED, ui_relationships.message_received);
+    msg_router.register(CONN_UI_MESSAGE.INVITE_SENT, ui_relationships.invite_sent);
+    msg_router.register(CONN_UI_MESSAGE.INVITE_RECEIVED, ui_relationships.invite_received);
+    msg_router.register(CONN_UI_MESSAGE.REQUEST_SENT, ui_relationships.request_sent);
+    msg_router.register(CONN_UI_MESSAGE.RESPONSE_SENT, ui_relationships.response_sent);
+    msg_router.register(CONN_UI_MESSAGE.MESSAGE_SENT, ui_relationships.message_sent);
+    msg_router.register(CONN_UI_MESSAGE.RESPONSE_RECEIVED, ui_relationships.response_received);
+    msg_router.register(CONN_UI_MESSAGE.REQUEST_RECEIVED, ui_relationships.request_received);
+    msg_router.register(CONN_UI_MESSAGE.MESSAGE_RECEIVED, ui_relationships.message_received);
 
     // }}}
 

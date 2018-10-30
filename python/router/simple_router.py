@@ -13,7 +13,7 @@ class SimpleRouter(BaseRouter):
     def __init__(self):
         self.routes = {}
 
-    async def register(self, msg_type: str, handler: Callable[[bytes, Agent], None]):
+    def register(self, msg_type: str, handler: Callable[[Message], None]):
         """ Register a callback for messages with a given type.
         """
         if msg_type in self.routes.keys():
@@ -21,8 +21,8 @@ class SimpleRouter(BaseRouter):
 
         self.routes[msg_type] = handler
 
-    async def route(self, msg: Message, agent: Agent):
+    async def route(self, msg: Message):
         """ Route a message to it's registered callback.
         """
         if msg.type in self.routes.keys():
-            return await self.routes[msg.type](msg, agent)
+            return await self.routes[msg.type](msg)

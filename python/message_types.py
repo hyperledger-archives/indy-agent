@@ -3,19 +3,26 @@
 
 
 class UI:
-    BASE = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/sovrin.org/ui/1.0/"
+    FAMILY = "ui"
+    VERSION = "1.0"
+    BASE = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY + "/" + VERSION + "/"
 
     STATE = BASE + "state"
     STATE_REQUEST = BASE + "state_request"
     INITIALIZE = BASE + "initialize"
 
+class CONN_UI:
+    FAMILY = "connections_ui"
+    VERSION = "1.0"
+    BASE = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY + "/" + VERSION + "/"
+
     SEND_INVITE = BASE + "send_invite"
     INVITE_SENT = BASE + "invite_sent"
     INVITE_RECEIVED = BASE + "invite_received"
 
-    REQUEST_RECEIVED = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/request"
-    RESPONSE_RECEIVED = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/response"
-    MESSAGE_RECEIVED = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/message"
+    REQUEST_RECEIVED = BASE + "request_received"
+    RESPONSE_RECEIVED = BASE + "response_received"
+    MESSAGE_RECEIVED = BASE + "message_received"
 
     SEND_REQUEST = BASE + "send_request"
     REQUEST_SENT = BASE + "request_sent"
@@ -28,12 +35,14 @@ class UI:
 
 
 class CONN:
-    BASE = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/"
+    FAMILY = "connections"
+    VERSION = "1.0"
+    BASE = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY + "/" + VERSION + "/"
 
-    SEND_INVITE = BASE + "send_invite"
-    SEND_REQUEST = BASE + "request"
-    SEND_RESPONSE = BASE + "response"
-    SEND_MESSAGE = BASE + "message"
+    INVITE = BASE + "invite"
+    REQUEST = BASE + "request"
+    RESPONSE = BASE + "response"
+    MESSAGE = BASE + "message"
 
 
 class FORWARD:
