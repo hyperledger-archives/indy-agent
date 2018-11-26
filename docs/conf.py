@@ -15,6 +15,7 @@
 import os
 import sys
 import sphinx_rtd_theme
+from recommonmark.transform import AutoStructify
 
 sys.path.insert(0, os.path.abspath('.'))
 
@@ -30,6 +31,8 @@ version = ''
 # The full version, including alpha/beta/rc tags
 release = ''
 
+# for documentation module
+nickname = 'agent'
 
 # -- General configuration ---------------------------------------------------
 
@@ -188,12 +191,17 @@ source_parsers = {
     '.md' : 'recommonmark.parser.CommonMarkParser',
 }
 
-from recommonmark.transform import AutoStructify
-from recommonmark.states import DummyStateMachine
+def setup(app):
+    app.add_config_value('recommonmark_config', {
+            'auto_toc_tree_section': 'Contents',
+            }, True)
+    app.add_transform(AutoStructify)
+
+
 # -------------- Additional fix for Markdown parsing support ---------------
 # Once Recommonmark is fixed, remove this hack.
-from recommonmark.states import DummyStateMachine
 # Monkey patch to fix recommonmark 0.4 doc reference issues.
+from recommonmark.states import DummyStateMachine
 orig_run_role = DummyStateMachine.run_role
 def run_role(self, name, options=None, content=None):
     if name == 'doc':
@@ -201,29 +209,20 @@ def run_role(self, name, options=None, content=None):
     return orig_run_role(self, name, options, content)
 DummyStateMachine.run_role = run_role
 
-# -------------- end hack ----------------------------
-
-def setup(app):
-    app.add_config_value('recommonmark_config', {
-            'auto_toc_tree_section': 'Contents',
-            }, True)
-    app.add_transform(AutoStructify)
-
 # ------------ Remote Documentation Builder Config -----------
+# Note: this is a hacky way of maintaining a consistent sidebar amongst all the repositories. 
+# Do you have a better way to do it?
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 if(on_rtd):
     rtd_version = os.environ.get('READTHEDOCS_VERSION', 'latest')
     if rtd_version not in ['stable', 'latest']:
         rtd_version = 'latest'
-
-# get sidebar file
     try:
         os.system("git clone https://github.com/michaeldboyd/sovrin-docs-conf.git remote_conf")
         os.system("mv remote_conf/remote_conf.py .")
-        os.system("rm toc.rst")
         import remote_conf
-        remote_conf.generate_sidebar(globals(), 'sdk')
+        remote_conf.generate_sidebar(globals(), nickname)
         intersphinx_mapping = remote_conf.get_intersphinx_mapping(rtd_version)
         master_doc = "toc"
     
@@ -232,3 +231,4 @@ if(on_rtd):
         print e
     finally:      
         os.system("rm -rf remote_conf/ __pycache__/ remote_conf.py")
+
