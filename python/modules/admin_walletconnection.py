@@ -44,6 +44,15 @@ class AdminWalletConnection(Module):
         except Exception as e:
             print(e)
             print("Could not open wallet!")
+            # Send User Error message in response.
+            return Message(
+                type=ADMIN_WALLETCONNECTION.USER_ERROR,
+                error_code="invalid_passphrase",
+                message="Invalid Passphrase",
+                thread={
+                    'tid': msg.id
+                }
+            )
 
         (_, self.agent.endpoint_vk) = await did.create_and_store_my_did(
             self.agent.wallet_handle, "{}")
