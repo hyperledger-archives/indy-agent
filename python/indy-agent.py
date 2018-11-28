@@ -91,36 +91,9 @@ LOOP.run_until_complete(RUNNER.setup())
 
 SERVER = web.TCPSite(runner=RUNNER, port=PORT)
 
-async def connect_wallet(agent_name, passphrase):
-    #set wallet name from msg contents
-
-    AGENT['agent'].owner = agent_name
-    wallet_name = '%s-wallet' % AGENT['agent'].owner
-
-    wallet_config = json.dumps({"id": wallet_name})
-    wallet_credentials = json.dumps({"key": passphrase})
-
-    # pylint: disable=bare-except
-    # TODO: better handle potential exceptions.
-    try:
-        await wallet.create_wallet(wallet_config, wallet_credentials)
-    except Exception as e:
-        print(e)
-
-    try:
-        AGENT['agent'].wallet_handle = await wallet.open_wallet(wallet_config,
-                                                       wallet_credentials)
-    except Exception as e:
-        print(e)
-        print("Could not open wallet!")
-    AGENT['agent'].initialized = True
-    (_, AGENT['agent'].endpoint_vk) = await did.create_and_store_my_did(
-        AGENT['agent'].wallet_handle, "{}")
-
-
 if AGENTINITINCLI:
     try:
-        LOOP.run_until_complete(connect_wallet(WALLETNAME, WALLETPASS))
+        LOOP.run_until_complete(AGENT['agent'].connect_wallet(WALLETNAME, WALLETPASS))
         print("Connected to wallet via command line args:{}".format(WALLETNAME))
     except Exception as e:
         print(e)

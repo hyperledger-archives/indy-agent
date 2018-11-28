@@ -39,38 +39,9 @@ class Ui(Module):
         data = msg.content
         agent_name = data['name']
         passphrase = data['passphrase']
-        try:
-            await self.configure_wallet(agent_name, passphrase)
-        except Exception as e:
-            print(e)
+        await self.agent.connect_wallet(data['name'], data['passphrase'])
 
         return await self.ui_connect(None)
-
-    async def configure_wallet(self, agent_name, passphrase):
-        #set wallet name from msg contents
-        self.agent.owner = agent_name
-        wallet_name = '%s-wallet' % self.agent.owner
-
-        wallet_config = json.dumps({"id": wallet_name})
-        wallet_credentials = json.dumps({"key": passphrase})
-
-        # pylint: disable=bare-except
-        # TODO: better handle potential exceptions.
-        try:
-            await wallet.create_wallet(wallet_config, wallet_credentials)
-        except Exception as e:
-            print(e)
-
-        try:
-            self.agent.wallet_handle = await wallet.open_wallet(wallet_config,
-                                                           wallet_credentials)
-        except Exception as e:
-            print(e)
-            print("Could not open wallet!")
-
-        (_, self.agent.endpoint_vk) = await did.create_and_store_my_did(
-            self.agent.wallet_handle, "{}")
-        self.agent.initialized = True
 
 @aiohttp_jinja2.template('index.html')
 async def root(request):
