@@ -4,7 +4,7 @@ Serializer using json as i/o format.
 
 import json
 
-from model import Message
+from message import Message
 
 
 def unpack_dict(dictionary: dict) -> Message:

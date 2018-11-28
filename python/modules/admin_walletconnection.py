@@ -4,7 +4,8 @@ import json
 from indy import did, wallet
 
 from router.simple_router import SimpleRouter
-from model import Message, Agent
+from agent import Agent
+from message import Message
 from message_types import ADMIN_WALLETCONNECTION
 from . import Module
 

@@ -28,9 +28,9 @@ import serializer.json_serializer as Serializer
 from receiver.message_receiver import MessageReceiver as Receiver
 from router.family_router import FamilyRouter as Router
 from ui_event import UIEventQueue
-from model import Agent
+from agent import Agent
 from message_types import UI, CONN, CONN_UI, ADMIN_WALLETCONNECTION
-from model import Message
+from message import Message
 
 
 AGENTINITINCLI = False
