@@ -64,9 +64,9 @@
             if(!("thread" in msg)){
                 return; //no thread, no callbacks possible
             }
-            tid = msg["thread"]["tid"];
-            if(tid in this.thread_handlers){
-                this.thread_handlers[tid]["handler"](msg);
+            thid = msg["thread"]["thid"];
+            if(thid in this.thread_handlers){
+                this.thread_handlers[thid]["handler"](msg);
             }
         },
         register: function(thread_id, thread_cb){

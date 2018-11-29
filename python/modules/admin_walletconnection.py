@@ -50,7 +50,7 @@ class AdminWalletConnection(Module):
                 error_code="invalid_passphrase",
                 message="Invalid Passphrase",
                 thread={
-                    'tid': msg.id
+                    'thid': msg.id
                 }
             )
 
