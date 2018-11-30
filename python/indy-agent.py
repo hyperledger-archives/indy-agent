@@ -21,13 +21,15 @@ from indy import crypto, did, error, IndyError, wallet
 
 from modules.connection import Connection
 from modules.ui import Ui
+from modules.admin_walletconnection import AdminWalletConnection
+
 import modules.ui
 import serializer.json_serializer as Serializer
 from receiver.message_receiver import MessageReceiver as Receiver
 from router.family_router import FamilyRouter as Router
 from ui_event import UIEventQueue
 from model import Agent
-from message_types import UI, CONN, CONN_UI
+from message_types import UI, CONN, CONN_UI, ADMIN_WALLETCONNECTION
 from model import Message
 
 
@@ -67,7 +69,9 @@ AGENT['agent'] = Agent()
 AGENT['modules'] = {
     'connection': Connection(AGENT['agent']),
     'ui': Ui(AGENT['agent']),
+    'admin_walletconnection': AdminWalletConnection(AGENT['agent'])
 }
+AGENT['agent'].modules = AGENT['modules']
 
 UI_TOKEN = uuid.uuid4().hex
 AGENT['agent'].ui_token = UI_TOKEN
@@ -219,6 +223,7 @@ async def ui_event_process(agent):
 
     ui_router.register(CONN_UI.FAMILY, connection)
     ui_router.register(UI.FAMILY, ui)
+    ui_router.register(ADMIN_WALLETCONNECTION.FAMILY, agent['modules']['admin_walletconnection'])
 
     while True:
         msg = await ui_event_queue.recv()
@@ -230,7 +235,7 @@ async def ui_event_process(agent):
                 print('Failed to unpack message: {}\n\nError: {}'.format(msg, e))
                 continue
 
-        if msg.id != UI_TOKEN:
+        if msg.ui_token != UI_TOKEN:
             print('Invalid token received, rejecting message: {}'.format(msg))
             continue
 
