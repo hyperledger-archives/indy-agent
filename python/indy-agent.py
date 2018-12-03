@@ -91,7 +91,7 @@ LOOP.run_until_complete(RUNNER.setup())
 
 SERVER = web.TCPSite(runner=RUNNER, port=PORT)
 
-if WEBAPPINITINCLI:
+if AGENTINITINCLI:
     try:
         LOOP.run_until_complete(WEBAPP['agent'].connect_wallet(WALLETNAME, WALLETPASS))
         print("Connected to wallet via command line args:{}".format(WALLETNAME))
