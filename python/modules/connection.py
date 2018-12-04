@@ -11,7 +11,7 @@ from indy import crypto, did, pairwise
 import serializer.json_serializer as Serializer
 from router.simple_router import SimpleRouter
 from . import Module
-from model import Message
+from message import Message
 from message_types import CONN_UI, CONN, FORWARD
 from helpers import serialize_bytes_json, bytes_to_str, str_to_bytes
 

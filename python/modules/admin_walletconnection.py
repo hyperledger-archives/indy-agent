@@ -4,7 +4,8 @@ import json
 from indy import did, wallet
 
 from router.simple_router import SimpleRouter
-from model import Message, Agent
+from agent import Agent
+from message import Message
 from message_types import ADMIN_WALLETCONNECTION
 from . import Module
 
@@ -22,32 +23,5 @@ class AdminWalletConnection(Module):
         """ Connect to existing wallet.
         """
 
-        self.agent.owner = msg.name
-        passphrase = msg.passphrase
-
-        #set wallet name from msg contents
-        wallet_name = '%s-wallet' % self.agent.owner
-
-        wallet_config = json.dumps({"id": wallet_name})
-        wallet_credentials = json.dumps({"key": passphrase})
-
-        # pylint: disable=bare-except
-        # TODO: better handle potential exceptions.
-        try:
-            await wallet.create_wallet(wallet_config, wallet_credentials)
-        except Exception as e:
-            print(e)
-
-        try:
-            self.agent.wallet_handle = await wallet.open_wallet(wallet_config,
-                                                           wallet_credentials)
-        except Exception as e:
-            print(e)
-            print("Could not open wallet!")
-
-        (_, self.agent.endpoint_vk) = await did.create_and_store_my_did(
-            self.agent.wallet_handle, "{}")
-
-        self.agent.initialized = True
-        # prompt a STATE message.
+        await self.agent.connect_wallet(msg.name, msg.passphrase)
         return await self.agent.modules['ui'].ui_connect(None)
