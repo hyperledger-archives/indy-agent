@@ -3,6 +3,9 @@
 import json
 from indy import wallet, did
 
+class WalletConnectionException(Exception):
+    pass
+
 class Agent:
     """ Agent class storing all needed elements for agent operation.
     """
@@ -48,3 +51,4 @@ class Agent:
             print(e)
             print("Could not open wallet!")
 
+            raise WalletConnectionException

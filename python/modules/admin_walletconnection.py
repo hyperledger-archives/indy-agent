@@ -4,7 +4,7 @@ import json
 from indy import did, wallet
 
 from router.simple_router import SimpleRouter
-from agent import Agent
+from agent import Agent, WalletConnectionException
 from message import Message
 from message_types import ADMIN_WALLETCONNECTION
 from . import Module
@@ -23,5 +23,17 @@ class AdminWalletConnection(Module):
         """ Connect to existing wallet.
         """
 
-        await self.agent.connect_wallet(msg.name, msg.passphrase)
+        try:
+            await self.agent.connect_wallet(msg.name, msg.passphrase)
+        except WalletConnectionException:
+            return Message(
+                type=ADMIN_WALLETCONNECTION.USER_ERROR,
+                error_code="invalid_passphrase",
+                message="Invalid Passphrase",
+                thread={
+                    'thid': msg.id
+                }
+            )
+
+        # prompt a STATE message.
         return await self.agent.modules['ui'].ui_connect(None)

@@ -11,13 +11,13 @@
     const UI_MESSAGE = {
         STATE: MESSAGE_TYPES.UI_BASE + "state",
         STATE_REQUEST: MESSAGE_TYPES.UI_BASE + "state_request",
-        INITIALIZE: MESSAGE_TYPES.UI_BASE + "initialize",
+        INITIALIZE: MESSAGE_TYPES.UI_BASE + "initialize"
     };
 
     const ADMIN_WALLETCONNECTION = {
         CONNECT: MESSAGE_TYPES.ADMIN_WALLETCONNECTION_BASE + 'connect',
         DISCONNECT: MESSAGE_TYPES.ADMIN_WALLETCONNECTION_BASE + 'disconnect',
-        USER_ERROR: MESSAGE_TYPES.ADMIN_WALLETCONNECTION_BASE + ''
+        USER_ERROR: MESSAGE_TYPES.ADMIN_WALLETCONNECTION_BASE + 'user_error'
     };
 
     const CONN_UI_MESSAGE = {
@@ -56,8 +56,33 @@
     };
     // }}}
 
+    // Limitation: this thread router only allows one cb per thread.
+    var thread_router = {
+        default_thread_expiration: 1000 * 60 * 5, // in milliseconds
+        thread_handlers: {},
+        route: function(msg){
+            if(!("thread" in msg)){
+                return; //no thread, no callbacks possible
+            }
+            thid = msg["thread"]["thid"];
+            if(thid in this.thread_handlers){
+                this.thread_handlers[thid]["handler"](msg);
+            }
+        },
+        register: function(thread_id, thread_cb){
+            this.thread_handlers[thread_id] = {
+                "handler": thread_cb,
+                "expires": (new Date()).getTime() + this.default_thread_expiration
+            };
+        },
+        clean_routes: function(){
+            // TODO: look through handlers and clean out expired ones.
+        }
+    };
+
     // this is shared data among all the vue instances for simplicity.
     var ui_data = {
+        wallet_connect_error: '',
         agent_name: '',
         passphrase: '',
         current_tab: 'login',
@@ -74,7 +99,7 @@
         data: ui_data,
         computed: {
             tab_active: function(){
-                return this.current_tab == "credentials";
+                return this.current_tab === "credentials";
             }
         }
     });
@@ -84,7 +109,7 @@
         data: ui_data,
         computed: {
             tab_active: function(){
-                return this.current_tab == "relationships";
+                return this.current_tab === "relationships";
             }
         },
         methods: {
@@ -210,16 +235,24 @@
         data: ui_data,
         computed: {
             tab_active: function(){
-                return this.current_tab == "login";
+                return this.current_tab === "login";
             }
         },
         methods: {
             walletconnnect: function () {
+                this.wallet_connect_error = ""; // clear any previous error
+                //var v_this = this;
                 sendMessage({
                     type: ADMIN_WALLETCONNECTION.CONNECT,
                     name: this.agent_name,
-                    passphrase: this.passphrase,
-                });
+                    passphrase: this.passphrase
+                }, function(msg){
+                    //thread callback
+                    console.log("received thread response", msg);
+                    if(msg.type === ADMIN_WALLETCONNECTION.USER_ERROR){
+                        this.wallet_connect_error = msg.message;
+                    }
+                }.bind(this));
             },
             connect: function(){
                 sendMessage(
@@ -270,12 +303,19 @@
         console.log('Routing: ' + event.data);
         msg = JSON.parse(event.data);
         msg_router.route(msg);
+        thread_router.route(msg);
     });
 
-    function sendMessage(msg){
+    function sendMessage(msg, thread_cb){
         //decorate message as necessary
         msg.ui_token = TOKEN; // deprecated
         msg.id = (new Date()).getTime(); // ms since epoch
-        //TODO: Encode properly
+
+        // register thread callback
+        if(typeof thread_cb !== "undefined") {
+            thread_router.register(msg.id, thread_cb);
+        }
+
+        // TODO: Encode properly when wire protocol is finished
         socket.send(JSON.stringify(msg));
     }
