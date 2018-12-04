@@ -24,16 +24,16 @@ class AdminWalletConnection(Module):
         """
 
         try:
-            await self.agent.connect_wallet(msg.name, msg.passphrase)
+            await self.agent.connect_wallet(msg['name'], msg['passphrase'])
         except WalletConnectionException:
-            return Message(
-                type=ADMIN_WALLETCONNECTION.USER_ERROR,
-                error_code="invalid_passphrase",
-                message="Invalid Passphrase",
-                thread={
+            return Message({
+                'type': ADMIN_WALLETCONNECTION.USER_ERROR,
+                'error_code': "invalid_passphrase",
+                'message': "Invalid Passphrase",
+                'thread': {
                     'thid': msg.id
                 }
-            )
+            })
 
         # prompt a STATE message.
         return await self.agent.modules['ui'].ui_connect(None)

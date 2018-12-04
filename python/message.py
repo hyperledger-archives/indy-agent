@@ -1,21 +1,27 @@
 """ Module defining the Message class that is used as base structure for all
     received messages.
 """
+from collections import UserDict
 
-class Message(object):
+
+class Message(UserDict):
     """ Data Model for messages.
     """
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """ Create a Message object
 
-        type: string denoting the message type. Standardization efforts are in progress.
-        id: identifier for message. Usually a nonce or a DID. This combined with the type
+        @type: string denoting the message type. Standardization efforts are in progress.
+        @id: identifier for message. Usually a nonce or a DID. This combined with the type
             tell us how to interpret the message.
-        message: ambiguous data. Interpretation defined by type and id.
+        other things: ambiguous data. Interpretation defined by type and id.
 
         """
-        for key in kwargs.keys():
-            self.__setattr__(key, kwargs[key])
+        UserDict.__init__(self,*args, **kwargs)
+
 
     def to_dict(self):
-        return self.__dict__
+        return self.data
+
+    @property
+    def type(self):
+        return self.data["type"]
