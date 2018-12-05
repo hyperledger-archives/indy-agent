@@ -138,7 +138,7 @@ async def message_process(agent):
             print('Failed to unpack message: {}\n\nError: {}'.format(encrypted_msg_bytes, e))
             continue
 
-        encrypted_msg_bytes = base64.b64decode(encrypted_msg_str.content.encode('utf-8'))
+        encrypted_msg_bytes = base64.b64decode(encrypted_msg_str['content'].encode('utf-8'))
 
         agent_dids_str = await did.list_my_dids_with_meta(WEBAPP['agent'].wallet_handle)
 
@@ -180,8 +180,8 @@ async def message_process(agent):
             continue
 
         #  pass this connections did with the message
-        msg.content['did'] = this_did
-        msg = Serializer.unpack_dict(msg.content)
+        msg['content']['did'] = this_did
+        msg = Serializer.unpack_dict(msg['content'])
 
         res = await msg_router.route(msg)
 
@@ -208,7 +208,7 @@ async def ui_event_process(agent):
                 print('Failed to unpack message: {}\n\nError: {}'.format(msg, e))
                 continue
 
-        if msg.ui_token != UI_TOKEN:
+        if msg['ui_token'] != UI_TOKEN:
             print('Invalid token received, rejecting message: {}'.format(msg))
             continue
 

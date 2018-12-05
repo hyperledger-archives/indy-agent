@@ -22,13 +22,13 @@ class Ui(Module):
 
     async def ui_connect(self, _) -> Message:
 
-        return Message(
-            type=UI.STATE,
-            content={
+        return Message({
+            'type': UI.STATE,
+            'content': {
                 'initialized': self.agent.initialized,
                 'agent_name': self.agent.owner
             }
-        )
+        })
 
 
     async def initialize_agent(self, msg):
@@ -36,7 +36,7 @@ class Ui(Module):
         """
         if self.agent.initialized is True:
             return
-        data = msg.content
+        data = msg['content']
         agent_name = data['name']
         passphrase = data['passphrase']
         await self.agent.connect_wallet(data['name'], data['passphrase'])
