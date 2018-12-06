@@ -36,4 +36,4 @@ class AdminWalletConnection(Module):
             })
 
         # prompt a STATE message.
-        return await self.agent.modules['ui'].ui_connect(None)
+        return await self.agent.modules['admin'].state_request(None)
