@@ -45,3 +45,9 @@ This will generate all the html files in `docs/source/_build/html` which you can
 
 ## Additional Instructions
 This section is to be used for repo maintainers to add additional documentation guidelines or instructions. 
+
+
+**TODO: Build the respective code API's into the readthedocs website**
+
+**TODO: Add table support for markdown files** 
+* This link may help: https://github.com/ryanfox/sphinx-markdown-tables
