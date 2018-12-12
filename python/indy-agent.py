@@ -20,16 +20,17 @@ from aiohttp import web
 from indy import crypto, did, error, IndyError, wallet
 
 from modules.connection import Connection
-from modules.ui import Ui
+from modules.admin import Admin
 from modules.admin_walletconnection import AdminWalletConnection
+from modules.basicmessage import BasicMessage
 
-import modules.ui
+import modules.admin
 import serializer.json_serializer as Serializer
 from receiver.message_receiver import MessageReceiver as Receiver
 from router.family_router import FamilyRouter as Router
 from ui_event import UIEventQueue
+from message_types import ADMIN, CONN, ADMIN_CONNECTIONS, ADMIN_WALLETCONNECTION, BASICMESSAGE, ADMIN_BASICMESSAGE
 from agent import Agent
-from message_types import UI, CONN, CONN_UI, ADMIN_WALLETCONNECTION
 from message import Message
 
 
@@ -68,8 +69,9 @@ WEBAPP['conn_receiver'] = Receiver()
 WEBAPP['agent'] = Agent()
 WEBAPP['modules'] = {
     'connection': Connection(WEBAPP['agent']),
-    'ui': Ui(WEBAPP['agent']),
-    'admin_walletconnection': AdminWalletConnection(WEBAPP['agent'])
+    'admin': Admin(WEBAPP['agent']),
+    'admin_walletconnection': AdminWalletConnection(WEBAPP['agent']),
+    'basicmessage': BasicMessage(WEBAPP['agent'])
 }
 WEBAPP['agent'].modules = WEBAPP['modules']
 
@@ -77,7 +79,7 @@ UI_TOKEN = uuid.uuid4().hex
 WEBAPP['agent'].ui_token = UI_TOKEN
 
 ROUTES = [
-    web.get('/', modules.ui.root),
+    web.get('/', modules.admin.root),
     web.get('/ws', WEBAPP['ui_event_queue'].ws_handler),
     web.static('/res', 'view/res'),
     web.post('/indy', WEBAPP['msg_receiver'].handle_message),
@@ -129,6 +131,7 @@ async def message_process(agent):
     connection = agent['modules']['connection']
 
     msg_router.register(CONN.FAMILY, connection)
+    msg_router.register(BASICMESSAGE.FAMILY, agent['modules']['basicmessage'])
 
     while True:
         encrypted_msg_bytes = await msg_receiver.recv()
@@ -147,6 +150,7 @@ async def message_process(agent):
         this_did = ""
 
         #  trying to find verkey for encryption
+        decrypted_msg = False # provide a fallthrough value if key not present.
         for agent_did_data in agent_dids_json:
             try:
                 decrypted_msg = await crypto.anon_decrypt(
@@ -170,7 +174,7 @@ async def message_process(agent):
                     continue
 
         if not decrypted_msg:
-            "Agent doesn't have needed verkey for anon_decrypt"
+            print("Agent doesn't have needed verkey for anon_decrypt")
             continue
 
         try:
@@ -192,11 +196,12 @@ async def ui_event_process(agent):
     ui_router = agent['ui_router']
     ui_event_queue = agent['ui_event_queue']
     connection = agent['modules']['connection']
-    ui = agent['modules']['ui']
+    admin = agent['modules']['admin']
 
-    ui_router.register(CONN_UI.FAMILY, connection)
-    ui_router.register(UI.FAMILY, ui)
+    ui_router.register(ADMIN_CONNECTIONS.FAMILY, connection)
+    ui_router.register(ADMIN.FAMILY, admin)
     ui_router.register(ADMIN_WALLETCONNECTION.FAMILY, agent['modules']['admin_walletconnection'])
+    ui_router.register(ADMIN_BASICMESSAGE.FAMILY, agent['modules']['basicmessage'])
 
     while True:
         msg = await ui_event_queue.recv()

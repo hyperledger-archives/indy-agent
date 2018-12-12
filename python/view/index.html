@@ -135,7 +135,7 @@
                             <button type="button" class="btn btn-info" v-on:click="display_history(c)">View</button>
                         </td>
                         <td>
-                            <button type="button" class="btn btn-warning" v-if="c.status == 'Invite Received'" v-on:click="send_request(c.invitation_msg)">Send Request</button>
+                            <button type="button" class="btn btn-warning" v-if="c.status == 'Invite Received'" v-on:click="send_request(c)">Send Request</button>
                             <button type="button" class="btn btn-warning" v-if="c.status == 'Request Received'" v-on:click="send_response(c.connecton_request)">Send Response</button>
                             <button type="button" class="btn btn-warning" v-if="c.their_did" v-on:click="send_message(c)">Send Message</button>
                         </td>
