@@ -129,6 +129,7 @@ class AdminBasicMessage(Module):
             messages.append(d)
         #TODO: fetch in loop till all records are processed
         await non_secrets.close_wallet_search(search_handle)
+        messages = sorted(messages, key=lambda n: n['timestamp'], reverse=True)
 
         return Message({
             'type': ADMIN_BASICMESSAGE.MESSAGES,
