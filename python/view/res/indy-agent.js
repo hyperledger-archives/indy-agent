@@ -40,7 +40,9 @@
     const ADMIN_BASICMESSAGE = {
         SEND_MESSAGE: MESSAGE_TYPES.ADMIN_BASICMESSAGE_BASE + "send_message",
         MESSAGE_SENT: MESSAGE_TYPES.ADMIN_BASICMESSAGE_BASE + "message_sent",
-        MESSAGE_RECEIVED: MESSAGE_TYPES.ADMIN_BASICMESSAGE_BASE + "message_received"
+        MESSAGE_RECEIVED: MESSAGE_TYPES.ADMIN_BASICMESSAGE_BASE + "message_received",
+        GET_MESSAGES: MESSAGE_TYPES.ADMIN_BASICMESSAGE_BASE + "get_messages",
+        MESSAGES: MESSAGE_TYPES.ADMIN_BASICMESSAGE_BASE + "messages"
     };
 
     // Message Router {{{
@@ -99,6 +101,7 @@
         pairwise_connections:[],
         connection: {},
         new_basicmessage: "",
+        basicmessage_list: [],
         history_view: []
     };
 
@@ -200,27 +203,33 @@
                 // now request a state update to see the new pairwise connection
                 sendMessage({type: ADMIN.STATE_REQUEST});
             },
-            send_message: function (c) {
-                msg = {
-                    '@type': ADMIN_BASICMESSAGE.SEND_MESSAGE,
-                    content: {
-                            name: c.name,
-                            message: 'Hello, world!',
-                            their_did: c.their_did
-                    }
-                };
-                sendMessage(msg);
-            },
             message_sent: function (msg) {
-                var c = this.get_connection_by_name(msg.content.name);
-                c.status = "Message sent";
+                //var c = this.get_connection_by_name(msg.content.name);
+                //c.status = "Message sent";
+                // msg.with has their_did to help match.
+                if(msg.with == this.connection.their_did){
+                    //connection view currently open
+                    sendMessage({
+                        type: ADMIN_BASICMESSAGE.GET_MESSAGES,
+                        with: msg.with
+                    });
+                } else {
+                    //connection not currently open. set unread flag on connection details?
+                }
             },
-
             message_received: function (msg) {
-                var c = this.get_connection_by_name(msg.content.name);
-                c.status = "Message received";
-                c.their_did = msg.content.their_did;
-                c.history.push(history_format(msg.content.history));
+                if(msg.with == this.connection.their_did){
+                    //connection view currently open
+                    sendMessage({
+                        type: ADMIN_BASICMESSAGE.GET_MESSAGES,
+                        with: msg.with
+                    });
+                } else {
+                    //connection not currently open. set unread flag on connection details?
+                }
+            },
+            messages: function(msg){
+                this.basicmessage_list = msg.messages;
             },
             display_history: function(connection){
                 this.history_view = connection.history;
@@ -249,7 +258,7 @@
         methods: {
             send_message: function(){
                 msg = {
-                    type: ADMIN_BASICMESSAGE.SEND_MESSAGE,
+                    '@type': ADMIN_BASICMESSAGE.SEND_MESSAGE,
                     to: this.connection.their_did,
                     message: this.new_basicmessage
                 };
