@@ -4,6 +4,7 @@ import jinja2
 import base64
 import json
 import time
+import uuid
 from indy import did, wallet, pairwise, crypto
 
 from helpers import str_to_bytes, serialize_bytes_json, bytes_to_str
@@ -42,6 +43,21 @@ class AdminBasicMessage(Module):
                 "timestamp": time_sent,
                 "content": message_to_send
             }
+        )
+
+        # store message in the wallet
+        await non_secrets.add_wallet_record(
+            self.agent.wallet_handle,
+            "basicmessage",
+            uuid.uuid4().hex,
+            json.dumps({
+                'from': my_did_str,
+                'timestamp': time_sent,
+                'content': message_to_send
+            }),
+            json.dumps({
+                "their_did": their_did_str
+            })
         )
 
         data_to_send_bytes = str_to_bytes(data_to_send)
@@ -89,8 +105,9 @@ class AdminBasicMessage(Module):
         return Message({
             '@type': ADMIN_BASICMESSAGE.MESSAGE_SENT,
             'id': self.agent.ui_token,
-            'to': their_did_str,
+            'with': their_did_str,
             'message': {
+                'from': my_did_str,
                 'timestamp': time_sent,
                 'content': message_to_send
             }
@@ -132,8 +149,28 @@ class BasicMessage(Module):
 
         their_data_json = json.loads(bytes_to_str(their_data_bytes))
 
+        # store message in the wallet
+        await non_secrets.add_wallet_record(
+            self.agent.wallet_handle,
+            "basicmessage",
+            uuid.uuid4().hex,
+            json.dumps({
+                'from': my_did_str,
+                'timestamp': their_data_json['timestamp'],
+                'content': their_data_json['content']
+            }),
+            json.dumps({
+                "their_did": their_did_str
+            })
+        )
+
         return Message({
             '@type': ADMIN_BASICMESSAGE.MESSAGE_RECEIVED,
             'id': self.agent.ui_token,
-            'message': their_data_json
+            'with': their_did_str,
+            'message': {
+                'from': their_did_str,
+                'timestamp': their_data_json['timestamp'],
+                'content': their_data_json['content']
+            }
         })
