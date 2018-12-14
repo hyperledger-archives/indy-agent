@@ -168,7 +168,8 @@
                 c.status = "Request Received";
                 c.connecton_request = msg.content;
                 c.history.push(history_format(msg.content.history));
-
+                // now request a state update to see the new pairwise connection
+                sendMessage({type: ADMIN.STATE_REQUEST});
             },
             send_response: function (prevMsg) {
                 msg = {
@@ -196,8 +197,8 @@
                 c.their_did = msg.content.their_did;
                 c.message_capable = true;
                 c.history.push(history_format(msg.content.history));
-                //             displayConnection(msg.content.name, [['Send Message', connections.send_message, socket, msg]], 'Response received');
-
+                // now request a state update to see the new pairwise connection
+                sendMessage({type: ADMIN.STATE_REQUEST});
             },
             send_message: function (c) {
                 msg = {
@@ -256,6 +257,11 @@
                 this.new_basicmessage = "";
             }
         }
+    });
+
+    var ui_title = new Vue({
+        el: 'title',
+        data: ui_data,
     });
 
     var ui_header = new Vue({
