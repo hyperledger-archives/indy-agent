@@ -113,7 +113,7 @@ class AdminBasicMessage(Module):
             }
         })
 
-    def get_messages(self, msg: Message) -> Message:
+    async def get_messages(self, msg: Message) -> Message:
         their_did = msg['with']
         search_handle = await non_secrets.open_wallet_search(
             self.agent.wallet_handle, "basicmessage",
