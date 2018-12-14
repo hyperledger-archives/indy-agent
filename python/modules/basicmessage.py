@@ -176,7 +176,7 @@ class BasicMessage(Module):
             "basicmessage",
             uuid.uuid4().hex,
             json.dumps({
-                'from': my_did_str,
+                'from': their_did_str,
                 'timestamp': their_data_json['timestamp'],
                 'content': their_data_json['content']
             }),
