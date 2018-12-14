@@ -23,7 +23,7 @@ from indy import crypto, did, error, IndyError, wallet
 from modules.connection import Connection
 from modules.admin import Admin
 from modules.admin_walletconnection import AdminWalletConnection
-from modules.basicmessage import BasicMessage
+from modules.basicmessage import AdminBasicMessage, BasicMessage
 
 import modules.admin
 import serializer.json_serializer as Serializer
@@ -64,7 +64,8 @@ WEBAPP['modules'] = {
     'connection': Connection(WEBAPP['agent']),
     'admin': Admin(WEBAPP['agent']),
     'admin_walletconnection': AdminWalletConnection(WEBAPP['agent']),
-    'basicmessage': BasicMessage(WEBAPP['agent'])
+    'basicmessage': BasicMessage(WEBAPP['agent']),
+    'admin_basicmessage': AdminBasicMessage(WEBAPP['agent'])
 }
 WEBAPP['agent'].modules = WEBAPP['modules']
 
@@ -196,7 +197,7 @@ async def ui_event_process(agent):
     ui_router.register(ADMIN_CONNECTIONS.FAMILY, connection)
     ui_router.register(ADMIN.FAMILY, admin)
     ui_router.register(ADMIN_WALLETCONNECTION.FAMILY, agent['modules']['admin_walletconnection'])
-    ui_router.register(ADMIN_BASICMESSAGE.FAMILY, agent['modules']['basicmessage'])
+    ui_router.register(ADMIN_BASICMESSAGE.FAMILY, agent['modules']['admin_basicmessage'])
 
     while True:
         msg = await ui_event_queue.recv()
