@@ -193,6 +193,18 @@
             <h3>Connection: {{connection.metadata.conn_name}}</h3>
             <p>My DID: {{connection.my_did}}</p>
             <p>Their DID: {{connection.their_did}}</p>
+
+            <div id="chatlist">
+                <div id="new_message_box">
+                    <input type="text" v-model="new_basicmessage"/>
+                    <input type="submit" value="Send" v-on:click="send_message()"/>
+                </div>
+                <div id="message_history">
+                    <div class="sent_message">Sup Dog</div>
+                    <div class="received_message">You want tacos?</div>
+                </div>
+            </div>
+
         </div>
 
     </main>

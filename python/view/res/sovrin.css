@@ -100,3 +100,22 @@ body > .container {
 code {
   font-size: 80%;
 }
+
+/* chat styling */
+#message_history {
+    width: 20em;
+}
+
+#message_history .sent_message, #message_history .received_message {
+    border: 1px solid lightgrey;
+    padding: .2em;
+    margin-bottom: .2em;
+}
+
+#message_history .sent_message {
+    margin-right: 3em;
+}
+#message_history .received_message {
+    margin-left: 3em;
+    text-align: right;
+}

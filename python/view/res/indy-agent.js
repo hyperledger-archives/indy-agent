@@ -98,6 +98,7 @@
         connections: [],
         pairwise_connections:[],
         connection: {},
+        new_basicmessage: "",
         history_view: []
     };
 
@@ -245,8 +246,14 @@
             }
         },
         methods: {
-            return_to_list: function(){
-                this.current_tab = "relationships";
+            send_message: function(){
+                msg = {
+                    type: ADMIN_BASICMESSAGE.SEND_MESSAGE,
+                    to: this.connection.their_did,
+                    message: this.new_basicmessage
+                };
+                sendMessage(msg);
+                this.new_basicmessage = "";
             }
         }
     });
