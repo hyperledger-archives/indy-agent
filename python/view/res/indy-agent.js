@@ -97,6 +97,7 @@
         },
         connections: [],
         pairwise_connections:[],
+        connection: {},
         history_view: []
     };
 
@@ -226,14 +227,41 @@
             },
             get_connection_by_name: function(name){
                return this.connections.find(function(x){return x.name === msg.content.name;});
+            },
+            show_connection: function(c){
+                this.connection = c;
+                this.current_tab = "connection";
             }
         }
+    });
 
+    // Single Connection
+    var ui_connection = new Vue({
+        el: "#connection",
+        data: ui_data,
+        computed: {
+            tab_active: function(){
+                return this.current_tab === "connection";
+            }
+        },
+        methods: {
+            return_to_list: function(){
+                this.current_tab = "relationships";
+            }
+        }
+    });
 
+    var ui_header = new Vue({
+        el: '#header',
+        data: ui_data,
+        computed:{
 
-
-
-
+        },
+        methods: {
+            set_tab: function(t){
+                this.current_tab = t;
+            }
+        }
     });
 
     // UI Agent {{{
