@@ -241,6 +241,7 @@
             },
             show_connection: function(c){
                 this.connection = c;
+                ui_connection.load();
                 this.current_tab = "connection";
             }
         }
@@ -264,6 +265,12 @@
                 };
                 sendMessage(msg);
                 this.new_basicmessage = "";
+            },
+            load: function(){
+                sendMessage({
+                    type: ADMIN_BASICMESSAGE.GET_MESSAGES,
+                    with: this.connection.their_did
+                });
             }
         }
     });
@@ -282,6 +289,7 @@
         methods: {
             set_tab: function(t){
                 this.current_tab = t;
+
             }
         }
     });
@@ -361,6 +369,7 @@
     msg_router.register(ADMIN_CONNECTION.RESPONSE_RECEIVED, ui_relationships.response_received);
     msg_router.register(ADMIN_CONNECTION.REQUEST_RECEIVED, ui_relationships.request_received);
     msg_router.register(ADMIN_BASICMESSAGE.MESSAGE_RECEIVED, ui_relationships.message_received);
+    msg_router.register(ADMIN_BASICMESSAGE.MESSAGES, ui_relationships.messages);
 
     // }}}
 
