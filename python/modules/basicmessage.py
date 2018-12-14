@@ -5,7 +5,7 @@ import base64
 import json
 import time
 import uuid
-from indy import did, wallet, pairwise, crypto
+from indy import did, wallet, pairwise, crypto, non_secrets
 
 from helpers import str_to_bytes, serialize_bytes_json, bytes_to_str
 from router.simple_router import SimpleRouter
