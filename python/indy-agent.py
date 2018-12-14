@@ -15,6 +15,7 @@ import aiohttp_jinja2
 import jinja2
 import base64
 import json
+import argparse
 
 from aiohttp import web
 from indy import crypto, did, error, IndyError, wallet
@@ -34,22 +35,14 @@ from agent import Agent
 from message import Message
 
 
-AGENTINITINCLI = False
-    #no cli input of walletname and passphrase
-if len(sys.argv) == 2 and str.isdigit(sys.argv[1]):
-    PORT = int(sys.argv[1])
-    print("Option 1 -= UI")
-    # args would be port agent1(name) passphrase, cont'd
+# Argument Parsing
+parser = argparse.ArgumentParser()
+parser.add_argument("port", nargs="?", default="8080", type=int, help="The port to attach.")
+parser.add_argument("--wallet", nargs=2, metavar=('walletname','walletpass'), help="The name and passphrase of the wallet to connect to.")
+parser.add_argument("--ephemeralwallet", action="store_true", help="Use ephemeral wallets")
+args = parser.parse_args()
 
-elif len(sys.argv) == 4 and str.isdigit(sys.argv[1]):
-    print("Option 2 - cli")
-    PORT = int(sys.argv[1])
-    WALLETNAME = str(sys.argv[2])
-    WALLETPASS = str(sys.argv[3])
-    AGENTINITINCLI = True
-
-else:
-    PORT = 8080
+# config webapp
 
 LOOP = asyncio.get_event_loop()
 
@@ -91,14 +84,16 @@ WEBAPP.add_routes(ROUTES)
 RUNNER = web.AppRunner(WEBAPP)
 LOOP.run_until_complete(RUNNER.setup())
 
-SERVER = web.TCPSite(runner=RUNNER, port=PORT)
+SERVER = web.TCPSite(runner=RUNNER, port=args.port)
 
-if AGENTINITINCLI:
+if args.wallet:
     try:
-        LOOP.run_until_complete(WEBAPP['agent'].connect_wallet(WALLETNAME, WALLETPASS))
-        print("Connected to wallet via command line args:{}".format(WALLETNAME))
+        LOOP.run_until_complete(WEBAPP['agent'].connect_wallet(args.wallet[0], args.wallet[1], ephemeral=args.ephemeralwallet))
+        print("Connected to wallet via command line args: {}".format(args.wallet[0]))
     except Exception as e:
         print(e)
+else:
+    print("Configure wallet connection via UI.")
 
 async def conn_process(agent):
     conn_router = agent['conn_router']
@@ -222,7 +217,7 @@ async def ui_event_process(agent):
             await ui_event_queue.send(Serializer.pack(res))
 
 try:
-    print('===== Starting Server on: http://localhost:{} ====='.format(PORT))
+    print('===== Starting Server on: http://localhost:{} ====='.format(args.port))
     print('Your UI Token is: {}'.format(UI_TOKEN))
     LOOP.create_task(SERVER.start())
     LOOP.create_task(conn_process(WEBAPP))
