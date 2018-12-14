@@ -143,6 +143,24 @@
                 </tbody>
             </table>
 
+            <h3>Pairwise Connections</h3>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="c in pairwise_connections">
+                        <td>{{ c.metadata.conn_name }}</td>
+                        <td>
+
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
             <div class="modal fade" id="historyModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
               <div class="modal-dialog" role="document">
                 <div class="modal-content">

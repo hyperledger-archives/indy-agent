@@ -1,7 +1,7 @@
 import aiohttp_jinja2
 import jinja2
 import json
-from indy import did, wallet, non_secrets
+from indy import did, wallet, non_secrets, pairwise
 
 from router.simple_router import SimpleRouter
 from agent import Agent
@@ -35,12 +35,22 @@ class Admin(Module):
             #TODO: fetch in loop till all records are processed
             await non_secrets.close_wallet_search(search_handle)
 
+        # load up pairwise connections
+        pairwise_records = []
+        agent_pairwises_list_str = await pairwise.list_pairwise(self.agent.wallet_handle)
+        agent_pairwises_list = json.loads(agent_pairwises_list_str)
+        for agent_pairwise_str in agent_pairwises_list:
+            pairwise_record = json.loads(agent_pairwise_str)
+            pairwise_record['metadata'] = json.loads(pairwise_record['metadata'])
+            pairwise_records.append(pairwise_record)
+
         return Message({
             '@type': ADMIN.STATE,
             'content': {
                 'initialized': self.agent.initialized,
                 'agent_name': self.agent.owner,
-                'invitations': invitations
+                'invitations': invitations,
+                'pairwise_connections': pairwise_records,
             }
         })
 

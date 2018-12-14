@@ -96,6 +96,7 @@
             endpoint: ""
         },
         connections: [],
+        pairwise_connections:[],
         history_view: []
     };
 
@@ -276,6 +277,7 @@
                     this.agent_name = state.agent_name;
                     this.current_tab = 'relationships';
                     //load invitations
+
                     console.log('invitations', state.invitations);
                     state.invitations.forEach((i) => {
                         this.connections.push({
@@ -289,6 +291,8 @@
                             history: []
                         });
                     });
+                    //load connections
+                    this.pairwise_connections = state['pairwise_connections'];
                 }
             }
         }
