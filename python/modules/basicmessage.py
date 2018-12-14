@@ -114,7 +114,27 @@ class AdminBasicMessage(Module):
         })
 
     def get_messages(self, msg: Message) -> Message:
-        pass
+        their_did = msg['with']
+        search_handle = await non_secrets.open_wallet_search(
+            self.agent.wallet_handle, "basicmessage",
+            json.dumps({"their_did": their_did}),
+            json.dumps({})
+        )
+        results = await non_secrets.fetch_wallet_search_next_records(self.agent.wallet_handle, search_handle, 100)
+
+        messages = []
+        for r in json.loads(results)["records"] or []: # records is None if empty
+            d = json.loads(r['value'])
+            d["_id"] = r["id"] # include record id for further reference.
+            messages.append(d)
+        #TODO: fetch in loop till all records are processed
+        await non_secrets.close_wallet_search(search_handle)
+
+        return Message({
+            'type': ADMIN_BASICMESSAGE.MESSAGES,
+            'with': their_did,
+            'messages': messages
+        })
 
 
 class BasicMessage(Module):
