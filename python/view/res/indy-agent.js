@@ -48,8 +48,8 @@
         routes: [],
         route:
             function(msg) {
-                if (msg.type in this.routes) {
-                    this.routes[msg.type](msg);
+                if (msg['@type'] in this.routes) {
+                    this.routes[msg['@type']](msg);
                 } else {
                     console.log('Message from server without registered route: ' + JSON.stringify(msg));
                 }
@@ -120,7 +120,7 @@
         methods: {
             send_invite: function () {
                 msg = {
-                    type: ADMIN_CONNECTION.SEND_INVITE,
+                    '@type': ADMIN_CONNECTION.SEND_INVITE,
                     name: this.new_connection_offer.name,
                     endpoint: this.new_connection_offer.endpoint
                 };
@@ -147,7 +147,7 @@
 
             send_request: function (c) {
                 msg = {
-                    type: ADMIN_CONNECTION.SEND_REQUEST,
+                    '@type': ADMIN_CONNECTION.SEND_REQUEST,
                     content: {
                             name: c.name,
                             endpoint: c.invitation.endpoint.url,
@@ -169,7 +169,7 @@
             },
             send_response: function (prevMsg) {
                 msg = {
-                    type: ADMIN_CONNECTION.SEND_RESPONSE,
+                    '@type': ADMIN_CONNECTION.SEND_RESPONSE,
                     content: {
                             name: prevMsg.name,
                             // endpoint_key: prevMsg.endpoint_key,
@@ -198,7 +198,7 @@
             },
             send_message: function (c) {
                 msg = {
-                    type: ADMIN_BASICMESSAGE.SEND_MESSAGE,
+                    '@type': ADMIN_BASICMESSAGE.SEND_MESSAGE,
                     content: {
                             name: c.name,
                             message: 'Hello, world!',
@@ -249,13 +249,13 @@
                 this.wallet_connect_error = ""; // clear any previous error
                 //var v_this = this;
                 sendMessage({
-                    type: ADMIN_WALLETCONNECTION.CONNECT,
+                    '@type': ADMIN_WALLETCONNECTION.CONNECT,
                     name: this.agent_name,
                     passphrase: this.passphrase
                 }, function(msg){
                     //thread callback
                     console.log("received thread response", msg);
-                    if(msg.type === ADMIN_WALLETCONNECTION.USER_ERROR){
+                    if(msg['@type'] === ADMIN_WALLETCONNECTION.USER_ERROR){
                         this.wallet_connect_error = msg.message;
                     }
                 }.bind(this));
@@ -263,7 +263,7 @@
             connect: function(){
                 sendMessage(
                     {
-                        type: ADMIN.STATE_REQUEST,
+                        '@type': ADMIN.STATE_REQUEST,
                         content: null
                     }
                 );

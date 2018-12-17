@@ -27,7 +27,7 @@ class AdminWalletConnection(Module):
             await self.agent.connect_wallet(msg['name'], msg['passphrase'])
         except WalletConnectionException:
             return Message({
-                'type': ADMIN_WALLETCONNECTION.USER_ERROR,
+                '@type': ADMIN_WALLETCONNECTION.USER_ERROR,
                 'error_code': "invalid_passphrase",
                 'message': "Invalid Passphrase",
                 'thread': {

@@ -36,7 +36,7 @@ class Admin(Module):
             await non_secrets.close_wallet_search(search_handle)
 
         return Message({
-            'type': ADMIN.STATE,
+            '@type': ADMIN.STATE,
             'content': {
                 'initialized': self.agent.initialized,
                 'agent_name': self.agent.owner,

@@ -55,7 +55,7 @@ class BasicMessage(Module):
         my_verkey_str = my_did_info_json['verkey']
 
         inner_msg = Message({
-            'type': BASICMESSAGE.MESSAGE,
+            '@type': BASICMESSAGE.MESSAGE,
             'to': "did:sov:ABC",
             'content': serialize_bytes_json(
                 await crypto.auth_crypt(self.agent.wallet_handle, my_verkey_str,
@@ -63,7 +63,7 @@ class BasicMessage(Module):
         })
 
         outer_msg = Message({
-            'type': FORWARD.FORWARD,
+            '@type': FORWARD.FORWARD,
             'to': "ABC",
             'content': inner_msg
         })
@@ -85,7 +85,7 @@ class BasicMessage(Module):
                 print(await resp.text())
 
         return Message({
-            'type': ADMIN_BASICMESSAGE.MESSAGE_SENT,
+            '@type': ADMIN_BASICMESSAGE.MESSAGE_SENT,
             'id': self.agent.ui_token,
             'content': {'name': conn_name}
         })
@@ -120,7 +120,7 @@ class BasicMessage(Module):
         their_data_json = json.loads(bytes_to_str(their_data_bytes))
 
         return Message({
-            'type': ADMIN_BASICMESSAGE.MESSAGE_RECEIVED,
+            '@type': ADMIN_BASICMESSAGE.MESSAGE_RECEIVED,
             'id': self.agent.ui_token,
             'content': {'name': conn_name,
                      'their_did': their_did_str,
