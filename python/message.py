@@ -24,4 +24,4 @@ class Message(UserDict):
 
     @property
     def type(self):
-        return self.data["type"]
+        return self.data["@type"]
