@@ -132,7 +132,7 @@ class AdminBasicMessage(Module):
         messages = sorted(messages, key=lambda n: n['timestamp'], reverse=True)
 
         return Message({
-            'type': ADMIN_BASICMESSAGE.MESSAGES,
+            '@type': ADMIN_BASICMESSAGE.MESSAGES,
             'with': their_did,
             'messages': messages
         })

@@ -172,7 +172,7 @@
                 c.connecton_request = msg.content;
                 c.history.push(history_format(msg.content.history));
                 // now request a state update to see the new pairwise connection
-                sendMessage({type: ADMIN.STATE_REQUEST});
+                sendMessage({'@type': ADMIN.STATE_REQUEST});
             },
             send_response: function (prevMsg) {
                 msg = {
@@ -191,6 +191,8 @@
                 c.status = "Response sent";
                 c.message_capable = true;
                 c.history.push(history_format(msg.content));
+                // remove from pending connections list
+                this.connections.splice(this.connections.indexOf(c), 1);
 
             },
             response_received: function (msg) {
@@ -200,8 +202,12 @@
                 c.their_did = msg.content.their_did;
                 c.message_capable = true;
                 c.history.push(history_format(msg.content.history));
+
+                // remove from pending connections list
+                this.connections.splice(this.connections.indexOf(c), 1);
+
                 // now request a state update to see the new pairwise connection
-                sendMessage({type: ADMIN.STATE_REQUEST});
+                sendMessage({'@type': ADMIN.STATE_REQUEST});
             },
             message_sent: function (msg) {
                 //var c = this.get_connection_by_name(msg.content.name);
@@ -210,7 +216,7 @@
                 if(msg.with == this.connection.their_did){
                     //connection view currently open
                     sendMessage({
-                        type: ADMIN_BASICMESSAGE.GET_MESSAGES,
+                        '@type': ADMIN_BASICMESSAGE.GET_MESSAGES,
                         with: msg.with
                     });
                 } else {
@@ -221,7 +227,7 @@
                 if(msg.with == this.connection.their_did){
                     //connection view currently open
                     sendMessage({
-                        type: ADMIN_BASICMESSAGE.GET_MESSAGES,
+                        '@type': ADMIN_BASICMESSAGE.GET_MESSAGES,
                         with: msg.with
                     });
                 } else {
@@ -268,7 +274,7 @@
             },
             load: function(){
                 sendMessage({
-                    type: ADMIN_BASICMESSAGE.GET_MESSAGES,
+                    '@type': ADMIN_BASICMESSAGE.GET_MESSAGES,
                     with: this.connection.their_did
                 });
             }

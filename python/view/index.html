@@ -108,14 +108,17 @@
                 </div>
             </div>
 
-            <div id='conns-details-container' class="row">
-                <div class="col-sm" id="conns">
-                    <h3 id="agent_name_header" class="text-center">Agent's name: {{agent_name}}</h3>
-                </div>
-            </div>
 
+            <nav class="navbar navbar-expand-lg navbar-light bg-light" style="margin-top:2em;">
+              <a class="h3 navbar-brand" href="#">Pending Connections</a>
+              <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
 
-            <button type="button" class="btn btn-primary btn-small navbar-btn" data-toggle="modal" data-target="#send_req_modal">Send connection offer</button>
+                </ul>
+                <button type="button" class="btn btn-outline-primary btn-small navbar-btn" data-toggle="modal" data-target="#send_req_modal">Send connection offer</button>
+              </div>
+            </nav>
+
 
 
             <table class="table table-bordered" id="conns-new">
@@ -144,7 +147,15 @@
                 </tbody>
             </table>
 
-            <h3>Pairwise Connections</h3>
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+              <a class="h3 navbar-brand" href="#">Pairwise Connections</a>
+              <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
+
+                </ul>
+              </div>
+            </nav>
+
             <table class="table table-bordered">
                 <thead>
                     <tr>
