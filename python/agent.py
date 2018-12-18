@@ -1,7 +1,7 @@
 """ Module defining Agent class and related methods
 """
 import json
-from indy import wallet, did
+from indy import wallet, did, error
 
 class WalletConnectionException(Exception):
     pass
@@ -20,20 +20,40 @@ class Agent:
         self.initialized = False
         self.modules = []
 
-    async def connect_wallet(self, agent_name, passphrase):
+    async def connect_wallet(self, agent_name, passphrase, ephemeral=False):
         """ Create if not already exists and open wallet.
         """
 
         self.owner = agent_name
-        wallet_name = '{}-wallet'.format(self.owner)
+        wallet_suffix = "wallet"
+        if ephemeral:
+            wallet_suffix = "ephemeral_wallet"
+        wallet_name = '{}-{}'.format(self.owner, wallet_suffix)
 
         wallet_config = json.dumps({"id": wallet_name})
         wallet_credentials = json.dumps({"key": passphrase})
 
+        # Handle ephemeral wallets
+        if ephemeral:
+            try:
+                await wallet.delete_wallet(wallet_config, wallet_credentials)
+                print("Removing ephemeral wallet.")
+            except error.IndyError as e:
+                if e.error_code is error.ErrorCode.WalletNotFoundError:
+                    pass  # This is ok, and expected.
+                else:
+                    print("Unexpected Indy Error: {}".format(e))
+            except Exception as e:
+                print(e)
         # pylint: disable=bare-except
-        # TODO: better handle potential exceptions.
+
         try:
             await wallet.create_wallet(wallet_config, wallet_credentials)
+        except error.IndyError as e:
+            if e.error_code is error.ErrorCode.WalletAlreadyExistsError:
+                pass # This is ok, and expected.
+            else:
+                print("Unexpected Indy Error: {}".format(e))
         except Exception as e:
             print(e)
 
