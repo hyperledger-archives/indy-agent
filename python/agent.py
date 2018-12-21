@@ -1,7 +1,12 @@
 """ Module defining Agent class and related methods
 """
 import json
-from indy import wallet, did, error
+import base64
+import aiohttp
+from indy import wallet, did, error, crypto, pairwise
+
+from helpers import bytes_to_str, serialize_bytes_json, str_to_bytes
+from message import Message
 
 class WalletConnectionException(Exception):
     pass
@@ -72,3 +77,87 @@ class Agent:
             print("Could not open wallet!")
 
             raise WalletConnectionException
+
+
+    async def unpack_agent_message(self, wire_msg_bytes):
+        wire_msg = json.loads(wire_msg_bytes)
+
+        # get key from wallet from to: did
+        # TODO: add error reporting if DID not found
+
+        #load my key list
+        did_list_str = await did.list_my_dids_with_meta(self.wallet_handle)
+        did_list = json.loads(did_list_str)
+        my_verkey_to_did = {}
+        for d in did_list:
+            my_verkey_to_did[d['verkey']] = d['did']
+
+        if wire_msg['to'] not in my_verkey_to_did:
+            raise Exception("Unknown recipient key")
+
+        #load pairwise
+        pairwise_list_str = await pairwise.list_pairwise(self.wallet_handle)
+        pairwise_list = json.loads(pairwise_list_str)
+        their_verkey_to_did = {}
+        for p_str in pairwise_list:
+            p = json.loads(p_str)
+            p_meta = json.loads(p['metadata'])
+            their_verkey_to_did[p_meta['their_verkey']] = p['their_did']
+
+        from_did = None
+        if wire_msg['from'] in their_verkey_to_did:
+            from_did = their_verkey_to_did[wire_msg['from']]
+
+        # now process payload
+        message_bytes = base64.b64decode(wire_msg['payload'])
+
+        their_key_str, their_data_bytes = await crypto.auth_decrypt(
+            self.wallet_handle, wire_msg['to'], message_bytes)
+
+        msg_str = bytes_to_str(their_data_bytes)
+        msg_json = json.loads(msg_str)
+
+        msg = Message(msg_json)
+
+        msg.context = {
+            'from_did': from_did, # will be none if unknown sender verkey
+            'from_key': their_key_str,
+            'to_key': wire_msg['to'],
+            'to_did': my_verkey_to_did[wire_msg['to']]
+        }
+        return msg
+
+    async def send_message_to_agent(self, to_did, msg:Message):
+
+        their_did_str = to_did
+
+        pairwise_conn_info_str = await pairwise.get_pairwise(self.wallet_handle, their_did_str)
+        pairwise_conn_info_json = json.loads(pairwise_conn_info_str)
+
+        my_did_str = pairwise_conn_info_json['my_did']
+
+        metadata_json = json.loads(pairwise_conn_info_json['metadata'])
+        # conn_name = metadata_json['conn_name']
+        their_endpoint = metadata_json['their_endpoint']
+        their_verkey_str = metadata_json['their_verkey']
+
+        my_did_info_str = await did.get_my_did_with_meta(self.wallet_handle,
+                                                         my_did_str)
+        my_did_info_json = json.loads(my_did_info_str)
+        my_verkey_str = my_did_info_json['verkey']
+
+        await self.send_message_to_endpoint_and_key(my_verkey_str, their_verkey_str, their_endpoint, msg)
+
+    # used directly when sending to an endpoint without a known did
+    async def send_message_to_endpoint_and_key(self, my_ver_key, their_ver_key, their_endpoint, msg):
+        wire_message = {
+            'to': their_ver_key,
+            'from': my_ver_key,
+            'payload': serialize_bytes_json(await crypto.auth_crypt(self.wallet_handle, my_ver_key,
+                                                                    their_ver_key, str_to_bytes(msg.as_json())))
+        }
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(their_endpoint, data=json.dumps(wire_message)) as resp:
+                print(resp.status)
+                print(await resp.text())

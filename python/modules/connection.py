@@ -111,14 +111,16 @@ class Connection(Module):
 
         (my_endpoint_did_str, my_connection_key) = await did.create_and_store_my_did(self.agent.wallet_handle, "{}")
 
-        data_to_send = json.dumps(
-            {
-                "did": my_endpoint_did_str,
-                "key": my_connection_key
-            }
-        )
+        to_did = "needed from admin message"
+        msg = Message({
+            '@type': CONN.REQUEST,
+            "did": my_endpoint_did_str,
+            "key": my_connection_key,
+            'endpoint': my_endpoint_uri,
+        })
 
-        data_to_send_bytes = str_to_bytes(data_to_send)
+        # we call the underlying method here because we don't know their did yet.
+        await self.agent.send_message_to_endpoint_and_key(my_connection_key, their_connection_key, their_endpoint, msg)
 
         meta_json = json.dumps(
             {
@@ -128,37 +130,6 @@ class Connection(Module):
         )
 
         await did.set_did_metadata(self.agent.wallet_handle, my_endpoint_did_str, meta_json)
-
-        inner_msg = Message({
-            '@type': CONN.REQUEST,
-            'to': "did:sov:ABC",
-            'endpoint': my_endpoint_uri,
-            'content': serialize_bytes_json(await crypto.auth_crypt(self.agent.wallet_handle, my_connection_key, their_connection_key, data_to_send_bytes))
-        })
-
-        outer_msg = Message({
-            '@type': FORWARD.FORWARD_TO_KEY,
-            'to': "ABC",
-            'content': inner_msg
-        })
-
-        serialized_outer_msg = Serializer.pack(outer_msg)
-
-        serialized_outer_msg_bytes = str_to_bytes(serialized_outer_msg)
-
-        all_message = Message({
-            '@type': CONN.REQUEST,
-            'content': serialize_bytes_json(
-                await crypto.anon_crypt(their_connection_key,
-                                        serialized_outer_msg_bytes))
-        })
-
-        serialized_msg = Serializer.pack(all_message)
-
-        async with aiohttp.ClientSession() as session:
-            async with session.post(their_endpoint, data=serialized_msg) as resp:
-                print(resp.status)
-                print(await resp.text())
 
         return Message({
             '@type': ADMIN_CONNECTIONS.REQUEST_SENT,
@@ -170,29 +141,20 @@ class Connection(Module):
     async def request_received(self, msg: Message) -> Message:
         their_endpoint_uri = msg['endpoint']
 
-        my_did_str = msg['did']
+        my_did_str = msg.context['to_did']
+        their_did_str = msg['did']
+        their_key_str = msg.context['from_key']
+
         my_did_info_str = await did.get_my_did_with_meta(self.agent.wallet_handle, my_did_str)
         my_did_info_json = json.loads(my_did_info_str)
-
-        my_verkey = my_did_info_json['verkey']
         metadata_str = my_did_info_json['metadata']
         metadata_dict = json.loads(metadata_str)
 
         conn_name = metadata_dict['conn_name']
 
-        message_bytes = str_to_bytes(msg['content'])
-        message_bytes = base64.b64decode(message_bytes)
-
-        their_key_str, their_data_bytes = await crypto.auth_decrypt(
-            self.agent.wallet_handle, my_verkey, message_bytes)
-
         # change verkey passed via send_invite to the agent without encryption
         my_new_verkey = await did.replace_keys_start(self.agent.wallet_handle, my_did_str, '{}')
         await did.replace_keys_apply(self.agent.wallet_handle, my_did_str)
-
-        their_data_json = json.loads(bytes_to_str(their_data_bytes))
-
-        their_did_str = their_data_json['did']
 
         identity_json = json.dumps(
             {
@@ -234,51 +196,15 @@ class Connection(Module):
 
         my_did_str = pairwise_conn_info_json['my_did']
 
-        data_to_send = json.dumps(
-            {
-                "did": my_did_str
-            }
-        )
-
-        data_to_send_bytes = str_to_bytes(data_to_send)
-
         metadata_json = json.loads(pairwise_conn_info_json['metadata'])
         conn_name = metadata_json['conn_name']
-        their_endpoint = metadata_json['their_endpoint']
-        their_verkey_str = metadata_json['their_verkey']
 
-        my_did_info_str = await did.get_my_did_with_meta(self.agent.wallet_handle, my_did_str)
-        my_did_info_json = json.loads(my_did_info_str)
-        my_verkey_str = my_did_info_json['verkey']
-
-        inner_msg = Message({
+        msg = Message({
             '@type': CONN.RESPONSE,
-            'to': "did:sov:ABC",
-            'content': serialize_bytes_json(await crypto.auth_crypt(
-                self.agent.wallet_handle, my_verkey_str, their_verkey_str, data_to_send_bytes))
+            "did": my_did_str,
         })
 
-        outer_msg = Message({
-            '@type': FORWARD.FORWARD,
-            'to': "ABC",
-            'content': inner_msg
-        })
-
-        serialized_outer_msg = Serializer.pack(outer_msg)
-
-        serialized_outer_msg_bytes = str_to_bytes(serialized_outer_msg)
-
-        all_message = Message({
-            'content': serialize_bytes_json(await crypto.anon_crypt(their_verkey_str,
-                                                                 serialized_outer_msg_bytes))
-        })
-
-        serialized_msg = Serializer.pack(all_message)
-
-        async with aiohttp.ClientSession() as session:
-            async with session.post(their_endpoint, data=serialized_msg) as resp:
-                print(resp.status)
-                print(await resp.text())
+        await self.agent.send_message_to_agent(their_did_str, msg)
 
         return Message({
             '@type': ADMIN_CONNECTIONS.RESPONSE_SENT,
@@ -288,7 +214,9 @@ class Connection(Module):
 
 
     async def response_received(self, msg: Message) -> Message:
-        my_did_str = msg['did']
+        my_did_str = msg.context['to_did']
+        their_did_str = msg['did']
+        their_key_str = msg.context['from_key']
 
         my_did_info_str = await did.get_my_did_with_meta(self.agent.wallet_handle, my_did_str)
         my_did_info_json = json.loads(my_did_info_str)
@@ -299,16 +227,6 @@ class Connection(Module):
 
         conn_name = metadata_dict['conn_name']
         their_endpoint = metadata_dict['their_endpoint']
-
-        message_bytes = str_to_bytes(msg['content'])
-        message_bytes = base64.b64decode(message_bytes)
-
-        their_key_str, their_data_bytes = await crypto.auth_decrypt(
-            self.agent.wallet_handle, my_verkey, message_bytes)
-
-        their_data_json = json.loads(bytes_to_str(their_data_bytes))
-
-        their_did_str = their_data_json['did']
 
         identity_json = json.dumps(
             {

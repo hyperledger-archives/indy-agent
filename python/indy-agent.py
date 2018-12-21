@@ -20,6 +20,7 @@ import argparse
 from aiohttp import web
 from indy import crypto, did, error, IndyError, wallet
 
+from helpers import deserialize_bytes_json, str_to_bytes, bytes_to_str
 from modules.connection import Connection
 from modules.admin import Admin
 from modules.admin_walletconnection import AdminWalletConnection
@@ -130,59 +131,15 @@ async def message_process(agent):
     msg_router.register(BASICMESSAGE.FAMILY, agent['modules']['basicmessage'])
 
     while True:
-        encrypted_msg_bytes = await msg_receiver.recv()
-        try:
-            encrypted_msg_str = Serializer.unpack(encrypted_msg_bytes)
-        except Exception as e:
-            print('Failed to unpack message: {}\n\nError: {}'.format(encrypted_msg_bytes, e))
-            continue
-
-        encrypted_msg_bytes = base64.b64decode(encrypted_msg_str['content'].encode('utf-8'))
-
-        agent_dids_str = await did.list_my_dids_with_meta(WEBAPP['agent'].wallet_handle)
-
-        agent_dids_json = json.loads(agent_dids_str)
-
-        this_did = ""
-
-        #  trying to find verkey for encryption
-        decrypted_msg = False # provide a fallthrough value if key not present.
-        for agent_did_data in agent_dids_json:
-            try:
-                decrypted_msg = await crypto.anon_decrypt(
-                    WEBAPP['agent'].wallet_handle,
-                    agent_did_data['verkey'],
-                    encrypted_msg_bytes
-                )
-                this_did = agent_did_data['did']
-                #  decrypted -> found key, stop loop
-                break
-
-            except IndyError as e:
-                #  key did not work
-                if e.error_code == error.ErrorCode.CommonInvalidStructure:
-                    print('Key did not work')
-                    continue
-                else:
-                    #  something else happened
-                    print('Could not decrypt message: {}\nError: {}'.format(
-                        encrypted_msg_bytes, e))
-                    continue
-
-        if not decrypted_msg:
-            print("Agent doesn't have needed verkey for anon_decrypt")
-            continue
+        wire_msg_bytes = await msg_receiver.recv()
 
         try:
-            msg = Serializer.unpack(decrypted_msg)
+            msg = await agent['agent'].unpack_agent_message(wire_msg_bytes)
         except Exception as e:
-            print('Failed to unpack message: {}\n\nError: {}'.format(decrypted_msg, e))
-            continue
+            print('Failed to unpack message: {}\n\nError: {}'.format(wire_msg_bytes, e))
+            continue  # handle next message in loop
 
-        #  pass this connections did with the message
-        msg['content']['did'] = this_did
-        msg = Serializer.unpack_dict(msg['content'])
-
+        #route message by payload type
         res = await msg_router.route(msg)
 
         if res is not None:
