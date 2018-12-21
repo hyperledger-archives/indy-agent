@@ -46,6 +46,8 @@ class ADMIN_BASICMESSAGE:
     MESSAGE_RECEIVED = BASE + "message_received"
     SEND_MESSAGE = BASE + "send_message"
     MESSAGE_SENT = BASE + "message_sent"
+    GET_MESSAGES = BASE + "get_messages"
+    MESSAGES = BASE + "messages"
 
 class ADMIN_WALLETCONNECTION:
     FAMILY = "admin_walletconnection"

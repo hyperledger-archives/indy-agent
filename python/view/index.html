@@ -1,3 +1,4 @@
+{% raw %}
 <!doctype html>
 <html lang="en">
   <head>
@@ -7,7 +8,7 @@
     <meta name="author" content="">
     <link rel="icon" href="favicon.ico">
 
-    <title>Indy Agent</title>
+    <title>Indy Agent {{agent_name}}</title>
 
     <!-- Bootstrap core CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
@@ -17,8 +18,8 @@
   </head>
 
   <body>
-{% raw %}
-    <header>
+
+    <header id="header">
       <!-- Fixed navbar -->
       <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
             <img id="nav-icon" src="/res/ICON.png" width="50px" height="50px">
@@ -31,7 +32,7 @@
         <div class="collapse navbar-collapse" id="navbarCollapse">
           <ul class="navbar-nav mr-auto">
             <li class="nav-item active">
-              <a class="nav-link" href="#">Connections<span class="sr-only">(current)</span></a>
+              <a class="nav-link" v-on:click="set_tab('relationships')" href="#">Connections<span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="#">Credentials<span class="sr-only">(current)</span></a>
@@ -41,6 +42,7 @@
 
         <ul class="nav navbar-nav navbar-right">
             <li>
+                <a class="nav-link active" href="#">{{agent_name}}</a>
             </li>
         </ul>
 
@@ -106,14 +108,17 @@
                 </div>
             </div>
 
-            <div id='conns-details-container' class="row">
-                <div class="col-sm" id="conns">
-                    <h3 id="agent_name_header" class="text-center">Agent's name: {{agent_name}}</h3>
-                </div>
-            </div>
 
+            <nav class="navbar navbar-expand-lg navbar-light bg-light" style="margin-top:2em;">
+              <a class="h3 navbar-brand" href="#">Pending Connections</a>
+              <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
 
-            <button type="button" class="btn btn-primary btn-small navbar-btn" data-toggle="modal" data-target="#send_req_modal">Send connection offer</button>
+                </ul>
+                <button type="button" class="btn btn-outline-primary btn-small navbar-btn" data-toggle="modal" data-target="#send_req_modal">Send connection offer</button>
+              </div>
+            </nav>
+
 
 
             <table class="table table-bordered" id="conns-new">
@@ -137,7 +142,32 @@
                         <td>
                             <button type="button" class="btn btn-warning" v-if="c.status == 'Invite Received'" v-on:click="send_request(c)">Send Request</button>
                             <button type="button" class="btn btn-warning" v-if="c.status == 'Request Received'" v-on:click="send_response(c.connecton_request)">Send Response</button>
-                            <button type="button" class="btn btn-warning" v-if="c.their_did" v-on:click="send_message(c)">Send Message</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+              <a class="h3 navbar-brand" href="#">Pairwise Connections</a>
+              <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
+
+                </ul>
+              </div>
+            </nav>
+
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="c in pairwise_connections">
+                        <td style="cursor:pointer;" v-on:click="show_connection(c)">{{ c.metadata.conn_name }}</td>
+                        <td>
+
                         </td>
                     </tr>
                 </tbody>
@@ -169,6 +199,27 @@
             </div>
 
         </div>
+
+        <!-- relationships page -->
+        <div id="connection" class="tab" v-if="tab_active">
+            <h3>Connection: {{connection.metadata.conn_name}}</h3>
+            <p>My DID: {{connection.my_did}}</p>
+            <p>Their DID: {{connection.their_did}}</p>
+
+            <div id="chatlist">
+                <div id="new_message_box">
+                    <input type="text" v-model="new_basicmessage"/>
+                    <input type="submit" value="Send" v-on:click="send_message()"/>
+                </div>
+                <div id="message_history" v-for="m in basicmessage_list">
+
+                    <div v-bind:class="{sent_message: m.from == connection.my_did, received_message: m.from == connection.their_did}">{{m.content}}</div>
+
+                </div>
+            </div>
+
+        </div>
+
     </main>
 {% endraw %}
     <footer class="footer">

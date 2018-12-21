@@ -3,7 +3,9 @@ import aiohttp_jinja2
 import jinja2
 import base64
 import json
-from indy import did, wallet, pairwise, crypto
+import time
+import uuid
+from indy import did, wallet, pairwise, crypto, non_secrets
 
 from helpers import str_to_bytes, serialize_bytes_json, bytes_to_str
 from router.simple_router import SimpleRouter
@@ -13,13 +15,12 @@ from message import Message
 from message_types import BASICMESSAGE, ADMIN_BASICMESSAGE, CONN, FORWARD
 from . import Module
 
-class BasicMessage(Module):
-
+class AdminBasicMessage(Module):
     def __init__(self, agent):
         self.agent = agent
         self.router = SimpleRouter()
-        self.router.register(BASICMESSAGE.MESSAGE, self.receive_message)
         self.router.register(ADMIN_BASICMESSAGE.SEND_MESSAGE, self.send_message)
+        self.router.register(ADMIN_BASICMESSAGE.GET_MESSAGES, self.get_messages)
 
     async def route(self, msg: Message) -> Message:
         return await self.router.route(msg)
@@ -28,18 +29,35 @@ class BasicMessage(Module):
         """ UI activated method.
         """
 
-        their_did_str = msg['content']['their_did']
-        message_to_send = msg['content']['message']
+        their_did_str = msg['to']
+        message_to_send = msg['message']
 
         pairwise_conn_info_str = await pairwise.get_pairwise(self.agent.wallet_handle, their_did_str)
         pairwise_conn_info_json = json.loads(pairwise_conn_info_str)
 
         my_did_str = pairwise_conn_info_json['my_did']
+        time_sent = time.time()
 
         data_to_send = json.dumps(
             {
-                "message": message_to_send
+                "timestamp": time_sent,
+                "content": message_to_send
             }
+        )
+
+        # store message in the wallet
+        await non_secrets.add_wallet_record(
+            self.agent.wallet_handle,
+            "basicmessage",
+            uuid.uuid4().hex,
+            json.dumps({
+                'from': my_did_str,
+                'timestamp': time_sent,
+                'content': message_to_send
+            }),
+            json.dumps({
+                "their_did": their_did_str
+            })
         )
 
         data_to_send_bytes = str_to_bytes(data_to_send)
@@ -56,8 +74,8 @@ class BasicMessage(Module):
 
         inner_msg = Message({
             '@type': BASICMESSAGE.MESSAGE,
-            'to': "did:sov:ABC",
-            'content': serialize_bytes_json(
+            'from': my_did_str,
+            'message': serialize_bytes_json(
                 await crypto.auth_crypt(self.agent.wallet_handle, my_verkey_str,
                                         their_verkey_str, data_to_send_bytes))
         })
@@ -87,31 +105,64 @@ class BasicMessage(Module):
         return Message({
             '@type': ADMIN_BASICMESSAGE.MESSAGE_SENT,
             'id': self.agent.ui_token,
-            'content': {'name': conn_name}
+            'with': their_did_str,
+            'message': {
+                'from': my_did_str,
+                'timestamp': time_sent,
+                'content': message_to_send
+            }
+        })
+
+    async def get_messages(self, msg: Message) -> Message:
+        their_did = msg['with']
+        search_handle = await non_secrets.open_wallet_search(
+            self.agent.wallet_handle, "basicmessage",
+            json.dumps({"their_did": their_did}),
+            json.dumps({})
+        )
+        results = await non_secrets.fetch_wallet_search_next_records(self.agent.wallet_handle, search_handle, 100)
+
+        messages = []
+        for r in json.loads(results)["records"] or []: # records is None if empty
+            d = json.loads(r['value'])
+            d["_id"] = r["id"] # include record id for further reference.
+            messages.append(d)
+        #TODO: fetch in loop till all records are processed
+        await non_secrets.close_wallet_search(search_handle)
+        messages = sorted(messages, key=lambda n: n['timestamp'], reverse=True)
+
+        return Message({
+            '@type': ADMIN_BASICMESSAGE.MESSAGES,
+            'with': their_did,
+            'messages': messages
         })
 
 
+class BasicMessage(Module):
+
+    def __init__(self, agent):
+        self.agent = agent
+        self.router = SimpleRouter()
+        self.router.register(BASICMESSAGE.MESSAGE, self.receive_message)
+
+    async def route(self, msg: Message) -> Message:
+        return await self.router.route(msg)
+
     async def receive_message(self, msg: Message) -> Message:
-        my_did_str = msg['did']
-        their_did_str = ""
-        conn_name = ""
-        my_verkey = ""
+        their_did_str = msg['from']
 
-        self.agent_pairwises_list_str = await pairwise.list_pairwise(self.agent.wallet_handle)
-        self.agent_pairwises_list = json.loads(self.agent_pairwises_list_str)
+        pairwise_conn_info_str = await pairwise.get_pairwise(self.agent.wallet_handle, their_did_str)
+        pairwise_conn_info_json = json.loads(pairwise_conn_info_str)
 
-        for self.agent_pairwise_str in self.agent_pairwises_list:
-            self.agent_pairwise_json = json.loads(self.agent_pairwise_str)
-            if not self.agent_pairwise_json['my_did'] == my_did_str:
-                continue
-            their_did_str = self.agent_pairwise_json['their_did']
+        my_did_str = pairwise_conn_info_json['my_did']
+        metadata = json.loads(pairwise_conn_info_json['metadata'])
 
-            metadata_str = self.agent_pairwise_json['metadata']
-            metadata_json = json.loads(metadata_str)
-            conn_name = metadata_json['conn_name']
-            my_verkey = metadata_json['my_verkey']
+        my_did_info_str = await did.get_my_did_with_meta(self.agent.wallet_handle, my_did_str)
 
-        message_bytes = str_to_bytes(msg['content'])
+        my_did_info_json = json.loads(my_did_info_str)
+        my_verkey = my_did_info_json['verkey']
+
+        message_bytes = str_to_bytes(msg['message'])
         message_bytes = base64.b64decode(message_bytes)
 
         their_key_str, their_data_bytes = await crypto.auth_decrypt(
@@ -119,10 +170,28 @@ class BasicMessage(Module):
 
         their_data_json = json.loads(bytes_to_str(their_data_bytes))
 
+        # store message in the wallet
+        await non_secrets.add_wallet_record(
+            self.agent.wallet_handle,
+            "basicmessage",
+            uuid.uuid4().hex,
+            json.dumps({
+                'from': their_did_str,
+                'timestamp': their_data_json['timestamp'],
+                'content': their_data_json['content']
+            }),
+            json.dumps({
+                "their_did": their_did_str
+            })
+        )
+
         return Message({
             '@type': ADMIN_BASICMESSAGE.MESSAGE_RECEIVED,
             'id': self.agent.ui_token,
-            'content': {'name': conn_name,
-                     'their_did': their_did_str,
-                     'history': their_data_json}
+            'with': their_did_str,
+            'message': {
+                'from': their_did_str,
+                'timestamp': their_data_json['timestamp'],
+                'content': their_data_json['content']
+            }
         })

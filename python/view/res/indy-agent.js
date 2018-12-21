@@ -40,7 +40,9 @@
     const ADMIN_BASICMESSAGE = {
         SEND_MESSAGE: MESSAGE_TYPES.ADMIN_BASICMESSAGE_BASE + "send_message",
         MESSAGE_SENT: MESSAGE_TYPES.ADMIN_BASICMESSAGE_BASE + "message_sent",
-        MESSAGE_RECEIVED: MESSAGE_TYPES.ADMIN_BASICMESSAGE_BASE + "message_received"
+        MESSAGE_RECEIVED: MESSAGE_TYPES.ADMIN_BASICMESSAGE_BASE + "message_received",
+        GET_MESSAGES: MESSAGE_TYPES.ADMIN_BASICMESSAGE_BASE + "get_messages",
+        MESSAGES: MESSAGE_TYPES.ADMIN_BASICMESSAGE_BASE + "messages"
     };
 
     // Message Router {{{
@@ -96,6 +98,10 @@
             endpoint: ""
         },
         connections: [],
+        pairwise_connections:[],
+        connection: {},
+        new_basicmessage: "",
+        basicmessage_list: [],
         history_view: []
     };
 
@@ -165,7 +171,8 @@
                 c.status = "Request Received";
                 c.connecton_request = msg.content;
                 c.history.push(history_format(msg.content.history));
-
+                // now request a state update to see the new pairwise connection
+                sendMessage({'@type': ADMIN.STATE_REQUEST});
             },
             send_response: function (prevMsg) {
                 msg = {
@@ -184,6 +191,8 @@
                 c.status = "Response sent";
                 c.message_capable = true;
                 c.history.push(history_format(msg.content));
+                // remove from pending connections list
+                this.connections.splice(this.connections.indexOf(c), 1);
 
             },
             response_received: function (msg) {
@@ -193,30 +202,40 @@
                 c.their_did = msg.content.their_did;
                 c.message_capable = true;
                 c.history.push(history_format(msg.content.history));
-                //             displayConnection(msg.content.name, [['Send Message', connections.send_message, socket, msg]], 'Response received');
 
-            },
-            send_message: function (c) {
-                msg = {
-                    '@type': ADMIN_BASICMESSAGE.SEND_MESSAGE,
-                    content: {
-                            name: c.name,
-                            message: 'Hello, world!',
-                            their_did: c.their_did
-                    }
-                };
-                sendMessage(msg);
+                // remove from pending connections list
+                this.connections.splice(this.connections.indexOf(c), 1);
+
+                // now request a state update to see the new pairwise connection
+                sendMessage({'@type': ADMIN.STATE_REQUEST});
             },
             message_sent: function (msg) {
-                var c = this.get_connection_by_name(msg.content.name);
-                c.status = "Message sent";
+                //var c = this.get_connection_by_name(msg.content.name);
+                //c.status = "Message sent";
+                // msg.with has their_did to help match.
+                if(msg.with == this.connection.their_did){
+                    //connection view currently open
+                    sendMessage({
+                        '@type': ADMIN_BASICMESSAGE.GET_MESSAGES,
+                        with: msg.with
+                    });
+                } else {
+                    //connection not currently open. set unread flag on connection details?
+                }
             },
-
             message_received: function (msg) {
-                var c = this.get_connection_by_name(msg.content.name);
-                c.status = "Message received";
-                c.their_did = msg.content.their_did;
-                c.history.push(history_format(msg.content.history));
+                if(msg.with == this.connection.their_did){
+                    //connection view currently open
+                    sendMessage({
+                        '@type': ADMIN_BASICMESSAGE.GET_MESSAGES,
+                        with: msg.with
+                    });
+                } else {
+                    //connection not currently open. set unread flag on connection details?
+                }
+            },
+            messages: function(msg){
+                this.basicmessage_list = msg.messages;
             },
             display_history: function(connection){
                 this.history_view = connection.history;
@@ -225,14 +244,60 @@
             },
             get_connection_by_name: function(name){
                return this.connections.find(function(x){return x.name === msg.content.name;});
+            },
+            show_connection: function(c){
+                this.connection = c;
+                ui_connection.load();
+                this.current_tab = "connection";
             }
         }
+    });
 
+    // Single Connection
+    var ui_connection = new Vue({
+        el: "#connection",
+        data: ui_data,
+        computed: {
+            tab_active: function(){
+                return this.current_tab === "connection";
+            }
+        },
+        methods: {
+            send_message: function(){
+                msg = {
+                    '@type': ADMIN_BASICMESSAGE.SEND_MESSAGE,
+                    to: this.connection.their_did,
+                    message: this.new_basicmessage
+                };
+                sendMessage(msg);
+                this.new_basicmessage = "";
+            },
+            load: function(){
+                sendMessage({
+                    '@type': ADMIN_BASICMESSAGE.GET_MESSAGES,
+                    with: this.connection.their_did
+                });
+            }
+        }
+    });
 
+    var ui_title = new Vue({
+        el: 'title',
+        data: ui_data,
+    });
 
+    var ui_header = new Vue({
+        el: '#header',
+        data: ui_data,
+        computed:{
 
+        },
+        methods: {
+            set_tab: function(t){
+                this.current_tab = t;
 
-
+            }
+        }
     });
 
     // UI Agent {{{
@@ -276,6 +341,7 @@
                     this.agent_name = state.agent_name;
                     this.current_tab = 'relationships';
                     //load invitations
+
                     console.log('invitations', state.invitations);
                     state.invitations.forEach((i) => {
                         this.connections.push({
@@ -289,6 +355,8 @@
                             history: []
                         });
                     });
+                    //load connections
+                    this.pairwise_connections = state['pairwise_connections'];
                 }
             }
         }
@@ -307,6 +375,7 @@
     msg_router.register(ADMIN_CONNECTION.RESPONSE_RECEIVED, ui_relationships.response_received);
     msg_router.register(ADMIN_CONNECTION.REQUEST_RECEIVED, ui_relationships.request_received);
     msg_router.register(ADMIN_BASICMESSAGE.MESSAGE_RECEIVED, ui_relationships.message_received);
+    msg_router.register(ADMIN_BASICMESSAGE.MESSAGES, ui_relationships.messages);
 
     // }}}
 
