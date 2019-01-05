@@ -7,10 +7,10 @@ def serialize_bytes_json(data: bytes) -> str:
     return data_b64_encoded_str
 
 
-def deserialize_bytes_json(b64_encrypted: bytes) -> str:
-    b64_decrypted = base64.b64decode(b64_encrypted)
-    b64_decrypted_str = b64_decrypted.decode('utf-8')
-    return b64_decrypted_str
+def deserialize_bytes_json(b64_encoded: bytes) -> str:
+    b64_decoded = base64.b64decode(b64_encoded)
+    b64_decoded_str = b64_decoded.encode('utf-8')
+    return b64_decoded_str
 
 
 def str_to_bytes(data: str) -> bytes:
