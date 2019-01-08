@@ -14,7 +14,6 @@ import serializer.json_serializer as Serializer
 from router.simple_router import SimpleRouter
 from . import Module
 from message import Message
-from message_types import FORWARD
 from helpers import serialize_bytes_json, bytes_to_str, str_to_bytes
 
 class AdminConnection(Module):
