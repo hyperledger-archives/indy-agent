@@ -4,14 +4,13 @@
 import re
 from typing import Callable
 from modules import Module
-from agent import Agent
 from message import Message
 from . import BaseRouter, RouteAlreadyRegisteredException
 
 class FamilyRouter(BaseRouter):
-    """ Simple router for handling Sovrin Messages.
+    """ Simple router for handling Indy Messages.
 
-        Uses python dictionary to correlate a message type to a callback.
+        Uses python dictionary to correlate a message family to a Module.
     """
     def __init__(self):
         self.routes = {}

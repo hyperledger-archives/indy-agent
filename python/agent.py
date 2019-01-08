@@ -7,6 +7,7 @@ from indy import wallet, did, error, crypto, pairwise
 
 from helpers import bytes_to_str, serialize_bytes_json, str_to_bytes
 from message import Message
+from router.family_router import FamilyRouter
 
 class WalletConnectionException(Exception):
     pass
@@ -24,6 +25,14 @@ class Agent:
         self.ui_socket = None
         self.initialized = False
         self.modules = []
+        self.family_router = FamilyRouter()
+
+    def register_module(self, module):
+        self.modules.append(module)
+        self.family_router.register(module.FAMILY, module)
+
+    async def route_message_to_module(self, message):
+        return await self.family_router.route(message)
 
     async def connect_wallet(self, agent_name, passphrase, ephemeral=False):
         """ Create if not already exists and open wallet.
