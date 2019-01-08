@@ -6,15 +6,20 @@ from indy import did, wallet, non_secrets, pairwise
 from router.simple_router import SimpleRouter
 from agent import Agent
 from message import Message
-from message_types import ADMIN
 from . import Module
 
 class Admin(Module):
+    FAMILY = "admin"
+    VERSION = "1.0"
+    BASE = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY + "/" + VERSION + "/"
+
+    STATE = BASE + "state"
+    STATE_REQUEST = BASE + "state_request"
 
     def __init__(self, agent):
         self.agent = agent
         self.router = SimpleRouter()
-        self.router.register(ADMIN.STATE_REQUEST, self.state_request)
+        self.router.register(self.STATE_REQUEST, self.state_request)
 
     async def route(self, msg: Message) -> Message:
         return await self.router.route(msg)
@@ -45,7 +50,7 @@ class Admin(Module):
             pairwise_records.append(pairwise_record)
 
         return Message({
-            '@type': ADMIN.STATE,
+            '@type': self.STATE,
             'content': {
                 'initialized': self.agent.initialized,
                 'agent_name': self.agent.owner,

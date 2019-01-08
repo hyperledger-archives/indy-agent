@@ -2,14 +2,6 @@
 """
 
 
-class ADMIN:
-    FAMILY = "admin"
-    VERSION = "1.0"
-    BASE = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY + "/" + VERSION + "/"
-
-    STATE = BASE + "state"
-    STATE_REQUEST = BASE + "state_request"
-
 class ADMIN_CONNECTIONS:
     FAMILY = "admin_connections"
     VERSION = "1.0"
