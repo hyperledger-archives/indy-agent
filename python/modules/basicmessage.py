@@ -12,15 +12,25 @@ from router.simple_router import SimpleRouter
 import serializer.json_serializer as Serializer
 from agent import Agent, WalletConnectionException
 from message import Message
-from message_types import BASICMESSAGE, ADMIN_BASICMESSAGE, FORWARD
+from message_types import FORWARD
 from . import Module
 
 class AdminBasicMessage(Module):
+    FAMILY = "admin_basicmessage"
+    VERSION = "1.0"
+    BASE = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY + "/" + VERSION + "/"
+
+    MESSAGE_RECEIVED = BASE + "message_received"
+    SEND_MESSAGE = BASE + "send_message"
+    MESSAGE_SENT = BASE + "message_sent"
+    GET_MESSAGES = BASE + "get_messages"
+    MESSAGES = BASE + "messages"
+
     def __init__(self, agent):
         self.agent = agent
         self.router = SimpleRouter()
-        self.router.register(ADMIN_BASICMESSAGE.SEND_MESSAGE, self.send_message)
-        self.router.register(ADMIN_BASICMESSAGE.GET_MESSAGES, self.get_messages)
+        self.router.register(AdminBasicMessage.SEND_MESSAGE, self.send_message)
+        self.router.register(AdminBasicMessage.GET_MESSAGES, self.get_messages)
 
     async def route(self, msg: Message) -> Message:
         return await self.router.route(msg)
@@ -55,7 +65,7 @@ class AdminBasicMessage(Module):
         )
 
         message = Message({
-            '@type': BASICMESSAGE.MESSAGE,
+            '@type': BasicMessage.MESSAGE,
             'timestamp': time_sent,
             'content': message_to_send
         })
@@ -63,7 +73,7 @@ class AdminBasicMessage(Module):
         await self.agent.send_message_to_agent(their_did_str, message)
 
         return Message({
-            '@type': ADMIN_BASICMESSAGE.MESSAGE_SENT,
+            '@type': AdminBasicMessage.MESSAGE_SENT,
             'id': self.agent.ui_token,
             'with': their_did_str,
             'message': {
@@ -92,18 +102,23 @@ class AdminBasicMessage(Module):
         messages = sorted(messages, key=lambda n: n['timestamp'], reverse=True)
 
         return Message({
-            '@type': ADMIN_BASICMESSAGE.MESSAGES,
+            '@type': AdminBasicMessage.MESSAGES,
             'with': their_did,
             'messages': messages
         })
 
 
 class BasicMessage(Module):
+    FAMILY = "basicmessage"
+    VERSION = "1.0"
+    BASE = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY + "/" + VERSION + "/"
+
+    MESSAGE = BASE + "message"
 
     def __init__(self, agent):
         self.agent = agent
         self.router = SimpleRouter()
-        self.router.register(BASICMESSAGE.MESSAGE, self.receive_message)
+        self.router.register(BasicMessage.MESSAGE, self.receive_message)
 
     async def route(self, msg: Message) -> Message:
         return await self.router.route(msg)
@@ -126,7 +141,7 @@ class BasicMessage(Module):
         )
 
         return Message({
-            '@type': ADMIN_BASICMESSAGE.MESSAGE_RECEIVED,
+            '@type': AdminBasicMessage.MESSAGE_RECEIVED,
             'id': self.agent.ui_token,
             'with': msg.context['from_did'],
             'message': {

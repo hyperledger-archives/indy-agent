@@ -31,7 +31,7 @@ import serializer.json_serializer as Serializer
 from receiver.message_receiver import MessageReceiver as Receiver
 from router.family_router import FamilyRouter as Router
 from ui_event import UIEventQueue
-from message_types import ADMIN_WALLETCONNECTION, BASICMESSAGE, ADMIN_BASICMESSAGE
+from message_types import ADMIN_WALLETCONNECTION
 from agent import Agent
 from message import Message
 
@@ -129,7 +129,7 @@ async def message_process(agent):
     connection = agent['modules']['connection']
 
     msg_router.register(Connection.FAMILY, connection)
-    msg_router.register(BASICMESSAGE.FAMILY, agent['modules']['basicmessage'])
+    msg_router.register(BasicMessage.FAMILY, agent['modules']['basicmessage'])
 
     while True:
         wire_msg_bytes = await msg_receiver.recv()
@@ -155,7 +155,7 @@ async def ui_event_process(agent):
     ui_router.register(AdminConnection.FAMILY, admin_connection)
     ui_router.register(Admin.FAMILY, admin)
     ui_router.register(ADMIN_WALLETCONNECTION.FAMILY, agent['modules']['admin_walletconnection'])
-    ui_router.register(ADMIN_BASICMESSAGE.FAMILY, agent['modules']['admin_basicmessage'])
+    ui_router.register(AdminBasicMessage.FAMILY, agent['modules']['admin_basicmessage'])
 
     while True:
         msg = await ui_event_queue.recv()
