@@ -2,6 +2,7 @@
 """
 import json
 import base64
+import asyncio
 import aiohttp
 from indy import wallet, did, error, crypto, pairwise
 
@@ -26,6 +27,7 @@ class Agent:
         self.initialized = False
         self.modules = []
         self.family_router = FamilyRouter()
+        self.message_queue = asyncio.Queue()
 
     def register_module(self, module):
         self.modules.append(module)

@@ -49,13 +49,11 @@ WEBAPP = web.Application()
 
 aiohttp_jinja2.setup(WEBAPP, loader=jinja2.FileSystemLoader('view'))
 
-WEBAPP['msg_receiver'] = Receiver()
-
-WEBAPP['ui_event_queue'] = UIEventQueue(LOOP)
-
-WEBAPP['conn_receiver'] = Receiver()
 
 AGENT = Agent()
+POST_MESSAGE_RECEIVER = Receiver(AGENT.message_queue)
+
+WEBAPP['ui_event_queue'] = UIEventQueue(LOOP)
 
 WEBAPP['agent'] = AGENT
 
@@ -71,8 +69,7 @@ ROUTES = [
     web.get('/', modules.admin.root),
     web.get('/ws', WEBAPP['ui_event_queue'].ws_handler),
     web.static('/res', 'view/res'),
-    web.post('/indy', WEBAPP['msg_receiver'].handle_message),
-    web.post('/offer', WEBAPP['conn_receiver'].handle_message)
+    web.post('/indy', POST_MESSAGE_RECEIVER.handle_message),
 ]
 
 WEBAPP.add_routes(ROUTES)
@@ -91,39 +88,30 @@ if args.wallet:
 else:
     print("Configure wallet connection via UI.")
 
-async def conn_process(agent):
-    conn_receiver = agent['conn_receiver']
-    ui_event_queue = agent['ui_event_queue']
-
-    while True:
-        msg_bytes = await conn_receiver.recv()
-        try:
-            msg = Serializer.unpack(msg_bytes)
-        except Exception as e:
-            print('Failed to unpack message: {}\n\nError: {}'.format(msg_bytes, e))
-            continue
-
-        res = await AGENT.route_message_to_module(msg)
-        if res is not None:
-            await ui_event_queue.send(Serializer.pack(res))
-
-
 async def message_process(agent):
     """ Message processing loop task.
     """
-    msg_receiver = agent['msg_receiver']
     ui_event_queue = agent['ui_event_queue']
 
     while True:
-        wire_msg_bytes = await msg_receiver.recv()
+        wire_msg_bytes = await AGENT.message_queue.get()
 
+        # Try to unpack message assuming it's not encrypted
         try:
-            msg = await agent['agent'].unpack_agent_message(wire_msg_bytes)
+            msg = Serializer.unpack(wire_msg_bytes)
         except Exception as e:
-            print('Failed to unpack message: {}\n\nError: {}'.format(wire_msg_bytes, e))
-            continue  # handle next message in loop
+            print("Message encryped, attempting to unpack...")
 
-        #route message by payload type
+        # TODO: More graceful checking here
+        if not isinstance(msg, Message) or "@type" not in msg:
+            # Message IS encrypted so unpack it
+            try:
+                msg = await agent['agent'].unpack_agent_message(wire_msg_bytes)
+            except Exception as e:
+                print('Failed to unpack message: {}\n\nError: {}'.format(wire_msg_bytes, e))
+                continue  # handle next message in loop
+
+        #route message through agent class
         res = await AGENT.route_message_to_module(msg)
 
         if res is not None:
@@ -149,7 +137,6 @@ async def ui_event_process(agent):
 try:
     print('===== Starting Server on: http://localhost:{} ====='.format(args.port))
     LOOP.create_task(SERVER.start())
-    LOOP.create_task(conn_process(WEBAPP))
     LOOP.create_task(message_process(WEBAPP))
     LOOP.create_task(ui_event_process(WEBAPP))
     LOOP.run_forever()
