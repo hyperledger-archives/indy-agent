@@ -21,7 +21,7 @@ from aiohttp import web
 from indy import crypto, did, error, IndyError, wallet
 
 from helpers import deserialize_bytes_json, str_to_bytes, bytes_to_str
-from modules.connection import Connection
+from modules.connection import Connection, AdminConnection
 from modules.admin import Admin
 from modules.admin_walletconnection import AdminWalletConnection
 from modules.basicmessage import AdminBasicMessage, BasicMessage
@@ -31,8 +31,7 @@ import serializer.json_serializer as Serializer
 from receiver.message_receiver import MessageReceiver as Receiver
 from router.family_router import FamilyRouter as Router
 from ui_event import UIEventQueue
-from message_types import CONN, ADMIN_CONNECTIONS, ADMIN_WALLETCONNECTION, BASICMESSAGE, ADMIN_BASICMESSAGE
-from modules.admin import Admin
+from message_types import ADMIN_WALLETCONNECTION, BASICMESSAGE, ADMIN_BASICMESSAGE
 from agent import Agent
 from message import Message
 
@@ -63,8 +62,9 @@ WEBAPP['conn_receiver'] = Receiver()
 
 WEBAPP['agent'] = Agent()
 WEBAPP['modules'] = {
-    'connection': Connection(WEBAPP['agent']),
     'admin': Admin(WEBAPP['agent']),
+    'connection': Connection(WEBAPP['agent']),
+    'admin_connection': AdminConnection(WEBAPP['agent']),
     'admin_walletconnection': AdminWalletConnection(WEBAPP['agent']),
     'basicmessage': BasicMessage(WEBAPP['agent']),
     'admin_basicmessage': AdminBasicMessage(WEBAPP['agent'])
@@ -104,7 +104,7 @@ async def conn_process(agent):
     ui_event_queue = agent['ui_event_queue']
     connection = agent['modules']['connection']
 
-    conn_router.register(CONN.FAMILY, connection)
+    conn_router.register(Connection.FAMILY, connection)
 
     while True:
         msg_bytes = await conn_receiver.recv()
@@ -128,7 +128,7 @@ async def message_process(agent):
     ui_event_queue = agent['ui_event_queue']
     connection = agent['modules']['connection']
 
-    msg_router.register(CONN.FAMILY, connection)
+    msg_router.register(Connection.FAMILY, connection)
     msg_router.register(BASICMESSAGE.FAMILY, agent['modules']['basicmessage'])
 
     while True:
@@ -149,10 +149,10 @@ async def message_process(agent):
 async def ui_event_process(agent):
     ui_router = agent['ui_router']
     ui_event_queue = agent['ui_event_queue']
-    connection = agent['modules']['connection']
+    admin_connection = agent['modules']['admin_connection']
     admin = agent['modules']['admin']
 
-    ui_router.register(ADMIN_CONNECTIONS.FAMILY, connection)
+    ui_router.register(AdminConnection.FAMILY, admin_connection)
     ui_router.register(Admin.FAMILY, admin)
     ui_router.register(ADMIN_WALLETCONNECTION.FAMILY, agent['modules']['admin_walletconnection'])
     ui_router.register(ADMIN_BASICMESSAGE.FAMILY, agent['modules']['admin_basicmessage'])

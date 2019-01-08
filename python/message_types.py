@@ -2,27 +2,6 @@
 """
 
 
-class ADMIN_CONNECTIONS:
-    FAMILY = "admin_connections"
-    VERSION = "1.0"
-    BASE = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY + "/" + VERSION + "/"
-
-    CONNECTION_LIST = BASE + "connection_list"
-    CONNECTION_LIST_REQUEST = BASE + "connection_list_request"
-
-    SEND_INVITE = BASE + "send_invite"
-    INVITE_SENT = BASE + "invite_sent"
-    INVITE_RECEIVED = BASE + "invite_received"
-
-    REQUEST_RECEIVED = BASE + "request_received"
-    RESPONSE_RECEIVED = BASE + "response_received"
-
-    SEND_REQUEST = BASE + "send_request"
-    REQUEST_SENT = BASE + "request_sent"
-
-    SEND_RESPONSE = BASE + "send_response"
-    RESPONSE_SENT = BASE + "response_sent"
-
 class BASICMESSAGE:
     FAMILY = "basicmessage"
     VERSION = "1.0"
@@ -49,15 +28,6 @@ class ADMIN_WALLETCONNECTION:
     CONNECT = BASE + "connect"
     DISCONNECT = BASE + "disconnect"
     USER_ERROR = BASE + "user_error"
-
-class CONN:
-    FAMILY = "connections"
-    VERSION = "1.0"
-    BASE = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY + "/" + VERSION + "/"
-
-    INVITE = BASE + "invite"
-    REQUEST = BASE + "request"
-    RESPONSE = BASE + "response"
 
 class FORWARD:
     BASE = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/routing/1.0/"

@@ -12,7 +12,7 @@ from router.simple_router import SimpleRouter
 import serializer.json_serializer as Serializer
 from agent import Agent, WalletConnectionException
 from message import Message
-from message_types import BASICMESSAGE, ADMIN_BASICMESSAGE, CONN, FORWARD
+from message_types import BASICMESSAGE, ADMIN_BASICMESSAGE, FORWARD
 from . import Module
 
 class AdminBasicMessage(Module):
