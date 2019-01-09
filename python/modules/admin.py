@@ -9,12 +9,12 @@ from message import Message
 from . import Module
 
 class Admin(Module):
-    FAMILY = "admin"
+    FAMILY_NAME = "admin"
     VERSION = "1.0"
-    BASE = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY + "/" + VERSION + "/"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
 
-    STATE = BASE + "state"
-    STATE_REQUEST = BASE + "state_request"
+    STATE = FAMILY + "state"
+    STATE_REQUEST = FAMILY + "state_request"
 
     def __init__(self, agent):
         self.agent = agent

@@ -17,26 +17,26 @@ from message import Message
 from helpers import serialize_bytes_json, bytes_to_str, str_to_bytes
 
 class AdminConnection(Module):
-    FAMILY = "admin_connections"
+    FAMILY_NAME = "admin_connections"
     VERSION = "1.0"
-    BASE = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY + "/" + VERSION + "/"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
 
     # Message Types in this family
-    CONNECTION_LIST = BASE + "connection_list"
-    CONNECTION_LIST_REQUEST = BASE + "connection_list_request"
+    CONNECTION_LIST = FAMILY + "connection_list"
+    CONNECTION_LIST_REQUEST = FAMILY + "connection_list_request"
 
-    SEND_INVITE = BASE + "send_invite"
-    INVITE_SENT = BASE + "invite_sent"
-    INVITE_RECEIVED = BASE + "invite_received"
+    SEND_INVITE = FAMILY + "send_invite"
+    INVITE_SENT = FAMILY + "invite_sent"
+    INVITE_RECEIVED = FAMILY + "invite_received"
 
-    REQUEST_RECEIVED = BASE + "request_received"
-    RESPONSE_RECEIVED = BASE + "response_received"
+    REQUEST_RECEIVED = FAMILY + "request_received"
+    RESPONSE_RECEIVED = FAMILY + "response_received"
 
-    SEND_REQUEST = BASE + "send_request"
-    REQUEST_SENT = BASE + "request_sent"
+    SEND_REQUEST = FAMILY + "send_request"
+    REQUEST_SENT = FAMILY + "request_sent"
 
-    SEND_RESPONSE = BASE + "send_response"
-    RESPONSE_SENT = BASE + "response_sent"
+    SEND_RESPONSE = FAMILY + "send_response"
+    RESPONSE_SENT = FAMILY + "response_sent"
 
     def __init__(self, agent):
         self.agent = agent
@@ -157,13 +157,13 @@ class AdminConnection(Module):
 
 class Connection(Module):
 
-    FAMILY = "connections"
+    FAMILY_NAME = "connections"
     VERSION = "1.0"
-    BASE = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY + "/" + VERSION + "/"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
 
-    INVITE = BASE + "invite"
-    REQUEST = BASE + "request"
-    RESPONSE = BASE + "response"
+    INVITE = FAMILY + "invite"
+    REQUEST = FAMILY + "request"
+    RESPONSE = FAMILY + "response"
 
 
     def __init__(self, agent):

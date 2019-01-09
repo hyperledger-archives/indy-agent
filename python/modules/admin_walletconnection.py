@@ -9,13 +9,13 @@ from message import Message
 from . import Module
 
 class AdminWalletConnection(Module):
-    FAMILY = "admin_walletconnection"
+    FAMILY_NAME = "admin_walletconnection"
     VERSION = "1.0"
-    BASE = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY + "/" + VERSION + "/"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
 
-    CONNECT = BASE + "connect"
-    DISCONNECT = BASE + "disconnect"
-    USER_ERROR = BASE + "user_error"
+    CONNECT = FAMILY + "connect"
+    DISCONNECT = FAMILY + "disconnect"
+    USER_ERROR = FAMILY + "user_error"
 
 
     def __init__(self, agent):

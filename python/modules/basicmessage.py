@@ -15,15 +15,15 @@ from message import Message
 from . import Module
 
 class AdminBasicMessage(Module):
-    FAMILY = "admin_basicmessage"
+    FAMILY_NAME = "admin_basicmessage"
     VERSION = "1.0"
-    BASE = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY + "/" + VERSION + "/"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
 
-    MESSAGE_RECEIVED = BASE + "message_received"
-    SEND_MESSAGE = BASE + "send_message"
-    MESSAGE_SENT = BASE + "message_sent"
-    GET_MESSAGES = BASE + "get_messages"
-    MESSAGES = BASE + "messages"
+    MESSAGE_RECEIVED = FAMILY + "message_received"
+    SEND_MESSAGE = FAMILY + "send_message"
+    MESSAGE_SENT = FAMILY + "message_sent"
+    GET_MESSAGES = FAMILY + "get_messages"
+    MESSAGES = FAMILY + "messages"
 
     def __init__(self, agent):
         self.agent = agent
@@ -108,11 +108,11 @@ class AdminBasicMessage(Module):
 
 
 class BasicMessage(Module):
-    FAMILY = "basicmessage"
+    FAMILY_NAME = "basicmessage"
     VERSION = "1.0"
-    BASE = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY + "/" + VERSION + "/"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
 
-    MESSAGE = BASE + "message"
+    MESSAGE = FAMILY + "message"
 
     def __init__(self, agent):
         self.agent = agent
