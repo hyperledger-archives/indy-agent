@@ -29,7 +29,7 @@ from modules.basicmessage import AdminBasicMessage, BasicMessage
 import modules.admin
 import serializer.json_serializer as Serializer
 from receiver.message_receiver import MessageReceiver as Receiver
-from ui_event import UIEventQueue
+from websocket_handler import WebSocketHandler
 from agent import Agent
 from message import Message
 
@@ -52,8 +52,8 @@ aiohttp_jinja2.setup(WEBAPP, loader=jinja2.FileSystemLoader('view'))
 
 AGENT = Agent()
 POST_MESSAGE_RECEIVER = Receiver(AGENT.message_queue)
+ADMIN_MESSAGE_HANDLER = WebSocketHandler(AGENT.message_queue, AGENT.outbound_admin_message_queue)
 
-WEBAPP['ui_event_queue'] = UIEventQueue(LOOP)
 
 WEBAPP['agent'] = AGENT
 
@@ -67,7 +67,7 @@ AGENT.register_module(AdminBasicMessage)
 
 ROUTES = [
     web.get('/', modules.admin.root),
-    web.get('/ws', WEBAPP['ui_event_queue'].ws_handler),
+    web.get('/ws', ADMIN_MESSAGE_HANDLER.ws_handler),
     web.static('/res', 'view/res'),
     web.post('/indy', POST_MESSAGE_RECEIVER.handle_message),
 ]
@@ -91,8 +91,6 @@ else:
 async def message_process(agent):
     """ Message processing loop task.
     """
-    ui_event_queue = agent['ui_event_queue']
-
     while True:
         wire_msg_bytes = await AGENT.message_queue.get()
 
@@ -113,32 +111,17 @@ async def message_process(agent):
 
         #route message through agent class
         res = await AGENT.route_message_to_module(msg)
+        print("RETURNED RESULT OF MESSAGE PROCESSING-------------")
+        print(res)
+        print(type(res))
 
         if res is not None:
-            await ui_event_queue.send(Serializer.pack(res))
-
-async def ui_event_process(agent):
-    ui_event_queue = agent['ui_event_queue']
-
-    while True:
-        msg = await ui_event_queue.recv()
-
-        if not isinstance(msg, Message):
-            try:
-                msg = Serializer.unpack(msg)
-            except Exception as e:
-                print('Failed to unpack message: {}\n\nError: {}'.format(msg, e))
-                continue
-
-        res = await AGENT.route_message_to_module(msg)
-        if res is not None:
-            await ui_event_queue.send(Serializer.pack(res))
+            await AGENT.send_admin_message(res)
 
 try:
     print('===== Starting Server on: http://localhost:{} ====='.format(args.port))
     LOOP.create_task(SERVER.start())
     LOOP.create_task(message_process(WEBAPP))
-    LOOP.create_task(ui_event_process(WEBAPP))
     LOOP.run_forever()
 except KeyboardInterrupt:
     print("exiting")

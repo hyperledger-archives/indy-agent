@@ -28,6 +28,7 @@ class Agent:
         self.modules = []
         self.family_router = FamilyRouter()
         self.message_queue = asyncio.Queue()
+        self.outbound_admin_message_queue = asyncio.Queue()
 
     def register_module(self, module):
         self.modules.append(module)
@@ -172,3 +173,6 @@ class Agent:
             async with session.post(their_endpoint, data=json.dumps(wire_message)) as resp:
                 print(resp.status)
                 print(await resp.text())
+
+    async def send_admin_message(self, msg: Message):
+        await self.outbound_admin_message_queue.put(msg.as_json())

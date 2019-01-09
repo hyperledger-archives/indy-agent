@@ -196,7 +196,7 @@ class Connection(Module):
             'content': {'name': conn_name,
                      'endpoint': their_endpoint,
                      'connection_key': their_connection_key,
-                     'history': msg}
+                     'history': msg.as_json()}
         })
 
 
@@ -242,7 +242,7 @@ class Connection(Module):
             'content': {
                 'name': conn_name,
                 'endpoint_did': their_did_str,
-                'history': msg
+                'history': msg.as_json()
             }
         })
 
@@ -288,5 +288,5 @@ class Connection(Module):
             'id': self.agent.ui_token,
             'content': {'name': conn_name,
                      'their_did': their_did_str,
-                     'history': msg}
+                     'history': msg.as_json()}
         })
