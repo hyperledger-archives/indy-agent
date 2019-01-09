@@ -39,5 +39,4 @@ class FamilyRouter(BaseRouter):
         if not matches:
             raise UnparsableMessageFamilyException()
 
-        print(matches.group(1))
         return matches.group(1)
