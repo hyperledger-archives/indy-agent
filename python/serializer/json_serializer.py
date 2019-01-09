@@ -25,11 +25,4 @@ def pack(msg: Message) -> str:
     """
     Serialize from Message to json string or from dictionary to json string.
     """
-
-    class MessageEncoder(json.JSONEncoder):
-        def default(self, obj):
-            if isinstance(obj, Message):
-                return obj.to_dict()
-            return json.JSONEncoder.default(self, obj)
-
-    return json.dumps(msg, cls=MessageEncoder)
+    return msg.as_json()
