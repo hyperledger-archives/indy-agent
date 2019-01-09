@@ -111,9 +111,6 @@ async def message_process(agent):
 
         #route message through agent class
         res = await AGENT.route_message_to_module(msg)
-        print("RETURNED RESULT OF MESSAGE PROCESSING-------------")
-        print(res)
-        print(type(res))
 
         if res is not None:
             await AGENT.send_admin_message(res)
