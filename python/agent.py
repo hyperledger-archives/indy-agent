@@ -29,7 +29,7 @@ class Agent:
 
     def register_module(self, module):
         self.modules.append(module)
-        self.family_router.register(module.FAMILY, module)
+        self.family_router.register(module.FAMILY, module(self))
 
     async def route_message_to_module(self, message):
         return await self.family_router.route(message)

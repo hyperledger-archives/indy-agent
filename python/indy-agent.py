@@ -59,12 +59,12 @@ AGENT = Agent()
 
 WEBAPP['agent'] = AGENT
 
-AGENT.register_module(Admin(AGENT))
-AGENT.register_module(Connection(AGENT))
-AGENT.register_module(AdminConnection(AGENT))
-AGENT.register_module(AdminWalletConnection(AGENT))
-AGENT.register_module(BasicMessage(AGENT))
-AGENT.register_module(AdminBasicMessage(AGENT))
+AGENT.register_module(Admin)
+AGENT.register_module(Connection)
+AGENT.register_module(AdminConnection)
+AGENT.register_module(AdminWalletConnection)
+AGENT.register_module(BasicMessage)
+AGENT.register_module(AdminBasicMessage)
 
 
 ROUTES = [
