@@ -4,7 +4,7 @@
 from aiohttp import web
 import asyncio
 
-class MessageReceiver():
+class PostMessageHandler():
     """ Simple message queue interface for receiving messages.
     """
     def __init__(self, queue):

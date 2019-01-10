@@ -22,7 +22,7 @@ from modules.basicmessage import AdminBasicMessage, BasicMessage
 
 import modules.admin
 import serializer.json_serializer as Serializer
-from receiver.message_receiver import MessageReceiver as Receiver
+from post_message_handler import PostMessageHandler
 from websocket_handler import WebSocketHandler
 from agent import Agent
 from message import Message
@@ -41,20 +41,14 @@ parser.add_argument("--ephemeralwallet", action="store_true", help="Use ephemera
 args = parser.parse_args()
 
 # config webapp
-
 LOOP = asyncio.get_event_loop()
-
 WEBAPP = web.Application()
-
 aiohttp_jinja2.setup(WEBAPP, loader=jinja2.FileSystemLoader('view'))
 
-
 AGENT = Agent()
-POST_MESSAGE_RECEIVER = Receiver(AGENT.message_queue)
+POST_MESSAGE_HANDLER = PostMessageHandler(AGENT.message_queue)
 ADMIN_MESSAGE_HANDLER = WebSocketHandler(AGENT.message_queue, AGENT.outbound_admin_message_queue)
 
-
-WEBAPP['agent'] = AGENT
 
 AGENT.register_module(Admin)
 AGENT.register_module(Connection)
@@ -68,9 +62,10 @@ ROUTES = [
     web.get('/', modules.admin.root),
     web.get('/ws', ADMIN_MESSAGE_HANDLER.ws_handler),
     web.static('/res', 'view/res'),
-    web.post('/indy', POST_MESSAGE_RECEIVER.handle_message),
+    web.post('/indy', POST_MESSAGE_HANDLER.handle_message),
 ]
 
+WEBAPP['agent'] = AGENT
 WEBAPP.add_routes(ROUTES)
 
 RUNNER = web.AppRunner(WEBAPP)
@@ -93,7 +88,7 @@ if args.wallet:
 else:
     print("Configure wallet connection via UI.")
 
-async def message_process(agent):
+async def message_process():
     """ Message processing loop task.
     """
     while True:
@@ -109,7 +104,7 @@ async def message_process(agent):
         if not isinstance(msg, Message) or "@type" not in msg:
             # Message IS encrypted so unpack it
             try:
-                msg = await agent['agent'].unpack_agent_message(wire_msg_bytes)
+                msg = await AGENT.unpack_agent_message(wire_msg_bytes)
             except Exception as e:
                 print('Failed to unpack message: {}\n\nError: {}'.format(wire_msg_bytes, e))
                 continue  # handle next message in loop
@@ -119,7 +114,8 @@ async def message_process(agent):
 try:
     print('===== Starting Server on: http://localhost:{} ====='.format(args.port))
     LOOP.create_task(SERVER.start())
-    LOOP.create_task(message_process(WEBAPP))
+    LOOP.create_task(message_process())
     LOOP.run_forever()
 except KeyboardInterrupt:
     print("exiting")
+
