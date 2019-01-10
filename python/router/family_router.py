@@ -4,14 +4,13 @@
 import re
 from typing import Callable
 from modules import Module
-from agent import Agent
 from message import Message
 from . import BaseRouter, RouteAlreadyRegisteredException
 
 class FamilyRouter(BaseRouter):
-    """ Simple router for handling Sovrin Messages.
+    """ Simple router for handling Indy Messages.
 
-        Uses python dictionary to correlate a message type to a callback.
+        Uses python dictionary to correlate a message family to a Module.
     """
     def __init__(self):
         self.routes = {}
@@ -36,7 +35,7 @@ class FamilyRouter(BaseRouter):
 
     @staticmethod
     def family_from_type(msg_type: str) -> str:
-        matches = re.match(".+/(.+?)/\d.\d/.+", msg_type)
+        matches = re.match("(.+/.+/\d.\d/).+", msg_type)
         if not matches:
             raise UnparsableMessageFamilyException()
 

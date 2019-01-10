@@ -3,7 +3,6 @@
 """
 
 from typing import Callable
-from agent import Agent
 from message import Message
 
 class BaseRouter(object):
@@ -15,7 +14,7 @@ class BaseRouter(object):
         """
         raise NotImplementedError("`register` not implemented in BaseRouter!")
 
-    async def route(self, msg: Message, agent: Agent):
+    async def route(self, msg: Message):
         """ Route a message to it's registered callback
         """
         raise NotImplementedError("`route` not implemented in BaseRouter!")

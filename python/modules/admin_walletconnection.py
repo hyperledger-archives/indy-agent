@@ -6,15 +6,22 @@ from indy import did, wallet
 from router.simple_router import SimpleRouter
 from agent import Agent, WalletConnectionException
 from message import Message
-from message_types import ADMIN_WALLETCONNECTION
 from . import Module
 
 class AdminWalletConnection(Module):
+    FAMILY_NAME = "admin_walletconnection"
+    VERSION = "1.0"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
+
+    CONNECT = FAMILY + "connect"
+    DISCONNECT = FAMILY + "disconnect"
+    USER_ERROR = FAMILY + "user_error"
+
 
     def __init__(self, agent):
         self.agent = agent
         self.router = SimpleRouter()
-        self.router.register(ADMIN_WALLETCONNECTION.CONNECT, self.connect)
+        self.router.register(AdminWalletConnection.CONNECT, self.connect)
 
     async def route(self, msg: Message) -> Message:
         return await self.router.route(msg)
@@ -27,7 +34,7 @@ class AdminWalletConnection(Module):
             await self.agent.connect_wallet(msg['name'], msg['passphrase'])
         except WalletConnectionException:
             return Message({
-                '@type': ADMIN_WALLETCONNECTION.USER_ERROR,
+                '@type': AdminWalletConnection.USER_ERROR,
                 'error_code': "invalid_passphrase",
                 'message': "Invalid Passphrase",
                 'thread': {

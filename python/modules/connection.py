@@ -14,25 +14,40 @@ import serializer.json_serializer as Serializer
 from router.simple_router import SimpleRouter
 from . import Module
 from message import Message
-from message_types import ADMIN_CONNECTIONS, CONN, FORWARD
 from helpers import serialize_bytes_json, bytes_to_str, str_to_bytes
 
-class Connection(Module):
+class AdminConnection(Module):
+    FAMILY_NAME = "admin_connections"
+    VERSION = "1.0"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
+
+    # Message Types in this family
+    CONNECTION_LIST = FAMILY + "connection_list"
+    CONNECTION_LIST_REQUEST = FAMILY + "connection_list_request"
+
+    SEND_INVITE = FAMILY + "send_invite"
+    INVITE_SENT = FAMILY + "invite_sent"
+    INVITE_RECEIVED = FAMILY + "invite_received"
+
+    REQUEST_RECEIVED = FAMILY + "request_received"
+    RESPONSE_RECEIVED = FAMILY + "response_received"
+
+    SEND_REQUEST = FAMILY + "send_request"
+    REQUEST_SENT = FAMILY + "request_sent"
+
+    SEND_RESPONSE = FAMILY + "send_response"
+    RESPONSE_SENT = FAMILY + "response_sent"
 
     def __init__(self, agent):
         self.agent = agent
-        self.router = SimpleRouter()
-        self.router.register(CONN.INVITE, self.invite_received)
-        self.router.register(CONN.REQUEST, self.request_received)
-        self.router.register(CONN.RESPONSE, self.response_received)
 
-        self.router.register(ADMIN_CONNECTIONS.SEND_INVITE, self.send_invite)
-        self.router.register(ADMIN_CONNECTIONS.SEND_REQUEST, self.send_request)
-        self.router.register(ADMIN_CONNECTIONS.SEND_RESPONSE, self.send_response)
+        self.router = SimpleRouter()
+        self.router.register(AdminConnection.SEND_INVITE, self.send_invite)
+        self.router.register(AdminConnection.SEND_REQUEST, self.send_request)
+        self.router.register(AdminConnection.SEND_RESPONSE, self.send_response)
 
     async def route(self, msg: Message) -> Message:
         return await self.router.route(msg)
-
 
     async def send_invite(self, msg: Message) -> Message:
         """ UI activated method.
@@ -52,8 +67,8 @@ class Connection(Module):
         await did.set_did_metadata(self.agent.wallet_handle, endpoint_did_str, meta_json)
 
         msg = Message({
-            '@type':CONN.INVITE,
-            'content':{
+            '@type': Connection.INVITE,
+            'content': {
                 'name': conn_name,
                 'endpoint': {
                     'url': self.agent.endpoint,
@@ -68,34 +83,10 @@ class Connection(Module):
                 print(await resp.text())
 
         return Message({
-            '@type': ADMIN_CONNECTIONS.INVITE_SENT,
+            '@type': AdminConnection.INVITE_SENT,
             'id': self.agent.ui_token,
             'content': {'name': conn_name}
         })
-
-
-    async def invite_received(self, msg: Message) -> Message:
-        conn_name = msg['content']['name']
-        their_endpoint = msg['content']['endpoint']
-        their_connection_key = msg['content']['connection_key']
-
-        # store invite in the wallet
-        await non_secrets.add_wallet_record(self.agent.wallet_handle,
-            "invitation", uuid.uuid4().hex,
-            json.dumps({
-            'name': conn_name,
-            'endpoint': their_endpoint,
-            'connection_key': their_connection_key
-        }), json.dumps({}))
-
-        return Message({
-            '@type': ADMIN_CONNECTIONS.INVITE_RECEIVED,
-            'content': {'name': conn_name,
-                     'endpoint': their_endpoint,
-                     'connection_key': their_connection_key,
-                     'history': msg}
-        })
-
 
     async def send_request(self, msg: Message) -> Message:
         """ UI activated method.
@@ -113,7 +104,7 @@ class Connection(Module):
 
         to_did = "needed from admin message"
         msg = Message({
-            '@type': CONN.REQUEST,
+            '@type': Connection.REQUEST,
             "did": my_endpoint_did_str,
             "key": my_connection_key,
             'endpoint': my_endpoint_uri,
@@ -132,9 +123,80 @@ class Connection(Module):
         await did.set_did_metadata(self.agent.wallet_handle, my_endpoint_did_str, meta_json)
 
         return Message({
-            '@type': ADMIN_CONNECTIONS.REQUEST_SENT,
+            '@type': AdminConnection.REQUEST_SENT,
             'id': self.agent.ui_token,
             'content': {'name': conn_name}
+        })
+
+    async def send_response(self, msg: Message) -> Message:
+        """ UI activated method.
+        """
+
+        their_did_str = msg['content']['endpoint_did']
+
+        pairwise_conn_info_str = await pairwise.get_pairwise(self.agent.wallet_handle, their_did_str)
+        pairwise_conn_info_json = json.loads(pairwise_conn_info_str)
+
+        my_did_str = pairwise_conn_info_json['my_did']
+
+        metadata_json = json.loads(pairwise_conn_info_json['metadata'])
+        conn_name = metadata_json['conn_name']
+
+        msg = Message({
+            '@type': Connection.RESPONSE,
+            "did": my_did_str,
+        })
+
+        await self.agent.send_message_to_agent(their_did_str, msg)
+
+        return Message({
+            '@type': AdminConnection.RESPONSE_SENT,
+            'id': self.agent.ui_token,
+            'content': {'name': conn_name}
+        })
+
+class Connection(Module):
+
+    FAMILY_NAME = "connections"
+    VERSION = "1.0"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
+
+    INVITE = FAMILY + "invite"
+    REQUEST = FAMILY + "request"
+    RESPONSE = FAMILY + "response"
+
+
+    def __init__(self, agent):
+        self.agent = agent
+        self.router = SimpleRouter()
+        self.router.register(Connection.INVITE, self.invite_received)
+        self.router.register(Connection.REQUEST, self.request_received)
+        self.router.register(Connection.RESPONSE, self.response_received)
+
+    async def route(self, msg: Message) -> Message:
+        return await self.router.route(msg)
+
+
+    async def invite_received(self, msg: Message) -> Message:
+        conn_name = msg['content']['name']
+        their_endpoint = msg['content']['endpoint']
+        their_connection_key = msg['content']['connection_key']
+
+        # store invite in the wallet
+        await non_secrets.add_wallet_record(self.agent.wallet_handle,
+            "invitation", uuid.uuid4().hex,
+            json.dumps({
+            'name': conn_name,
+            'endpoint': their_endpoint,
+            'connection_key': their_connection_key
+        }), json.dumps({}))
+
+        return Message({
+            '@type': AdminConnection.INVITE_RECEIVED,
+            'content': {'name': conn_name,
+                     'endpoint': their_endpoint,
+                     'connection_key': their_connection_key,
+                     'history': msg}
         })
 
 
@@ -176,7 +238,7 @@ class Connection(Module):
         await pairwise.create_pairwise(self.agent.wallet_handle, their_did_str, my_did_str, meta_json)
 
         return Message({
-            '@type': ADMIN_CONNECTIONS.REQUEST_RECEIVED,
+            '@type': AdminConnection.REQUEST_RECEIVED,
             'content': {
                 'name': conn_name,
                 'endpoint_did': their_did_str,
@@ -184,33 +246,6 @@ class Connection(Module):
             }
         })
 
-
-    async def send_response(self, msg: Message) -> Message:
-        """ UI activated method.
-        """
-
-        their_did_str = msg['content']['endpoint_did']
-
-        pairwise_conn_info_str = await pairwise.get_pairwise(self.agent.wallet_handle, their_did_str)
-        pairwise_conn_info_json = json.loads(pairwise_conn_info_str)
-
-        my_did_str = pairwise_conn_info_json['my_did']
-
-        metadata_json = json.loads(pairwise_conn_info_json['metadata'])
-        conn_name = metadata_json['conn_name']
-
-        msg = Message({
-            '@type': CONN.RESPONSE,
-            "did": my_did_str,
-        })
-
-        await self.agent.send_message_to_agent(their_did_str, msg)
-
-        return Message({
-            '@type': ADMIN_CONNECTIONS.RESPONSE_SENT,
-            'id': self.agent.ui_token,
-            'content': {'name': conn_name}
-        })
 
 
     async def response_received(self, msg: Message) -> Message:
@@ -249,7 +284,7 @@ class Connection(Module):
 
         #  pairwise connection between agents is established to this point
         return Message({
-            '@type': ADMIN_CONNECTIONS.RESPONSE_RECEIVED,
+            '@type': AdminConnection.RESPONSE_RECEIVED,
             'id': self.agent.ui_token,
             'content': {'name': conn_name,
                      'their_did': their_did_str,
