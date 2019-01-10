@@ -8,19 +8,13 @@
 # established in indy projects.
 # pylint: disable=invalid-name
 
-import asyncio
-import sys
-import uuid
-import aiohttp_jinja2
-import jinja2
-import base64
-import json
 import argparse
+import asyncio
+import jinja2
+import aiohttp_jinja2
 
 from aiohttp import web
-from indy import crypto, did, error, IndyError, wallet
 
-from helpers import deserialize_bytes_json, str_to_bytes, bytes_to_str
 from modules.connection import Connection, AdminConnection
 from modules.admin import Admin
 from modules.admin_walletconnection import AdminWalletConnection
@@ -37,7 +31,12 @@ from message import Message
 # Argument Parsing
 parser = argparse.ArgumentParser()
 parser.add_argument("port", nargs="?", default="8080", type=int, help="The port to attach.")
-parser.add_argument("--wallet", nargs=2, metavar=('walletname','walletpass'), help="The name and passphrase of the wallet to connect to.")
+parser.add_argument(
+    "--wallet",
+    nargs=2,
+    metavar=('walletname', 'walletpass'),
+    help="The name and passphrase of the wallet to connect to."
+)
 parser.add_argument("--ephemeralwallet", action="store_true", help="Use ephemeral wallets")
 args = parser.parse_args()
 
@@ -81,7 +80,13 @@ SERVER = web.TCPSite(runner=RUNNER, port=args.port)
 
 if args.wallet:
     try:
-        LOOP.run_until_complete(AGENT.connect_wallet(args.wallet[0], args.wallet[1], ephemeral=args.ephemeralwallet))
+        LOOP.run_until_complete(
+            AGENT.connect_wallet(
+                args.wallet[0],
+                args.wallet[1],
+                ephemeral=args.ephemeralwallet
+            )
+        )
         print("Connected to wallet via command line args: {}".format(args.wallet[0]))
     except Exception as e:
         print(e)
