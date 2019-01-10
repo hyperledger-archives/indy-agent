@@ -109,11 +109,7 @@ async def message_process(agent):
                 print('Failed to unpack message: {}\n\nError: {}'.format(wire_msg_bytes, e))
                 continue  # handle next message in loop
 
-        #route message through agent class
-        res = await AGENT.route_message_to_module(msg)
-
-        if res is not None:
-            await AGENT.send_admin_message(res)
+        await AGENT.route_message_to_module(msg)
 
 try:
     print('===== Starting Server on: http://localhost:{} ====='.format(args.port))

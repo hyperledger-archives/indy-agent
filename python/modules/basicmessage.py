@@ -71,16 +71,18 @@ class AdminBasicMessage(Module):
 
         await self.agent.send_message_to_agent(their_did_str, message)
 
-        return Message({
-            '@type': AdminBasicMessage.MESSAGE_SENT,
-            'id': self.agent.ui_token,
-            'with': their_did_str,
-            'message': {
-                'from': my_did_str,
-                'timestamp': time_sent,
-                'content': message_to_send
-            }
-        })
+        await self.agent.send_admin_message(
+            Message({
+                '@type': AdminBasicMessage.MESSAGE_SENT,
+                'id': self.agent.ui_token,
+                'with': their_did_str,
+                'message': {
+                    'from': my_did_str,
+                    'timestamp': time_sent,
+                    'content': message_to_send
+                }
+            })
+        )
 
     async def get_messages(self, msg: Message) -> Message:
         their_did = msg['with']
@@ -100,11 +102,13 @@ class AdminBasicMessage(Module):
         await non_secrets.close_wallet_search(search_handle)
         messages = sorted(messages, key=lambda n: n['timestamp'], reverse=True)
 
-        return Message({
-            '@type': AdminBasicMessage.MESSAGES,
-            'with': their_did,
-            'messages': messages
-        })
+        await self.agent.send_admin_message(
+            Message({
+                '@type': AdminBasicMessage.MESSAGES,
+                'with': their_did,
+                'messages': messages
+            })
+        )
 
 
 class BasicMessage(Module):
@@ -139,13 +143,15 @@ class BasicMessage(Module):
             })
         )
 
-        return Message({
-            '@type': AdminBasicMessage.MESSAGE_RECEIVED,
-            'id': self.agent.ui_token,
-            'with': msg.context['from_did'],
-            'message': {
-                'from': msg.context['from_did'],
-                'timestamp': msg['timestamp'],
-                'content': msg['content']
-            }
-        })
+        await self.agent.send_admin_message(
+            Message({
+                '@type': AdminBasicMessage.MESSAGE_RECEIVED,
+                'id': self.agent.ui_token,
+                'with': msg.context['from_did'],
+                'message': {
+                    'from': msg.context['from_did'],
+                    'timestamp': msg['timestamp'],
+                    'content': msg['content']
+                }
+            })
+        )

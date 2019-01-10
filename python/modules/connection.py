@@ -82,11 +82,13 @@ class AdminConnection(Module):
                 print(resp.status)
                 print(await resp.text())
 
-        return Message({
-            '@type': AdminConnection.INVITE_SENT,
-            'id': self.agent.ui_token,
-            'content': {'name': conn_name}
-        })
+        await self.agent.send_admin_message(
+            Message({
+                '@type': AdminConnection.INVITE_SENT,
+                'id': self.agent.ui_token,
+                'content': {'name': conn_name}
+            })
+        )
 
     async def send_request(self, msg: Message) -> Message:
         """ UI activated method.
@@ -122,11 +124,13 @@ class AdminConnection(Module):
 
         await did.set_did_metadata(self.agent.wallet_handle, my_endpoint_did_str, meta_json)
 
-        return Message({
-            '@type': AdminConnection.REQUEST_SENT,
-            'id': self.agent.ui_token,
-            'content': {'name': conn_name}
-        })
+        await self.agent.send_admin_message(
+            Message({
+                '@type': AdminConnection.REQUEST_SENT,
+                'id': self.agent.ui_token,
+                'content': {'name': conn_name}
+            })
+        )
 
     async def send_response(self, msg: Message) -> Message:
         """ UI activated method.
@@ -149,11 +153,13 @@ class AdminConnection(Module):
 
         await self.agent.send_message_to_agent(their_did_str, msg)
 
-        return Message({
-            '@type': AdminConnection.RESPONSE_SENT,
-            'id': self.agent.ui_token,
-            'content': {'name': conn_name}
-        })
+        await self.agent.send_admin_message(
+            Message({
+                '@type': AdminConnection.RESPONSE_SENT,
+                'id': self.agent.ui_token,
+                'content': {'name': conn_name}
+            })
+        )
 
 class Connection(Module):
 
@@ -191,13 +197,17 @@ class Connection(Module):
             'connection_key': their_connection_key
         }), json.dumps({}))
 
-        return Message({
-            '@type': AdminConnection.INVITE_RECEIVED,
-            'content': {'name': conn_name,
-                     'endpoint': their_endpoint,
-                     'connection_key': their_connection_key,
-                     'history': msg}
-        })
+        await self.agent.send_admin_message(
+            Message({
+                '@type': AdminConnection.INVITE_RECEIVED,
+                'content': {
+                    'name': conn_name,
+                    'endpoint': their_endpoint,
+                    'connection_key': their_connection_key,
+                    'history': msg
+                }
+            })
+        )
 
 
     async def request_received(self, msg: Message) -> Message:
@@ -237,15 +247,16 @@ class Connection(Module):
         await did.store_their_did(self.agent.wallet_handle, identity_json)
         await pairwise.create_pairwise(self.agent.wallet_handle, their_did_str, my_did_str, meta_json)
 
-        return Message({
-            '@type': AdminConnection.REQUEST_RECEIVED,
-            'content': {
-                'name': conn_name,
-                'endpoint_did': their_did_str,
-                'history': msg
-            }
-        })
-
+        await self.agent.send_admin_message(
+            Message({
+                '@type': AdminConnection.REQUEST_RECEIVED,
+                'content': {
+                    'name': conn_name,
+                    'endpoint_did': their_did_str,
+                    'history': msg
+                }
+            })
+        )
 
 
     async def response_received(self, msg: Message) -> Message:
@@ -283,10 +294,14 @@ class Connection(Module):
         await pairwise.create_pairwise(self.agent.wallet_handle, their_did_str, my_did_str, meta_json)
 
         #  pairwise connection between agents is established to this point
-        return Message({
-            '@type': AdminConnection.RESPONSE_RECEIVED,
-            'id': self.agent.ui_token,
-            'content': {'name': conn_name,
-                     'their_did': their_did_str,
-                     'history': msg}
-        })
+        await self.agent.send_admin_message(
+            Message({
+                '@type': AdminConnection.RESPONSE_RECEIVED,
+                'id': self.agent.ui_token,
+                'content': {
+                    'name': conn_name,
+                    'their_did': their_did_str,
+                    'history': msg
+                }
+            })
+        )
