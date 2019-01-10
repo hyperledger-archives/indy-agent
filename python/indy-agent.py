@@ -18,34 +18,10 @@ from modules.connection import Connection, AdminConnection
 from modules.admin import Admin, root
 from modules.admin_walletconnection import AdminWalletConnection
 from modules.basicmessage import AdminBasicMessage, BasicMessage
-import serializer.json_serializer as Serializer
 from post_message_handler import PostMessageHandler
 from websocket_handler import WebSocketHandler
 from agent import Agent
 from message import Message
-
-async def message_process(agent):
-    """ Message processing loop task.
-    """
-    while True:
-        wire_msg_bytes = await agent.message_queue.get()
-
-        # Try to unpack message assuming it's not encrypted
-        try:
-            msg = Serializer.unpack(wire_msg_bytes)
-        except Exception as e:
-            print("Message encryped, attempting to unpack...")
-
-        # TODO: More graceful checking here
-        if not isinstance(msg, Message) or "@type" not in msg:
-            # Message IS encrypted so unpack it
-            try:
-                msg = await agent.unpack_agent_message(wire_msg_bytes)
-            except Exception as e:
-                print('Failed to unpack message: {}\n\nError: {}'.format(wire_msg_bytes, e))
-                continue  # handle next message in loop
-
-        await agent.route_message_to_module(msg)
 
 if __name__ == "__main__":
 
@@ -112,7 +88,7 @@ if __name__ == "__main__":
     try:
         print('===== Starting Server on: http://localhost:{} ====='.format(args.port))
         LOOP.create_task(SERVER.start())
-        LOOP.create_task(message_process(AGENT))
+        LOOP.create_task(AGENT.start())
         LOOP.run_forever()
     except KeyboardInterrupt:
         print("exiting")

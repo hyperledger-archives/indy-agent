@@ -6,6 +6,7 @@ import asyncio
 import aiohttp
 from indy import wallet, did, error, crypto, pairwise
 
+from serializer import json_serializer as Serializer
 from helpers import bytes_to_str, serialize_bytes_json, str_to_bytes
 from message import Message
 from router.family_router import FamilyRouter
@@ -36,6 +37,29 @@ class Agent:
 
     async def route_message_to_module(self, message):
         return await self.family_router.route(message)
+
+    async def start(self):
+        """ Message processing loop task.
+        """
+        while True:
+            wire_msg_bytes = await self.message_queue.get()
+
+            # Try to unpack message assuming it's not encrypted
+            try:
+                msg = Serializer.unpack(wire_msg_bytes)
+            except Exception as e:
+                print("Message encryped, attempting to unpack...")
+
+            # TODO: More graceful checking here
+            if not isinstance(msg, Message) or "@type" not in msg:
+                # Message IS encrypted so unpack it
+                try:
+                    msg = await self.unpack_agent_message(wire_msg_bytes)
+                except Exception as e:
+                    print('Failed to unpack message: {}\n\nError: {}'.format(wire_msg_bytes, e))
+                    continue  # handle next message in loop
+
+            await self.route_message_to_module(msg)
 
     async def connect_wallet(self, agent_name, passphrase, ephemeral=False):
         """ Create if not already exists and open wallet.
