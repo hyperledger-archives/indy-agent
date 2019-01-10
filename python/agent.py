@@ -41,8 +41,8 @@ class Agent:
     async def start(self):
         """ Message processing loop task.
         """
-        try:
-            while True:
+        while True:
+            try:
                 wire_msg_bytes = await self.message_queue.get()
 
                 # Try to unpack message assuming it's not encrypted
@@ -62,8 +62,8 @@ class Agent:
                         continue  # handle next message in loop
 
                 await self.route_message_to_module(msg)
-        except Exception as e:
-                print("Message Processing failed!!! Processing now halted!!! \n\n{}".format(e))
+            except Exception as e:
+                    print("\n\nMessage Processing failed!!! \n\n{}".format(e))
 
     async def connect_wallet(self, agent_name, passphrase, ephemeral=False):
         """ Create if not already exists and open wallet.
