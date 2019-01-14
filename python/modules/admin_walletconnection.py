@@ -5,6 +5,7 @@ from indy import did, wallet
 
 from router.simple_router import SimpleRouter
 from agent import Agent, WalletConnectionException
+from modules.admin import Admin
 from message import Message
 from . import Module
 
@@ -43,4 +44,4 @@ class AdminWalletConnection(Module):
             })
 
         # prompt a STATE message.
-        return await self.agent.modules['admin'].state_request(None)
+        return await self.agent.modules[Admin.FAMILY].state_request(None)
