@@ -26,14 +26,14 @@ class Agent:
         self.pool_handle = None
         self.ui_socket = None
         self.initialized = False
-        self.modules = []
+        self.modules = {}
         self.family_router = FamilyRouter()
         self.message_queue = asyncio.Queue()
         self.outbound_admin_message_queue = asyncio.Queue()
 
     def register_module(self, module):
-        self.modules.append(module)
-        self.family_router.register(module.FAMILY, module(self))
+        self.modules[module.FAMILY] = module(self)
+        self.family_router.register(module.FAMILY, self.modules[module.FAMILY])
 
     async def route_message_to_module(self, message):
         return await self.family_router.route(message)
