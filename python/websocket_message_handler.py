@@ -2,11 +2,10 @@ import asyncio
 import aiohttp
 from aiohttp import web
 
-class UIEventQueue(object):
-    def __init__(self, loop):
-        self.loop = loop
-        self.recv_q = asyncio.Queue()
-        self.send_q = asyncio.Queue()
+class WebSocketMessageHandler(object):
+    def __init__(self, inbound_queue, outbound_queue):
+        self.recv_q = inbound_queue
+        self.send_q = outbound_queue
         self.ws = None
 
     async def ws_handler(self, request):
@@ -48,9 +47,3 @@ class UIEventQueue(object):
             msg_to_send = await self.send_q.get()
             print('Sending "{}"'.format(msg_to_send))
             await self.ws.send_str(msg_to_send)
-
-    async def recv(self):
-        return await self.recv_q.get()
-
-    async def send(self, msg):
-        return await self.send_q.put(msg)

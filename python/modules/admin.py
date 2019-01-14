@@ -25,6 +25,7 @@ class Admin(Module):
         return await self.router.route(msg)
 
     async def state_request(self, _) -> Message:
+        print("Processing state_request")
 
         invitations = []
         if self.agent.initialized:
@@ -49,22 +50,26 @@ class Admin(Module):
                 pairwise_record['metadata'] = json.loads(pairwise_record['metadata'])
                 pairwise_records.append(pairwise_record)
 
-            return Message({
-                '@type': self.STATE,
-                'content': {
-                    'initialized': self.agent.initialized,
-                    'agent_name': self.agent.owner,
-                    'invitations': invitations,
-                    'pairwise_connections': pairwise_records,
-                }
-            })
+            await self.agent.send_admin_message(
+                Message({
+                    '@type': self.STATE,
+                    'content': {
+                        'initialized': self.agent.initialized,
+                        'agent_name': self.agent.owner,
+                        'invitations': invitations,
+                        'pairwise_connections': pairwise_records,
+                    }
+                })
+            )
         else:
-            return Message({
-                '@type': self.STATE,
-                'content': {
-                    'initialized': self.agent.initialized,
-                }
-            })
+            await self.agent.send_admin_message(
+                Message({
+                    '@type': self.STATE,
+                    'content': {
+                        'initialized': self.agent.initialized,
+                        }
+                    })
+            )
 
 
 @aiohttp_jinja2.template('index.html')

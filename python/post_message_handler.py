@@ -4,11 +4,11 @@
 from aiohttp import web
 import asyncio
 
-class MessageReceiver():
+class PostMessageHandler():
     """ Simple message queue interface for receiving messages.
     """
-    def __init__(self):
-        self.msg_queue = asyncio.Queue()
+    def __init__(self, queue):
+        self.msg_queue = queue
 
     async def handle_message(self, request):
         """ Put to message queue and return 202 to client.
@@ -19,8 +19,3 @@ class MessageReceiver():
         msg = await request.read()
         await self.msg_queue.put(msg)
         raise web.HTTPAccepted()
-
-    async def recv(self):
-        """ Pop from message queue.
-        """
-        return await self.msg_queue.get()
