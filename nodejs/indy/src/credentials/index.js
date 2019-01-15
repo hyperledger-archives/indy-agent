@@ -15,15 +15,26 @@ exports.getAll = async function () {
     return await sdk.proverGetCredentials(await indy.wallet.get(), {});
 };
 
-exports.sendOffer = async function (theirDid, credentialDefinitionId) {
-    let credOffer = await sdk.issuerCreateCredentialOffer(await indy.wallet.get(), credentialDefinitionId);
-    await indy.store.pendingCredentialOffers.write(credOffer);
-    let pairwise = await sdk.getPairwise(await indy.wallet.get(), theirDid);
-    let myDid = pairwise.my_did;
-    let message = await indy.crypto.buildAuthcryptedMessage(myDid, theirDid, MESSAGE_TYPES.OFFER, credOffer);
-    let meta = JSON.parse(pairwise.metadata);
-    let theirEndpointDid = meta.theirEndpointDid;
-    return indy.crypto.sendAnonCryptedMessage(theirEndpointDid, message);
+exports.sendOffer = async function (theirDid, credentialDefinitionId, credentialData) {
+    if(theirDid === '_self_') {
+        return issueCredentialToSelf(credentialDefinitionId, credentialData);
+    }
+    else {
+      let credOffer = await sdk.issuerCreateCredentialOffer(await indy.wallet.get(), credentialDefinitionId);
+      try {
+        credOffer.data = JSON.parse(credentialData);
+      } catch (e) {
+        credOffer.data = {};
+        console.log(e);
+      }
+      await indy.store.pendingCredentialOffers.write(credOffer);
+      let pairwise = await sdk.getPairwise(await indy.wallet.get(), theirDid);
+      let myDid = pairwise.my_did;
+      let message = await indy.crypto.buildAuthcryptedMessage(myDid, theirDid, MESSAGE_TYPES.OFFER, credOffer);
+      let meta = JSON.parse(pairwise.metadata);
+      let theirEndpointDid = meta.theirEndpointDid;
+      return indy.crypto.sendAnonCryptedMessage(theirEndpointDid, message);
+    }
 };
 
 exports.sendRequest = async function (theirDid, encryptedMessage) {
@@ -53,33 +64,14 @@ exports.acceptRequest = async function(theirDid, encryptedMessage) {
         }
     }
     let schema = await indy.issuer.getSchema(credentialOffer.schema_id);
+
     let credentialValues = {};
     for(let attr of schema.attrNames) {
-        let value;
-        switch(attr) {
-            case "name":
-                value = await indy.pairwise.getAttr(theirDid, 'name') || "Alice";
-                break;
-            case "degree":
-                value = "Bachelor of Science, Marketing";
-                break;
-            case "status":
-                value = "graduated";
-                break;
-            case "ssn":
-                value = "123-45-6789";
-                break;
-            case "year":
-                value = "2015";
-                break;
-            case "average":
-                value = "5";
-                break;
-            default:
-                value = "someValue";
+        if(credentialOffer.data[attr]) {
+          credentialValues[attr] = {raw: credentialOffer.data[attr], encoded: indy.credentials.encode(credentialOffer.data[attr])};
         }
-        credentialValues[attr] = {raw: value, encoded: exports.encode(value)};
     }
+
     console.log(credentialValues);
 
     let [credential] = await sdk.issuerCreateCredential(await indy.wallet.get(), credentialOffer, credentialRequest, credentialValues);
@@ -140,3 +132,33 @@ exports.decode = function(number) {
     console.log(string);
     return string;
 };
+
+async function issueCredentialToSelf(credentialDefinitionId, credentialData) {
+  try {
+    let endpointDID = await indy.did.getEndpointDid();
+    let wallet = await indy.wallet.get();
+    let pool = await indy.pool.get();
+    let credentialOffer = await sdk.issuerCreateCredentialOffer(wallet, credentialDefinitionId);
+    try {
+      credentialOffer.data = JSON.parse(credentialData);
+    } catch (e) {
+      credentialOffer.data = {};
+      console.log(e);
+    }
+    let [, credentialDefinition] = await indy.issuer.getCredDef(pool, endpointDID, credentialOffer.cred_def_id);
+    let masterSecretId = await indy.did.getEndpointDidAttribute('master_secret_id');
+    let [credRequestJson, credRequestMetadataJson] = await sdk.proverCreateCredentialReq(wallet, endpointDID, credentialOffer, credentialDefinition, masterSecretId);
+    let schema = await indy.issuer.getSchema(credentialOffer.schema_id);
+
+    let credentialValues = {};
+    for (let attr of schema.attrNames) {
+      if (credentialOffer.data[attr]) {
+        credentialValues[attr] = {raw: credentialOffer.data[attr], encoded: indy.credentials.encode(credentialOffer.data[attr])};
+      }
+    }
+    let [credential] = await sdk.issuerCreateCredential(wallet, credentialOffer, credRequestJson, credentialValues);
+    await sdk.proverStoreCredential(wallet, null, credRequestMetadataJson, credential, credentialDefinition);
+  } catch (e) {
+      console.log(e);
+  }
+}
