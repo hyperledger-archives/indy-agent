@@ -16,6 +16,11 @@
                     <%}%>
                     <option value="proofRequestOther">Other (Paste Proof Request Here) --></option>
                 </select>
+            </div>
+            <div class="w3-container w3-card w3-padding w3-margin">
+                <div id="proofRequest" style="width:100%;">
+                    <textarea name="request_entry" style="width:100%;" rows="10"></textarea>
+                </div>
                 <br><br>
                 <input class="w3-btn w3-white w3-border" type="submit">
             </div>
@@ -27,7 +32,7 @@
                 </div>
             <%}%>
             <div id="proofRequestOther" class="proofRequestsClass" style="width:100%;display:none;">
-                <textarea name="manual_entry" style="width:100%;" rows="20"></textarea>
+                <textarea style="width:100%;" rows="20"></textarea>
             </div>
         </div>
     </form>

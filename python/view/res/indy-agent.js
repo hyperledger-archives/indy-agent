@@ -68,7 +68,7 @@
         data: ui_data,
         computed: {
             tab_active: function(){
-                return this.current_tab == "credentials";
+                return this.current_tab === "credentials";
             }
         }
     });
@@ -78,7 +78,7 @@
         data: ui_data,
         computed: {
             tab_active: function(){
-                return this.current_tab == "relationships";
+                return this.current_tab === "relationships";
             }
         },
         methods: {
@@ -208,7 +208,7 @@
         data: ui_data,
         computed: {
             tab_active: function(){
-                return this.current_tab == "login";
+                return this.current_tab === "login";
             }
         },
         methods: {

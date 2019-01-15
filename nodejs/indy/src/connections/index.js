@@ -18,12 +18,12 @@ exports.MESSAGE_TYPES = MESSAGE_TYPES;
 
 exports.handlers = require('./handlers');
 
-exports.prepareRequest = async function (theirEndpointDid) {
+exports.prepareRequest = async function (theirEndpointDid, connection_alias) {
     let [myNewDid, myNewVerkey] = await sdk.createAndStoreMyDid(await indy.wallet.get(), {});
     await indy.pool.sendNym(await indy.pool.get(), await indy.wallet.get(), await indy.did.getEndpointDid(), myNewDid, myNewVerkey);
 
     let nonce = uuid();
-    indy.store.pendingRelationships.write(myNewDid, theirEndpointDid, nonce);
+    indy.store.pendingRelationships.write(myNewDid, theirEndpointDid, nonce, connection_alias);
 
     return {
         type: MESSAGE_TYPES.REQUEST,
@@ -96,6 +96,7 @@ exports.acceptResponse = async function (myDid, rawMessage) {
 
             let meta = JSON.stringify({
                 name: relationship.name,
+                alias: relationship.alias,
                 theirEndpointDid: relationship.theirEndpointDid
             });
             await sdk.createPairwise(await indy.wallet.get(), theirDid, relationship.myNewDid, meta);
@@ -109,7 +110,7 @@ exports.acceptResponse = async function (myDid, rawMessage) {
 
 exports.sendAcknowledgement = async function (myDid, theirDid, theirEndpointDid) {
     await indy.crypto.sendAnonCryptedMessage(theirEndpointDid, await indy.crypto.buildAuthcryptedMessage(myDid, theirDid, MESSAGE_TYPES.ACKNOWLEDGE, "Success"));
-    await indy.proofs.sendRequest(myDid, theirDid, 'General-Identity');
+    // await indy.proofs.sendRequest(myDid, theirDid, 'General-Identity');
 };
 
 exports.acceptAcknowledgement = async function (theirDid, encryptedMessage) {
@@ -118,7 +119,7 @@ exports.acceptAcknowledgement = async function (theirDid, encryptedMessage) {
     let message = await indy.crypto.authDecrypt(myDid, encryptedMessage);
     console.log(message);
 
-    await indy.proofs.sendRequest(myDid, theirDid, 'General-Identity');
+    // await indy.proofs.sendRequest(myDid, theirDid, 'General-Identity');
 };
 
 // accept identity proof request, send identity proof and own proof request on identity
