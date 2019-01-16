@@ -1,6 +1,7 @@
 import aiohttp_jinja2
 import jinja2
 import json
+import socket
 from indy import did, wallet, non_secrets, pairwise
 
 from router.simple_router import SimpleRouter
@@ -76,13 +77,14 @@ class Admin(Module):
 async def root(request):
     print(request)
     agent = request.app['agent']
-    agent.offer_endpoint = request.url.scheme + '://' + request.url.host
-    print(agent.offer_endpoint)
-    agent.endpoint = request.url.scheme + '://' + request.url.host
+    local_ip = socket.gethostbyname(socket.gethostname())
+    agent.offer_endpoint = request.url.scheme + '://' + local_ip
+    agent.endpoint = request.url.scheme + '://' + local_ip
     if request.url.port is not None:
         agent.endpoint += ':' + str(request.url.port) + '/indy'
         agent.offer_endpoint += ':' + str(request.url.port) + '/offer'
     else:
         agent.endpoint += '/indy'
         agent.offer_endpoint += '/offer'
+    print('Agent Offer Endpoint : "{}"'.format(agent.offer_endpoint))
     return {'ui_token': agent.ui_token}

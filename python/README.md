@@ -41,7 +41,10 @@ Change your current folder to `indy-agent/python`
     * In another instance of your terminal: `$ python indy-agent 8095` and don't close it.
     * Open up your browser, with two tabs opened: localhost:8094 (agent A) and localhost:8095 (agent B).
 
-To this point I hope you have properly launched the agents.
+To this point I hope you have properly launched the agents. In each terminal, 
+after browser tabs opened, you can see the "offer endpoint" usefull for
+the following scenario (in my case `Agent Offer Endpoint : "http://172.17.0.3:8095/offer"`)
+
 To do the DEMO (**using both 1 and 2 ways of running the agent**):
 * In agent A browser tab type: `Alice` and any password.
 * In agent B browser tab type: `Bob` and any password.
