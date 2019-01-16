@@ -29,14 +29,13 @@ class AdminConnection(Module):
     INVITE_SENT = FAMILY + "invite_sent"
     INVITE_RECEIVED = FAMILY + "invite_received"
 
-    REQUEST_RECEIVED = FAMILY + "request_received"
-    RESPONSE_RECEIVED = FAMILY + "response_received"
-
     SEND_REQUEST = FAMILY + "send_request"
     REQUEST_SENT = FAMILY + "request_sent"
+    REQUEST_RECEIVED = FAMILY + "request_received"
 
     SEND_RESPONSE = FAMILY + "send_response"
     RESPONSE_SENT = FAMILY + "response_sent"
+    RESPONSE_RECEIVED = FAMILY + "response_received"
 
     def __init__(self, agent):
         self.agent = agent
@@ -184,26 +183,50 @@ class Connection(Module):
 
 
     async def invite_received(self, msg: Message) -> Message:
-        conn_name = msg['content']['name']
-        their_endpoint = msg['content']['endpoint']
-        their_connection_key = msg['content']['connection_key']
+        """ Received an Invite. In this iteration, invite messages are sent from the admin interface
+            after being copy and pasted from another agent instance.
+
+            This interaction represents an out-of-band communication channel. In the future and in
+            practice, these sort of invitations will be received over any number of channels such as
+            SMS, Email, QR Code, NFC, etc.
+
+            Structure of an invite message:
+
+                {
+                    "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/invitation",
+                    "label": "Alice",
+                    "did": "did:sov:QmWbsNYhMrjHiqZDTUTEJs"
+                }
+
+            Or, in the case of a peer DID:
+
+                {
+                    "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/invitation",
+                    "label": "Alice",
+                    "did": "did:peer:oiSqsNYhMrjHiqZDTUthsw",
+                    "key": "8HH5gYEeNc3z7PYXmd54d4x6qAfCNrqQqEB3nS7Zfu7K",
+                    "endpoint": "https://example.com/endpoint"
+                }
+
+            Currently, only peer DID is supported.
+        """
 
         # store invite in the wallet
         await non_secrets.add_wallet_record(self.agent.wallet_handle,
             "invitation", uuid.uuid4().hex,
             json.dumps({
-            'name': conn_name,
-            'endpoint': their_endpoint,
-            'connection_key': their_connection_key
+            'label': msg['label'],
+            'endpoint': msg: ['endpoint'],
+            'connection_key': msg['key']
         }), json.dumps({}))
 
         await self.agent.send_admin_message(
             Message({
                 '@type': AdminConnection.INVITE_RECEIVED,
                 'content': {
-                    'name': conn_name,
-                    'endpoint': their_endpoint,
-                    'connection_key': their_connection_key,
+                    'name': msg['label'],
+                    'endpoint': msg['endpoint'],
+                    'connection_key': msg['key'],
                     'history': msg
                 }
             })
