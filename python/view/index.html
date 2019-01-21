@@ -74,40 +74,85 @@
         <!-- relationships page -->
         <div id="relationships" class="tab" v-if="tab_active">
             <!-- Modal -->
-            <div class="modal fade" id="send_req_modal" tabindex="-1" role="dialog" aria-labelledby="send_req_modal_label" aria-hidden="true">
+            <div class="modal fade" id="generate_invite_modal" tabindex="-1" role="dialog" aria-labelledby="generate_invite_modal_label" aria-hidden="true">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="send_req_modal_label">Send Connection Offer</h5>
+                            <h5 class="modal-title" id="generate_invite_modal_label">New Connection Invitation</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
                         <div class="modal-body">
                             <form>
-                                <p>This Connection Offer is sent "out-of-band" to it's destination meaning it is not sent through Sovrin.
-                                In the real world, this offer would be sent through a previously established and trusted method;
-                                for example, a QR code, text message, university communications, etc.
+                                <p>This dialog will generate a new connection invitation that can then be sent out-of-band to another agent.
                                 </p>
                                 <div class="form-group">
-                                    <label for="send_name">Connection Name</label>
-                                    <input type="text" v-model="new_connection_offer.name" class="form-control" id="send_name" aria-describedby="emailHelp" placeholder="Name">
+                                    <label for="label">Connection Label</label>
+                                    <input type="text" v-model="new_connection_invite.label" class="form-control" id="label" aria-describedby="emailHelp" placeholder="Name">
                                     <small id="emailHelp" class="form-text text-muted">This will name will be used to identify the connection.</small>
-                                </div>
-                                <div class="form-group">
-                                    <label for="send_endpoint">Endpoint</label>
-                                    <input type="text" v-model="new_connection_offer.endpoint" class="form-control" id="send_endpoint" placeholder="Endpoint">
                                 </div>
                             </form>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                            <button id="send_offer" v-on:click="send_invite" type="button" class="btn btn-primary" data-dismiss="modal">Send Offer</button>
+                            <button id="generate_invite" v-on:click="generate_invite" type="button" class="btn btn-primary" data-dismiss="modal">Generate Invite</button>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <div class="modal fade" id="generated_invite_modal" tabindex="-1" role="dialog" aria-labelledby="generated_invite_modal_label" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="generated_invite_modal_label">Generated Connection Invitation</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Invite</span>
+                                </div>
+                                <input type="text" class="form-control" v-model="generated_invite.invite" id="invite">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" type="button" id="copy-invite" v-on:click="copy_invite">Copy</button>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="send_request_modal" tabindex="-1" role="dialog" aria-labelledby="send_request_modal_label" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="send_request_modal_label">Send Request</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Invite</span>
+                                </div>
+                                <input type="text" class="form-control" v-model="send_request_info.invite" id="request_invite">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button id="generate_invite" v-on:click="send_request" type="button" class="btn btn-primary" data-dismiss="modal">Send Request</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <nav class="navbar navbar-expand-lg navbar-light bg-light" style="margin-top:2em;">
               <a class="h3 navbar-brand" href="#">Pending Connections</a>
@@ -115,7 +160,8 @@
                 <ul class="navbar-nav mr-auto">
 
                 </ul>
-                <button type="button" class="btn btn-outline-primary btn-small navbar-btn" data-toggle="modal" data-target="#send_req_modal">Send connection offer</button>
+                <button type="button" class="btn btn-outline-primary btn-small navbar-btn" data-toggle="modal" data-target="#generate_invite_modal">Generate Connection Invitation</button>
+                <button type="button" class="btn btn-outline-primary btn-small navbar-btn" data-toggle="modal" data-target="#send_request_modal">Send Request</button>
               </div>
             </nav>
 
@@ -202,7 +248,7 @@
 
         <!-- relationships page -->
         <div id="connection" class="tab" v-if="tab_active">
-            <h3>Connection: {{connection.metadata.conn_name}}</h3>
+            <h3>Connection: {{connection.label}}</h3>
             <p>My DID: {{connection.my_did}}</p>
             <p>Their DID: {{connection.their_did}}</p>
 

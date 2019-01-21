@@ -24,8 +24,8 @@
         CONNECTION_LIST: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "connection_list",
         CONNECTION_LIST_REQUEST: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "connection_list_request",
 
-        SEND_INVITE: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "send_invite",
-        INVITE_SENT: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "invite_sent",
+        GENERATE_INVITE: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "generate_invite",
+        INVITE_GENERATED: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "invite_generated",
         INVITE_RECEIVED: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "invite_received",
 
         SEND_REQUEST: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "send_request",
@@ -93,9 +93,14 @@
         agent_name: '',
         passphrase: '',
         current_tab: 'login',
-        new_connection_offer: {
-            name: "",
-            endpoint: ""
+        new_connection_invite: {
+            label: "",
+        },
+        generated_invite: {
+            invite: ""
+        },
+        send_request_info: {
+            invite: ""
         },
         connections: [],
         pairwise_connections:[],
@@ -124,20 +129,20 @@
             }
         },
         methods: {
-            send_invite: function () {
+            generate_invite: function () {
                 msg = {
-                    '@type': ADMIN_CONNECTION.SEND_INVITE,
-                    name: this.new_connection_offer.name,
-                    endpoint: this.new_connection_offer.endpoint
+                    '@type': ADMIN_CONNECTION.GENERATE_INVITE,
+                    label: this.new_connection_invite.label,
                 };
                 sendMessage(msg);
             },
-            invite_sent: function (msg) {
-                this.connections.push({
-                    name: msg.content.name,
-                    status: "Invite Sent",
-                    history: []
-                });
+            invite_generated: function (msg) {
+                this.generated_invite.invite = msg.invite;
+                $('#generated_invite_modal').modal('show');
+            },
+            copy_invite: function() {
+                document.getElementById('invite').select();
+                console.log(document.execCommand('copy'));
             },
             invite_received: function (msg) {
                 this.connections.push({
@@ -154,11 +159,7 @@
             send_request: function (c) {
                 msg = {
                     '@type': ADMIN_CONNECTION.SEND_REQUEST,
-                    content: {
-                            name: c.name,
-                            endpoint: c.invitation.endpoint.url,
-                            key: c.invitation.key
-                    }
+                    invite: this.send_request_info.invite
                 };
                 sendMessage(msg);
             },
@@ -367,7 +368,7 @@
 
     // Message Routes {{{
     msg_router.register(ADMIN.STATE, ui_agent.update);
-    msg_router.register(ADMIN_CONNECTION.INVITE_SENT, ui_relationships.invite_sent);
+    msg_router.register(ADMIN_CONNECTION.INVITE_GENERATED, ui_relationships.invite_generated);
     msg_router.register(ADMIN_CONNECTION.INVITE_RECEIVED, ui_relationships.invite_received);
     msg_router.register(ADMIN_CONNECTION.REQUEST_SENT, ui_relationships.request_sent);
     msg_router.register(ADMIN_CONNECTION.RESPONSE_SENT, ui_relationships.response_sent);
