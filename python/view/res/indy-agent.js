@@ -1,6 +1,3 @@
-
-    const TOKEN = document.getElementById("ui_token").innerText;
-
     const MESSAGE_TYPES = {
         CONN_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/",
         ADMIN_CONNECTIONS_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin_connections/1.0/",
