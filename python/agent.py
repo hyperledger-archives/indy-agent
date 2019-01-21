@@ -3,6 +3,7 @@
 import json
 import base64
 import asyncio
+import traceback
 import aiohttp
 from indy import wallet, did, error, crypto, pairwise
 
@@ -64,7 +65,6 @@ class Agent:
                 await self.route_message_to_module(msg)
             except Exception as e:
                     print("\n\n--- Message Processing failed --- \n\n")
-                    import traceback
                     traceback.print_exc()
 
     async def connect_wallet(self, agent_name, passphrase, ephemeral=False):
@@ -139,7 +139,6 @@ class Agent:
 
         #load pairwise
         pairwise_list_str = await pairwise.list_pairwise(self.wallet_handle)
-        print(pairwise_list_str)
         pairwise_list = json.loads(pairwise_list_str)
         their_verkey_to_did = {}
         for p_str in pairwise_list:
