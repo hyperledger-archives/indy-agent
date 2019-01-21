@@ -129,26 +129,32 @@
                 </div>
             </div>
 
-            <div class="modal fade" id="send_request_modal" tabindex="-1" role="dialog" aria-labelledby="send_request_modal_label" aria-hidden="true">
+            <div class="modal fade" id="receive_invite_modal" tabindex="-1" role="dialog" aria-labelledby="receive_invite_modal_label" aria-hidden="true">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="send_request_modal_label">Send Request</h5>
+                            <h5 class="modal-title" id="receive_invite_modal_label">Receive Invite</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
                         <div class="modal-body">
                             <div class="input-group">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Label</span>
+                                </div>
+                                <input type="text" class="form-control" v-model="receive_invite_info.label" id="request_invite_label">
+                            </div>
                                 <div class="input-group-prepend">
                                     <span class="input-group-text">Invite</span>
                                 </div>
-                                <input type="text" class="form-control" v-model="send_request_info.invite" id="request_invite">
+                                <input type="text" class="form-control" v-model="receive_invite_info.invite" id="request_invite">
                             </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                            <button id="generate_invite" v-on:click="send_request" type="button" class="btn btn-primary" data-dismiss="modal">Send Request</button>
+                            <button id="generate_invite" v-on:click="receive_invite" type="button" class="btn btn-primary" data-dismiss="modal">Receive Invite</button>
                         </div>
                     </div>
                 </div>
@@ -161,7 +167,7 @@
 
                 </ul>
                 <button type="button" class="btn btn-outline-primary btn-small navbar-btn" data-toggle="modal" data-target="#generate_invite_modal">Generate Connection Invitation</button>
-                <button type="button" class="btn btn-outline-primary btn-small navbar-btn" data-toggle="modal" data-target="#send_request_modal">Send Request</button>
+                <button type="button" class="btn btn-outline-primary btn-small navbar-btn" data-toggle="modal" data-target="#receive_invite_modal">Receive Invite</button>
               </div>
             </nav>
 
@@ -180,7 +186,7 @@
                 <tbody>
                     <tr v-for="c in connections">
                         <td></td>
-                        <td>{{ c.name }}</td>
+                        <td>{{ c.label }}</td>
                         <td>{{ c.status }}</td>
                         <td>
                             <button type="button" class="btn btn-info" v-on:click="display_history(c)">View</button>

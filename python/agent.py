@@ -63,7 +63,9 @@ class Agent:
 
                 await self.route_message_to_module(msg)
             except Exception as e:
-                    print("\n\nMessage Processing failed!!! \n\n{}".format(e))
+                    print("\n\n--- Message Processing failed --- \n\n")
+                    import traceback
+                    traceback.print_exc()
 
     async def connect_wallet(self, agent_name, passphrase, ephemeral=False):
         """ Create if not already exists and open wallet.
@@ -168,25 +170,18 @@ class Agent:
         return msg
 
     async def send_message_to_agent(self, to_did, msg:Message):
+        their_did = to_did
 
-        their_did_str = to_did
+        pairwise_info = json.loads(await pairwise.get_pairwise(self.wallet_handle, their_did))
+        pairwise_meta = json.loads(pairwise_info['metadata'])
 
-        pairwise_conn_info_str = await pairwise.get_pairwise(self.wallet_handle, their_did_str)
-        pairwise_conn_info_json = json.loads(pairwise_conn_info_str)
+        my_did = pairwise_info['my_did']
+        their_endpoint = pairwise_meta['their_endpoint']
+        their_vk = pairwise_meta['their_vk']
 
-        my_did_str = pairwise_conn_info_json['my_did']
+        my_vk = await did.key_for_local_did(self.wallet_handle, my_did)
 
-        metadata_json = json.loads(pairwise_conn_info_json['metadata'])
-        # conn_name = metadata_json['conn_name']
-        their_endpoint = metadata_json['their_endpoint']
-        their_verkey_str = metadata_json['their_verkey']
-
-        my_did_info_str = await did.get_my_did_with_meta(self.wallet_handle,
-                                                         my_did_str)
-        my_did_info_json = json.loads(my_did_info_str)
-        my_verkey_str = my_did_info_json['verkey']
-
-        await self.send_message_to_endpoint_and_key(my_verkey_str, their_verkey_str, their_endpoint, msg)
+        await self.send_message_to_endpoint_and_key(my_vk, their_vk, their_endpoint, msg)
 
     # used directly when sending to an endpoint without a known did
     async def send_message_to_endpoint_and_key(self, my_ver_key, their_ver_key, their_endpoint, msg):

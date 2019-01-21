@@ -27,6 +27,7 @@
         GENERATE_INVITE: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "generate_invite",
         INVITE_GENERATED: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "invite_generated",
         INVITE_RECEIVED: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "invite_received",
+        RECEIVE_INVITE: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "receive_invite",
 
         SEND_REQUEST: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "send_request",
         REQUEST_SENT: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "request_sent",
@@ -99,7 +100,8 @@
         generated_invite: {
             invite: ""
         },
-        send_request_info: {
+        receive_invite_info: {
+            label: "",
             invite: ""
         },
         connections: [],
@@ -146,25 +148,34 @@
             },
             invite_received: function (msg) {
                 this.connections.push({
-                    name: msg.content.name,
+                    label: msg.label,
                     invitation: {
-                        key: msg.content.connection_key,
-                        endpoint: msg.content.endpoint
+                        did: msg.did,
+                        key: msg.key,
+                        endpoint: msg.endpoint
                     },
                     status: "Invite Received",
-                    history: [history_format(msg.content.history)]
+                    history: [history_format(msg.history)]
                 });
             },
 
+            receive_invite: function (c) {
+                msg = {
+                    '@type': ADMIN_CONNECTION.RECEIVE_INVITE,
+                    label: this.receive_invite_info.label,
+                    invite: this.receive_invite_info.invite
+                };
+                sendMessage(msg);
+            },
             send_request: function (c) {
                 msg = {
                     '@type': ADMIN_CONNECTION.SEND_REQUEST,
-                    invite: this.send_request_info.invite
+                    did: c.invitation.did
                 };
                 sendMessage(msg);
             },
             request_sent: function (msg) {
-                var c = this.get_connection_by_name(msg.content.name);
+                var c = this.get_connection_by_name(msg.label);
                 c.status = "Request Sent";
             },
             request_received: function (msg) {
@@ -243,8 +254,8 @@
                 console.log(this.history_view);
                 $('#historyModal').modal({});
             },
-            get_connection_by_name: function(name){
-               return this.connections.find(function(x){return x.name === msg.content.name;});
+            get_connection_by_name: function(label){
+               return this.connections.find(function(x){return x.label === msg.label;});
             },
             show_connection: function(c){
                 this.connection = c;

@@ -6,6 +6,7 @@
 import json
 import base64
 import uuid
+import re
 
 import aiohttp
 from indy import crypto, did, pairwise, non_secrets
@@ -28,6 +29,7 @@ class AdminConnection(Module):
     GENERATE_INVITE = FAMILY + "generate_invite"
     INVITE_GENERATED = FAMILY + "invite_generated"
     INVITE_RECEIVED = FAMILY + "invite_received"
+    RECEIVE_INVITE = FAMILY + "receive_invite"
 
     SEND_REQUEST = FAMILY + "send_request"
     REQUEST_SENT = FAMILY + "request_sent"
@@ -37,11 +39,16 @@ class AdminConnection(Module):
     RESPONSE_SENT = FAMILY + "response_sent"
     RESPONSE_RECEIVED = FAMILY + "response_received"
 
+    class BadInviteException(Exception):
+        def __init__(self, msg):
+            super.__init__(msg)
+
     def __init__(self, agent):
         self.agent = agent
 
         self.router = SimpleRouter()
         self.router.register(AdminConnection.GENERATE_INVITE, self.generate_invite)
+        self.router.register(AdminConnection.RECEIVE_INVITE, self.receive_invite)
         self.router.register(AdminConnection.SEND_REQUEST, self.send_request)
         self.router.register(AdminConnection.SEND_RESPONSE, self.send_response)
 
@@ -77,17 +84,9 @@ class AdminConnection(Module):
         """
         (my_did, my_vk) = await did.create_and_store_my_did(self.agent.wallet_handle, "{}")
 
-        meta_json = json.dumps(
-            {
-                "label": msg['label']
-            }
-        )
-
-        await did.set_did_metadata(self.agent.wallet_handle, my_did, meta_json)
-
         invite_msg = Message({
             '@type': Connection.INVITE,
-            'label': msg['label'],
+            'label': self.agent.owner,
             'did': my_did,
             'key': my_vk,
             'endpoint': self.agent.endpoint,
@@ -103,10 +102,162 @@ class AdminConnection(Module):
             })
         )
 
-    async def send_request(self, msg: Message) -> Message:
-        """ UI activated method.
+    async def receive_invite(self, msg: Message) -> Message:
+        """ Receive and save invite.
+
+            This interaction represents an out-of-band communication channel. In the future and in
+            practice, these sort of invitations will be received over any number of channels such as
+            SMS, Email, QR Code, NFC, etc.
+
+            In this iteration, invite messages are received from the admin interface as a URL
+            after being copied and pasted from another agent instance.
+
+            The URL is formatted as follows:
+
+                https://<domain>/<path>?c_i=<invitationstring>
+
+            The invitation string is a base64 url encoded json string.
+
+            Structure of an invite message:
+
+                {
+                    "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/invitation",
+                    "label": "Alice",
+                    "did": "did:sov:QmWbsNYhMrjHiqZDTUTEJs"
+                }
+
+            Or, in the case of a peer DID:
+
+                {
+                    "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/invitation",
+                    "label": "Alice",
+                    "did": "did:peer:oiSqsNYhMrjHiqZDTUthsw",
+                    "key": "8HH5gYEeNc3z7PYXmd54d4x6qAfCNrqQqEB3nS7Zfu7K",
+                    "endpoint": "https://example.com/endpoint"
+                }
+
+            Currently, only peer DID format is supported.
         """
 
+        # Parse invite string
+        matches = re.match("(.+)?c_i=(.+)", msg['invite'])
+        if not matches:
+            raise BadInviteException("Invite string is improperly formatted")
+
+        invite_msg = Serializer.unpack(
+            base64.urlsafe_b64decode(matches.group(2)).decode('utf-8')
+        )
+
+        record = uuid.uuid4().hex
+
+        await self.agent.send_admin_message(Message({
+            '@type': AdminConnection.INVITE_RECEIVED,
+            'label': invite_msg['label'],
+            'did': invite_msg['did'],
+            'key': invite_msg['key'],
+            'endpoint': invite_msg['endpoint']
+        }))
+
+        await non_secrets.add_wallet_record(
+            self.agent.wallet_handle,
+            'invitation',
+            invite_msg['did'],
+            Serializer.pack(invite_msg),
+            '{}'
+        )
+
+    async def send_request(self, msg: Message):
+        """ Recall invite message from wallet and prepare and send request to the inviter.
+
+            send_request message format:
+
+                {
+                  "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin_connections/1.0/send_request",
+                  "did": <did sent in invite>
+                }
+
+            Request format:
+
+                {
+                  "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/request",
+                  "label": "Bob",
+                  "DID": "B.did@B:A",
+                  "DIDDoc": {
+                      // did Doc here.
+                  }
+                }
+        """
+        invite = Serializer.unpack(
+            json.loads(
+                await non_secrets.get_wallet_record(
+                    self.agent.wallet_handle,
+                    'invitation',
+                    msg['did'],
+                    '{}'
+                )
+            )['value']
+        )
+
+        my_label = self.agent.owner
+        label = invite['label']
+        their_did = invite['did']
+        their_vk = invite['key']
+        their_endpoint = invite['endpoint']
+
+        # Store their information from invite
+        await did.store_their_did(
+            self.agent.wallet_handle,
+            json.dumps({
+                'did': their_did,
+                'verkey': their_vk,
+            })
+        )
+        await did.set_did_metadata(
+            self.agent.wallet_handle,
+            their_did,
+            json.dumps({
+                'label': label,
+                'endpoint': their_endpoint
+            })
+        )
+
+        # Create my information for connection
+        (my_did, my_vk) = await did.create_and_store_my_did(self.agent.wallet_handle, '{}')
+
+        # Create pairwise relationship between my did and their did
+        await pairwise.create_pairwise(
+            self.agent.wallet_handle,
+            their_did,
+            my_did,
+            json.dumps({
+                'label': label,
+                'their_endpoint': their_endpoint,
+                'their_vk': their_vk,
+                'my_vk': my_vk
+            })
+        )
+
+        # Send Connection Request to inviter
+        request = Message({
+            '@type': Connection.REQUEST,
+            'label': my_label,
+            'DID': my_did,
+            'DIDDoc': {
+                'key': my_vk,
+                'endpoint': self.agent.endpoint,
+            }
+        })
+
+        await self.agent.send_message_to_agent(their_did, request)
+
+        await self.agent.send_admin_message(
+            Message({
+                '@type': AdminConnection.REQUEST_SENT,
+                'label': label
+            })
+        )
+
+        return
         # read invitation from wallet if id present. otherwise, use values from args
 
         their_endpoint = msg['content']['endpoint']
@@ -223,28 +374,10 @@ class Connection(Module):
                 }
 
             Currently, only peer DID is supported.
+
+            Since receiving an invite is a user triggered action, we go ahead and send a request
+            back to the inviter here.
         """
-
-        # store invite in the wallet
-        await non_secrets.add_wallet_record(self.agent.wallet_handle,
-            "invitation", uuid.uuid4().hex,
-            json.dumps({
-            'label': msg['label'],
-            'endpoint': msg['endpoint'],
-            'connection_key': msg['key']
-        }), json.dumps({}))
-
-        await self.agent.send_admin_message(
-            Message({
-                '@type': AdminConnection.INVITE_RECEIVED,
-                'content': {
-                    'name': msg['label'],
-                    'endpoint': msg['endpoint'],
-                    'connection_key': msg['key'],
-                    'history': msg
-                }
-            })
-        )
 
 
     async def request_received(self, msg: Message) -> Message:
