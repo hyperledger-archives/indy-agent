@@ -257,71 +257,50 @@ class AdminConnection(Module):
             })
         )
 
-        return
-        # read invitation from wallet if id present. otherwise, use values from args
-
-        their_endpoint = msg['content']['endpoint']
-        conn_name = msg['content']['name']
-        their_connection_key = msg['content']['key']
-
-        my_endpoint_uri = self.agent.endpoint
-
-        (my_endpoint_did_str, my_connection_key) = await did.create_and_store_my_did(self.agent.wallet_handle, "{}")
-
-        to_did = "needed from admin message"
-        msg = Message({
-            '@type': Connection.REQUEST,
-            "did": my_endpoint_did_str,
-            "key": my_connection_key,
-            'endpoint': my_endpoint_uri,
-        })
-
-        # we call the underlying method here because we don't know their did yet.
-        await self.agent.send_message_to_endpoint_and_key(my_connection_key, their_connection_key, their_endpoint, msg)
-
-        meta_json = json.dumps(
-            {
-                "conn_name": conn_name,
-                "their_endpoint": their_endpoint
-            }
-        )
-
-        await did.set_did_metadata(self.agent.wallet_handle, my_endpoint_did_str, meta_json)
-
-        await self.agent.send_admin_message(
-            Message({
-                '@type': AdminConnection.REQUEST_SENT,
-                'id': self.agent.ui_token,
-                'content': {'name': conn_name}
-            })
-        )
-
     async def send_response(self, msg: Message) -> Message:
-        """ UI activated method.
+        """ Send response to request.
+
+            send_response message format:
+
+                {
+                  "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin_connections/1.0/send_response",
+                  "did": <did of request sender>
+                }
+
+            Response format:
+                {
+                  "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/response",
+                  "DID":"A.did@A:B",
+                  "DIDDoc": {
+                      //did doc
+                  }
+                }
         """
+        their_did = msg['did']
 
-        their_did_str = msg['content']['endpoint_did']
+        pairwise_info = json.loads(await pairwise.get_pairwise(self.agent.wallet_handle, their_did))
+        pairwise_meta = json.loads(pairwise_info['metadata'])
 
-        pairwise_conn_info_str = await pairwise.get_pairwise(self.agent.wallet_handle, their_did_str)
-        pairwise_conn_info_json = json.loads(pairwise_conn_info_str)
-
-        my_did_str = pairwise_conn_info_json['my_did']
-
-        metadata_json = json.loads(pairwise_conn_info_json['metadata'])
-        conn_name = metadata_json['conn_name']
+        my_did = pairwise_info['my_did']
+        label = pairwise_meta['label']
+        my_vk = await did.key_for_local_did(self.agent.wallet_handle, my_did)
 
         msg = Message({
             '@type': Connection.RESPONSE,
-            "did": my_did_str,
+            'DID': my_did,
+            'DIDDoc': {
+                'key': my_vk,
+                'endpoint': self.agent.endpoint
+            }
         })
 
-        await self.agent.send_message_to_agent(their_did_str, msg)
+        await self.agent.send_message_to_agent(their_did, msg)
 
         await self.agent.send_admin_message(
             Message({
                 '@type': AdminConnection.RESPONSE_SENT,
-                'id': self.agent.ui_token,
-                'content': {'name': conn_name}
+                'label': label,
+                'did': their_did
             })
         )
 
@@ -339,139 +318,112 @@ class Connection(Module):
     def __init__(self, agent):
         self.agent = agent
         self.router = SimpleRouter()
-        self.router.register(Connection.INVITE, self.invite_received)
         self.router.register(Connection.REQUEST, self.request_received)
         self.router.register(Connection.RESPONSE, self.response_received)
 
     async def route(self, msg: Message) -> Message:
         return await self.router.route(msg)
 
-
-    async def invite_received(self, msg: Message) -> Message:
-        """ Received an Invite. In this iteration, invite messages are sent from the admin interface
-            after being copy and pasted from another agent instance.
-
-            This interaction represents an out-of-band communication channel. In the future and in
-            practice, these sort of invitations will be received over any number of channels such as
-            SMS, Email, QR Code, NFC, etc.
-
-            Structure of an invite message:
-
-                {
-                    "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/invitation",
-                    "label": "Alice",
-                    "did": "did:sov:QmWbsNYhMrjHiqZDTUTEJs"
-                }
-
-            Or, in the case of a peer DID:
-
-                {
-                    "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/invitation",
-                    "label": "Alice",
-                    "did": "did:peer:oiSqsNYhMrjHiqZDTUthsw",
-                    "key": "8HH5gYEeNc3z7PYXmd54d4x6qAfCNrqQqEB3nS7Zfu7K",
-                    "endpoint": "https://example.com/endpoint"
-                }
-
-            Currently, only peer DID is supported.
-
-            Since receiving an invite is a user triggered action, we go ahead and send a request
-            back to the inviter here.
-        """
-
-
     async def request_received(self, msg: Message) -> Message:
-        their_endpoint_uri = msg['endpoint']
+        """ Received connection request.
 
-        my_did_str = msg.context['to_did']
-        their_did_str = msg['did']
-        their_key_str = msg.context['from_key']
+            Request format:
 
-        my_did_info_str = await did.get_my_did_with_meta(self.agent.wallet_handle, my_did_str)
-        my_did_info_json = json.loads(my_did_info_str)
-        metadata_str = my_did_info_json['metadata']
-        metadata_dict = json.loads(metadata_str)
-
-        conn_name = metadata_dict['conn_name']
+                {
+                  "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/request",
+                  "label": "Bob",
+                  "DID": "B.did@B:A",
+                  "DIDDoc": {
+                    "key": "1234",
+                    "endpoint": "asdf"
+                  }
+                }
+        """
+        my_did = msg.context['to_did']
+        label = msg['label']
+        their_did = msg['DID']
+        their_vk = msg['DIDDoc']['key']
+        their_endpoint = msg['DIDDoc']['endpoint']
 
         # change verkey passed via send_invite to the agent without encryption
-        my_new_verkey = await did.replace_keys_start(self.agent.wallet_handle, my_did_str, '{}')
-        await did.replace_keys_apply(self.agent.wallet_handle, my_did_str)
+        my_new_vk = await did.replace_keys_start(self.agent.wallet_handle, my_did, '{}')
+        await did.replace_keys_apply(self.agent.wallet_handle, my_did)
 
-        identity_json = json.dumps(
-            {
-                "did": their_did_str,
-                "verkey": their_key_str
-            }
+        # Store their information from request
+        await did.store_their_did(
+            self.agent.wallet_handle,
+            json.dumps({
+                'did': their_did,
+                'verkey': their_vk,
+            })
+        )
+        await did.set_did_metadata(
+            self.agent.wallet_handle,
+            their_did,
+            json.dumps({
+                'label': label,
+                'endpoint': their_endpoint
+            })
         )
 
-        meta_json = json.dumps(
-            {
-                "conn_name": conn_name,
-                "their_endpoint": their_endpoint_uri,
-                "their_verkey": their_key_str,
-                "my_verkey": my_new_verkey
-            }
+        # Create pairwise relationship between my did and their did
+        await pairwise.create_pairwise(
+            self.agent.wallet_handle,
+            their_did,
+            my_did,
+            json.dumps({
+                'label': label,
+                'their_endpoint': their_endpoint,
+                'their_vk': their_vk,
+                'my_vk': my_new_vk
+            })
         )
-
-        await did.store_their_did(self.agent.wallet_handle, identity_json)
-        await pairwise.create_pairwise(self.agent.wallet_handle, their_did_str, my_did_str, meta_json)
 
         await self.agent.send_admin_message(
             Message({
                 '@type': AdminConnection.REQUEST_RECEIVED,
-                'content': {
-                    'name': conn_name,
-                    'endpoint_did': their_did_str,
-                    'history': msg
-                }
+                'label': label,
+                'did': their_did,
+                'endpoint': their_endpoint,
+                'history': msg
             })
         )
 
 
     async def response_received(self, msg: Message) -> Message:
-        my_did_str = msg.context['to_did']
-        their_did_str = msg['did']
-        their_key_str = msg.context['from_key']
+        """ Process response
 
-        my_did_info_str = await did.get_my_did_with_meta(self.agent.wallet_handle, my_did_str)
-        my_did_info_json = json.loads(my_did_info_str)
+            Response format:
+                {
+                  "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/response",
+                  "DID":"A.did@A:B",
+                  "DIDDoc": {
+                      //did doc
+                  }
+                }
+        """
+        my_did = msg.context['to_did']
+        their_did = msg['DID']
+        their_new_vk = msg.context['from_key'] # equivalent to msg['DIDDoc']['key']?
 
-        my_verkey = my_did_info_json['verkey']
-        metadata_str = my_did_info_json['metadata']
-        metadata_dict = json.loads(metadata_str)
+        # Store new vk in pairwise metadata
+        pairwise_info = json.loads(await pairwise.get_pairwise(self.agent.wallet_handle, their_did))
+        pairwise_meta = json.loads(pairwise_info['metadata'])
 
-        conn_name = metadata_dict['conn_name']
-        their_endpoint = metadata_dict['their_endpoint']
-
-        identity_json = json.dumps(
-            {
-                "did": their_did_str,
-                "verkey": their_key_str
-            }
+        pairwise_meta['their_vk'] = their_new_vk
+        
+        await pairwise.set_pairwise_metadata(
+            self.agent.wallet_handle,
+            their_did,
+            json.dumps(pairwise_meta)
         )
 
-        meta_json = json.dumps(
-            {
-                "conn_name": conn_name,
-                "their_endpoint": their_endpoint,
-                "their_verkey": their_key_str,
-                "my_verkey": my_verkey
-            }
-        )
-
-        await did.store_their_did(self.agent.wallet_handle, identity_json)
-        await pairwise.create_pairwise(self.agent.wallet_handle, their_did_str, my_did_str, meta_json)
-
-        #  pairwise connection between agents is established to this point
+        # Pairwise connection between agents is established at this point
         await self.agent.send_admin_message(
             Message({
                 '@type': AdminConnection.RESPONSE_RECEIVED,
-                'id': self.agent.ui_token,
-                'content': {
-                    'name': conn_name,
-                    'their_did': their_did_str,
-                    'history': msg
-                }
+                'label': pairwise_meta['label'],
+                'their_did': their_did,
+                'history': msg
             })
         )

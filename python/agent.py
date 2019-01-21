@@ -139,12 +139,13 @@ class Agent:
 
         #load pairwise
         pairwise_list_str = await pairwise.list_pairwise(self.wallet_handle)
+        print(pairwise_list_str)
         pairwise_list = json.loads(pairwise_list_str)
         their_verkey_to_did = {}
         for p_str in pairwise_list:
             p = json.loads(p_str)
             p_meta = json.loads(p['metadata'])
-            their_verkey_to_did[p_meta['their_verkey']] = p['their_did']
+            their_verkey_to_did[p_meta['their_vk']] = p['their_did']
 
         from_did = None
         if wire_msg['from'] in their_verkey_to_did:

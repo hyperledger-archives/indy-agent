@@ -94,9 +94,6 @@
         agent_name: '',
         passphrase: '',
         current_tab: 'login',
-        new_connection_invite: {
-            label: "",
-        },
         generated_invite: {
             invite: ""
         },
@@ -134,7 +131,6 @@
             generate_invite: function () {
                 msg = {
                     '@type': ADMIN_CONNECTION.GENERATE_INVITE,
-                    label: this.new_connection_invite.label,
                 };
                 sendMessage(msg);
             },
@@ -179,41 +175,37 @@
                 c.status = "Request Sent";
             },
             request_received: function (msg) {
-                var c = this.get_connection_by_name(msg.content.name);
-                c.status = "Request Received";
-                c.connecton_request = msg.content;
-                c.history.push(history_format(msg.content.history));
-                // now request a state update to see the new pairwise connection
+                this.connections.push({
+                    label: msg.label,
+                    did: msg.did,
+                    status: "Request Received",
+                    history: [history_format(msg.history)]
+                })
                 sendMessage({'@type': ADMIN.STATE_REQUEST});
             },
-            send_response: function (prevMsg) {
+            send_response: function (c) {
                 msg = {
                     '@type': ADMIN_CONNECTION.SEND_RESPONSE,
-                    content: {
-                            name: prevMsg.name,
-                            // endpoint_key: prevMsg.endpoint_key,
-                            // endpoint_uri: prevMsg.endpoint_uri,
-                            endpoint_did: prevMsg.endpoint_did
-                    }
+                    'did': c.did,
                 };
                 sendMessage(msg);
             },
             response_sent: function (msg) {
-                var c = this.get_connection_by_name(msg.content.name);
+                var c = this.get_connection_by_name(msg.label);
                 c.status = "Response sent";
                 c.message_capable = true;
-                c.history.push(history_format(msg.content));
+                c.history.push(history_format(msg.history));
                 // remove from pending connections list
                 this.connections.splice(this.connections.indexOf(c), 1);
 
             },
             response_received: function (msg) {
-                var c = this.get_connection_by_name(msg.content.name);
+                var c = this.get_connection_by_name(msg.label);
                 c.status = "Response received";
                 c.response_msg = msg;
-                c.their_did = msg.content.their_did;
+                c.their_did = msg.their_did;
                 c.message_capable = true;
-                c.history.push(history_format(msg.content.history));
+                c.history.push(history_format(msg.history));
 
                 // remove from pending connections list
                 this.connections.splice(this.connections.indexOf(c), 1);
@@ -409,7 +401,6 @@
 
     function sendMessage(msg, thread_cb){
         //decorate message as necessary
-        msg.ui_token = TOKEN; // deprecated
         msg.id = (new Date()).getTime(); // ms since epoch
 
         // register thread callback

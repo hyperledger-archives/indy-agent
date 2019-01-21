@@ -33,7 +33,6 @@ class WebSocketMessageHandler(object):
                 if websocket_message.data == 'close':
                     await self.ws.close()
                 else:
-                    await self.ws.send_str('{"type":"ACK"}')
                     print('Received "{}"'.format(websocket_message.data))
                     await self.recv_q.put(websocket_message.data)
             elif websocket_message.type == aiohttp.WSMsgType.ERROR:

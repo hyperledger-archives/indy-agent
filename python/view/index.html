@@ -74,34 +74,6 @@
         <!-- relationships page -->
         <div id="relationships" class="tab" v-if="tab_active">
             <!-- Modal -->
-            <div class="modal fade" id="generate_invite_modal" tabindex="-1" role="dialog" aria-labelledby="generate_invite_modal_label" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="generate_invite_modal_label">New Connection Invitation</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <form>
-                                <p>This dialog will generate a new connection invitation that can then be sent out-of-band to another agent.
-                                </p>
-                                <div class="form-group">
-                                    <label for="label">Connection Label</label>
-                                    <input type="text" v-model="new_connection_invite.label" class="form-control" id="label" aria-describedby="emailHelp" placeholder="Name">
-                                    <small id="emailHelp" class="form-text text-muted">This will name will be used to identify the connection.</small>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                            <button id="generate_invite" v-on:click="generate_invite" type="button" class="btn btn-primary" data-dismiss="modal">Generate Invite</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <div class="modal fade" id="generated_invite_modal" tabindex="-1" role="dialog" aria-labelledby="generated_invite_modal_label" aria-hidden="true">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
@@ -140,12 +112,6 @@
                         </div>
                         <div class="modal-body">
                             <div class="input-group">
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">Label</span>
-                                </div>
-                                <input type="text" class="form-control" v-model="receive_invite_info.label" id="request_invite_label">
-                            </div>
                                 <div class="input-group-prepend">
                                     <span class="input-group-text">Invite</span>
                                 </div>
@@ -166,7 +132,7 @@
                 <ul class="navbar-nav mr-auto">
 
                 </ul>
-                <button type="button" class="btn btn-outline-primary btn-small navbar-btn" data-toggle="modal" data-target="#generate_invite_modal">Generate Connection Invitation</button>
+                <button type="button" class="btn btn-outline-primary btn-small navbar-btn" v-on:click="generate_invite">Generate Connection Invitation</button>
                 <button type="button" class="btn btn-outline-primary btn-small navbar-btn" data-toggle="modal" data-target="#receive_invite_modal">Receive Invite</button>
               </div>
             </nav>
@@ -193,7 +159,7 @@
                         </td>
                         <td>
                             <button type="button" class="btn btn-warning" v-if="c.status == 'Invite Received'" v-on:click="send_request(c)">Send Request</button>
-                            <button type="button" class="btn btn-warning" v-if="c.status == 'Request Received'" v-on:click="send_response(c.connecton_request)">Send Response</button>
+                            <button type="button" class="btn btn-warning" v-if="c.status == 'Request Received'" v-on:click="send_response(c)">Send Response</button>
                         </td>
                     </tr>
                 </tbody>
@@ -217,7 +183,7 @@
                 </thead>
                 <tbody>
                     <tr v-for="c in pairwise_connections">
-                        <td style="cursor:pointer;" v-on:click="show_connection(c)">{{ c.metadata.conn_name }}</td>
+                        <td style="cursor:pointer;" v-on:click="show_connection(c)">{{ c.metadata.label }}</td>
                         <td>
 
                         </td>
@@ -276,7 +242,7 @@
 {% endraw %}
     <footer class="footer">
       <div class="container">
-          <span class="text-muted">Your UI token is <span id="ui_token">{{ ui_token }}</span></span>
+          <span class="text-muted"></span></span>
       </div>
     </footer>
 
