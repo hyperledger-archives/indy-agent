@@ -24,6 +24,7 @@ exports.createCredDef = async function (schemaId, tag) {
     let [credDefId, credDefJson] = await sdk.issuerCreateAndStoreCredentialDef(await indy.wallet.get(), await indy.did.getEndpointDid(), schema, tag, 'CL', '{"support_revocation": false}');
     let credDefRequest = await sdk.buildCredDefRequest(await indy.did.getEndpointDid(), credDefJson);
     await sdk.signAndSubmitRequest(await indy.pool.get(), await indy.wallet.get(), await indy.did.getEndpointDid(), credDefRequest);
+    credDefJson.schemaId_long = schemaId;
     await indy.did.pushEndpointDidAttribute('credential_definitions', credDefJson);
 };
 

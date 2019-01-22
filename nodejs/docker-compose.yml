@@ -25,115 +25,149 @@ services:
   #
   # Agents
   #
-  alice:
+  government:
     image: indy-agentjs
     build:
       context: .
-    command: "bash -c 'npm start'"
+    command: "bash -c 'node --inspect=0.0.0.0 ./bin/www'"
+    #    command: "bash -c 'npm start'"
     environment:
-      - PORT=3000
-      - NAME=Alice
-      - EMAIL=alice@faber.edu
-      - PASSWORD=123
-      - USERNAME=alice
-      - PUBLIC_DID_ENDPOINT=173.17.0.150:3000
-      - DOCKERHOST=${DOCKERHOST}
-      - RUST_LOG=${RUST_LOG}
-      - TEST_POOL_IP=${TEST_POOL_IP}
+    - PORT=3000
+    - NAME=Government
+    - EMAIL=government@example.com
+    - PASSWORD=123
+    - USERNAME=government
+    - PUBLIC_DID_ENDPOINT=173.17.0.99:3000
+    - DOCKERHOST=${DOCKERHOST}
+    - RUST_LOG=${RUST_LOG}
+    - TEST_POOL_IP=${TEST_POOL_IP}
     ports:
-      - 3000:3000
+    - 3000:3000
+    - 9220:9229
     depends_on:
-      - pool
+    - pool
     networks:
       services:
-        ipv4_address: 173.17.0.150
+        ipv4_address: 173.17.0.99
 
-  #
-  #
-  bob:
+  alice:
     image: indy-agentjs
-    command: "bash -c 'npm start'"
+    command: "bash -c 'node --inspect=0.0.0.0 ./bin/www'"
+    #    command: "bash -c 'npm start'"
     environment:
       - PORT=3001
-      - NAME=Bob
-      - EMAIL=bob@byu.edu
+      - NAME=Alice
+      - EMAIL=alice@example.com
       - PASSWORD=123
-      - USERNAME=bob
-      - PUBLIC_DID_ENDPOINT=173.17.0.160:3001
+      - USERNAME=alice
+      - PUBLIC_DID_ENDPOINT=173.17.0.11:3001
       - DOCKERHOST=${DOCKERHOST}
       - RUST_LOG=${RUST_LOG}
       - TEST_POOL_IP=${TEST_POOL_IP}
     ports:
       - 3001:3001
+      - 9221:9229
     depends_on:
       - pool
-      - alice
+      - government
     networks:
       services:
-        ipv4_address: 173.17.0.160
+        ipv4_address: 173.17.0.11
 
-  faber:
+  #
+  #
+  bob:
     image: indy-agentjs
-    command: "bash -c 'npm start'"
+    command: "bash -c 'node --inspect=0.0.0.0 ./bin/www'"
+    #    command: "bash -c 'npm start'"
     environment:
       - PORT=3002
-      - NAME=Faber University
-      - EMAIL=admin@faber.edu
+      - NAME=Bob
+      - EMAIL=bob@example.com
       - PASSWORD=123
-      - USERNAME=faber
-      - PUBLIC_DID_ENDPOINT=173.17.0.170:3002
+      - USERNAME=bob
+      - PUBLIC_DID_ENDPOINT=173.17.0.22:3002
       - DOCKERHOST=${DOCKERHOST}
       - RUST_LOG=${RUST_LOG}
       - TEST_POOL_IP=${TEST_POOL_IP}
     ports:
       - 3002:3002
+      - 9222:9229
     depends_on:
       - pool
-      - alice
+      - government
     networks:
       services:
-        ipv4_address: 173.17.0.170
+        ipv4_address: 173.17.0.22
 
-  acme:
+  faber:
     image: indy-agentjs
-    command: "bash -c 'npm start'"
+    command: "bash -c 'node --inspect=0.0.0.0 ./bin/www'"
+#    command: "bash -c 'npm start'"
     environment:
       - PORT=3003
-      - NAME=Acme Corporation
-      - EMAIL=boss@acme.com
+      - NAME=Faber University
+      - EMAIL=faber@example.com
       - PASSWORD=123
-      - USERNAME=acme
-      - PUBLIC_DID_ENDPOINT=173.17.0.180:3003
+      - USERNAME=faber
+      - PUBLIC_DID_ENDPOINT=173.17.0.33:3003
       - DOCKERHOST=${DOCKERHOST}
       - RUST_LOG=${RUST_LOG}
       - TEST_POOL_IP=${TEST_POOL_IP}
     ports:
       - 3003:3003
+      - 9223:9229
     depends_on:
       - pool
-      - alice
+      - government
     networks:
       services:
-        ipv4_address: 173.17.0.180
+        ipv4_address: 173.17.0.33
 
-  thrift:
+  acme:
     image: indy-agentjs
-    command: "bash -c 'npm start'"
+#    command: "bash -c 'npm start'"
+    command: "bash -c 'node --inspect=0.0.0.0 ./bin/www'"
     environment:
       - PORT=3004
-      - NAME=Thrift Bank
-      - EMAIL=owner@thrift.com
+      - NAME=Acme Corporation
+      - EMAIL=acme@example.com
       - PASSWORD=123
-      - USERNAME=thrift
-      - PUBLIC_DID_ENDPOINT=173.17.0.190:3004
+      - USERNAME=acme
+      - PUBLIC_DID_ENDPOINT=173.17.0.44:3004
       - DOCKERHOST=${DOCKERHOST}
       - RUST_LOG=${RUST_LOG}
       - TEST_POOL_IP=${TEST_POOL_IP}
     ports:
       - 3004:3004
+      - 9224:9229
     depends_on:
       - pool
-      - alice
+      - government
     networks:
       services:
-        ipv4_address: 173.17.0.190
+        ipv4_address: 173.17.0.44
+
+  thrift:
+    image: indy-agentjs
+#    command: "bash -c 'npm start'"
+    command: "bash -c 'node --inspect=0.0.0.0 ./bin/www'"
+    environment:
+      - PORT=3005
+      - NAME=Thrift Bank
+      - EMAIL=thrift@example.com
+      - PASSWORD=123
+      - USERNAME=thrift
+      - PUBLIC_DID_ENDPOINT=173.17.0.55:3005
+      - DOCKERHOST=${DOCKERHOST}
+      - RUST_LOG=${RUST_LOG}
+      - TEST_POOL_IP=${TEST_POOL_IP}
+    ports:
+      - 3005:3005
+      - 9225:9229
+    depends_on:
+      - pool
+      - government
+    networks:
+      services:
+        ipv4_address: 173.17.0.55
