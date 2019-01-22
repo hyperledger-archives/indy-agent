@@ -17,6 +17,10 @@ from . import Module
 from message import Message
 from helpers import serialize_bytes_json, bytes_to_str, str_to_bytes
 
+class BadInviteException(Exception):
+    def __init__(self, msg):
+        super().__init__(msg)
+
 class AdminConnection(Module):
     FAMILY_NAME = "admin_connections"
     VERSION = "1.0"
@@ -38,10 +42,6 @@ class AdminConnection(Module):
     SEND_RESPONSE = FAMILY + "send_response"
     RESPONSE_SENT = FAMILY + "response_sent"
     RESPONSE_RECEIVED = FAMILY + "response_received"
-
-    class BadInviteException(Exception):
-        def __init__(self, msg):
-            super.__init__(msg)
 
     def __init__(self, agent):
         self.agent = agent
