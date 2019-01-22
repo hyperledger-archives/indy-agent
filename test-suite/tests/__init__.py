@@ -2,6 +2,7 @@
 """
 import asyncio
 import pytest
+from pytest import fail
 from typing import Callable
 
 from transport import BaseTransport
@@ -22,4 +23,10 @@ async def expect_message(transport: BaseTransport, timeout: int):
     for task in unfinished:
         task.cancel()
 
-    pytest.fail("No message received before timing out")
+    fail("No message received before timing out")
+
+def validate_message(expected_attrs, msg):
+    __tracebackhide__ = True
+    for attribute in expected_attrs:
+        if attribute not in msg:
+            fail("Attribute \"{}\" is missing from msg:\n{}".format(attribute, msg))

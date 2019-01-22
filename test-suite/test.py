@@ -12,4 +12,4 @@ config = Config.from_file(DEFAULT_CONFIG_PATH)
 
 tests = [ ''.join(['tests/', test.replace('.','/')]) for test in config.tests ]
 
-pytest.main(tests)
+pytest.main(tests + [ '-s', '-r fe', '-v' ])
