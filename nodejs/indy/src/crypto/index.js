@@ -60,4 +60,4 @@ exports.buildAuthcryptedMessage = async function (myDid, theirDid, messageType, 
 
 exports.getMasterSecretId = async function() {
     return await indy.did.getEndpointDidAttribute('master_secret_id');
-}
+};
