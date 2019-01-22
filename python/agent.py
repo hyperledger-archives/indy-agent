@@ -5,7 +5,7 @@ import base64
 import asyncio
 import traceback
 import aiohttp
-from indy import wallet, did, error, crypto, pairwise
+from indy import wallet, did, error, crypto, pairwise, non_secrets
 
 from serializer import json_serializer as Serializer
 from helpers import bytes_to_str, serialize_bytes_json, str_to_bytes
@@ -135,7 +135,18 @@ class Agent:
             my_verkey_to_did[d['verkey']] = d['did']
 
         if wire_msg['to'] not in my_verkey_to_did:
-            raise Exception("Unknown recipient key")
+            try:
+                connection_key = json.loads(
+                    await non_secrets.get_wallet_record(
+                        self.wallet_handle,
+                        'connection_key',
+                        wire_msg['to'],
+                        '{}'
+                    )
+                )['value']
+                my_verkey_to_did[wire_msg['to']] = None
+            except Exception as e:
+                raise Exception("Unknown recipient key")
 
         #load pairwise
         pairwise_list_str = await pairwise.list_pairwise(self.wallet_handle)

@@ -82,13 +82,21 @@ class AdminConnection(Module):
 
             Currently, only peer DID is supported.
         """
-        (my_did, my_vk) = await did.create_and_store_my_did(self.agent.wallet_handle, "{}")
+        connection_key = await did.create_key(self.agent.wallet_handle, "{}")
+
+        # Store connection key
+        await non_secrets.add_wallet_record(
+            self.agent.wallet_handle,
+            'connection_key',
+            connection_key,
+            connection_key,
+            '{}'
+        )
 
         invite_msg = Message({
             '@type': Connection.INVITE,
             'label': self.agent.owner,
-            'did': my_did,
-            'key': my_vk,
+            'key': connection_key,
             'endpoint': self.agent.endpoint,
         })
 
@@ -131,7 +139,6 @@ class AdminConnection(Module):
                 {
                     "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/invitation",
                     "label": "Alice",
-                    "did": "did:peer:oiSqsNYhMrjHiqZDTUthsw",
                     "key": "8HH5gYEeNc3z7PYXmd54d4x6qAfCNrqQqEB3nS7Zfu7K",
                     "endpoint": "https://example.com/endpoint"
                 }
@@ -153,7 +160,6 @@ class AdminConnection(Module):
         await self.agent.send_admin_message(Message({
             '@type': AdminConnection.INVITE_RECEIVED,
             'label': invite_msg['label'],
-            'did': invite_msg['did'],
             'key': invite_msg['key'],
             'endpoint': invite_msg['endpoint']
         }))
@@ -161,7 +167,7 @@ class AdminConnection(Module):
         await non_secrets.add_wallet_record(
             self.agent.wallet_handle,
             'invitation',
-            invite_msg['did'],
+            invite_msg['key'],
             Serializer.pack(invite_msg),
             '{}'
         )
@@ -173,7 +179,7 @@ class AdminConnection(Module):
 
                 {
                   "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin_connections/1.0/send_request",
-                  "did": <did sent in invite>
+                  "key": <key sent in invite>
                 }
 
             Request format:
@@ -192,7 +198,7 @@ class AdminConnection(Module):
                 await non_secrets.get_wallet_record(
                     self.agent.wallet_handle,
                     'invitation',
-                    msg['did'],
+                    msg['key'],
                     '{}'
                 )
             )['value']
@@ -200,40 +206,18 @@ class AdminConnection(Module):
 
         my_label = self.agent.owner
         label = invite['label']
-        their_did = invite['did']
-        their_vk = invite['key']
+        their_connection_key = invite['key']
         their_endpoint = invite['endpoint']
-
-        # Store their information from invite
-        await did.store_their_did(
-            self.agent.wallet_handle,
-            json.dumps({
-                'did': their_did,
-                'verkey': their_vk,
-            })
-        )
-        await did.set_did_metadata(
-            self.agent.wallet_handle,
-            their_did,
-            json.dumps({
-                'label': label,
-                'endpoint': their_endpoint
-            })
-        )
 
         # Create my information for connection
         (my_did, my_vk) = await did.create_and_store_my_did(self.agent.wallet_handle, '{}')
 
-        # Create pairwise relationship between my did and their did
-        await pairwise.create_pairwise(
+        await did.set_did_metadata(
             self.agent.wallet_handle,
-            their_did,
             my_did,
             json.dumps({
                 'label': label,
-                'their_endpoint': their_endpoint,
-                'their_vk': their_vk,
-                'my_vk': my_vk
+                'their_endpoint': their_endpoint
             })
         )
 
@@ -248,7 +232,12 @@ class AdminConnection(Module):
             }
         })
 
-        await self.agent.send_message_to_agent(their_did, request)
+        await self.agent.send_message_to_endpoint_and_key(
+            my_vk,
+            their_connection_key,
+            their_endpoint,
+            request
+        )
 
         await self.agent.send_admin_message(
             Message({
@@ -339,15 +328,12 @@ class Connection(Module):
                   }
                 }
         """
-        my_did = msg.context['to_did']
+        connection_key = msg.context['to_key']
+
         label = msg['label']
         their_did = msg['DID']
         their_vk = msg['DIDDoc']['key']
         their_endpoint = msg['DIDDoc']['endpoint']
-
-        # change verkey passed via send_invite to the agent without encryption
-        my_new_vk = await did.replace_keys_start(self.agent.wallet_handle, my_did, '{}')
-        await did.replace_keys_apply(self.agent.wallet_handle, my_did)
 
         # Store their information from request
         await did.store_their_did(
@@ -366,6 +352,9 @@ class Connection(Module):
             })
         )
 
+        # Create my information for connection
+        (my_did, my_vk) = await did.create_and_store_my_did(self.agent.wallet_handle, '{}')
+
         # Create pairwise relationship between my did and their did
         await pairwise.create_pairwise(
             self.agent.wallet_handle,
@@ -375,7 +364,7 @@ class Connection(Module):
                 'label': label,
                 'their_endpoint': their_endpoint,
                 'their_vk': their_vk,
-                'my_vk': my_new_vk
+                'my_vk': my_vk
             })
         )
 
@@ -403,31 +392,60 @@ class Connection(Module):
                 }
         """
         my_did = msg.context['to_did']
+        my_vk = await did.key_for_local_did(self.agent.wallet_handle, my_did)
         their_did = msg['DID']
-        their_new_vk = msg.context['from_key'] # equivalent to msg['DIDDoc']['key']?
+        their_vk = msg.context['from_key'] # equivalent to msg['DIDDoc']['key']?
+
+        # Retrieve connection information from DID metadata
+        my_did_meta = json.loads(
+            await did.get_did_metadata(self.agent.wallet_handle, my_did)
+        )
+        label = my_did_meta['label']
+        their_endpoint = my_did_meta['their_endpoint']
+
+        # Clear DID metadata. This info will be stored in pairwise meta.
+        await did.set_did_metadata(self.agent.wallet_handle, my_did, '')
 
         # In the final implementation, a signature will be provided to verify changes to
         # the keys and DIDs to be used long term in the relationship.
         # Both the signature and signature check are omitted for now until specifics of the
         # signature are decided.
 
-        # Store new vk in pairwise metadata
-        pairwise_info = json.loads(await pairwise.get_pairwise(self.agent.wallet_handle, their_did))
-        pairwise_meta = json.loads(pairwise_info['metadata'])
-
-        pairwise_meta['their_vk'] = their_new_vk
-
-        await pairwise.set_pairwise_metadata(
+        # Store their information from response
+        await did.store_their_did(
+            self.agent.wallet_handle,
+            json.dumps({
+                'did': their_did,
+                'verkey': their_vk,
+            })
+        )
+        await did.set_did_metadata(
             self.agent.wallet_handle,
             their_did,
-            json.dumps(pairwise_meta)
+            json.dumps({
+                'label': label,
+                'endpoint': their_endpoint
+            })
+        )
+
+        # Create pairwise relationship between my did and their did
+        await pairwise.create_pairwise(
+            self.agent.wallet_handle,
+            their_did,
+            my_did,
+            json.dumps({
+                'label': label,
+                'their_endpoint': their_endpoint,
+                'their_vk': their_vk,
+                'my_vk': my_vk
+            })
         )
 
         # Pairwise connection between agents is established at this point
         await self.agent.send_admin_message(
             Message({
                 '@type': AdminConnection.RESPONSE_RECEIVED,
-                'label': pairwise_meta['label'],
+                'label': label,
                 'their_did': their_did,
                 'history': msg
             })

@@ -143,7 +143,6 @@
                 this.connections.push({
                     label: msg.label,
                     invitation: {
-                        did: msg.did,
                         key: msg.key,
                         endpoint: msg.endpoint
                     },
@@ -163,7 +162,7 @@
             send_request: function (c) {
                 msg = {
                     '@type': ADMIN_CONNECTION.SEND_REQUEST,
-                    did: c.invitation.did
+                    key: c.invitation.key
                 };
                 sendMessage(msg);
             },
