@@ -406,12 +406,17 @@ class Connection(Module):
         their_did = msg['DID']
         their_new_vk = msg.context['from_key'] # equivalent to msg['DIDDoc']['key']?
 
+        # In the final implementation, a signature will be provided to verify changes to
+        # the keys and DIDs to be used long term in the relationship.
+        # Both the signature and signature check are omitted for now until specifics of the
+        # signature are decided.
+
         # Store new vk in pairwise metadata
         pairwise_info = json.loads(await pairwise.get_pairwise(self.agent.wallet_handle, their_did))
         pairwise_meta = json.loads(pairwise_info['metadata'])
 
         pairwise_meta['their_vk'] = their_new_vk
-        
+
         await pairwise.set_pairwise_metadata(
             self.agent.wallet_handle,
             their_did,
