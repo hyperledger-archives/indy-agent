@@ -16,14 +16,14 @@ Change your current folder to `indy-agent/python`.
 ### 1. Using Docker
 
 * Make sure you have Docker installed
-* Build docker image : `$ make build`
-* In one instance of your terminal : `$ make start PORT=8094` and don't close it
-* In another instance of your terminal : `$ make start PORT=8095` and don't close it
+* Build docker image : `$ make docker-build`
+* In one instance of your terminal : `$ make docker-start PORT=8094` and don't close it
+* In another instance of your terminal : `$ make docker-start PORT=8095` and don't close it
 * Open up 2 tabs in your browser : http://localhost:8094 (agent A) and http://localhost:8095 (agent B)
 
 If agent is not reachable with `localhost`, try with the internal docker container IP :
-* Run `make getip PORT=8094` to get the ID address of the first container (for example : 172.17.0.2)
-* And run `make getip PORT=8095` to get the ID address of the second container (for example : 172.17.0.3)
+* Run `make docker-getip PORT=8094` to get the ID address of the first container (for example : 172.17.0.2)
+* And run `make docker-getip PORT=8095` to get the ID address of the second container (for example : 172.17.0.3)
 
 ### 2. Using dev mode
 
