@@ -49,15 +49,12 @@ if __name__ == "__main__":
         AGENT.message_queue,
         AGENT.outbound_admin_message_queue
     )
-    PROVISIONAL_CONNECTION_PROTOCOL_MESSAGE_HANLDER = \
-        ProvisionalConnectionProtocolMessageHandler(AGENT.message_queue)
 
     ROUTES = [
         web.get('/', root),
         web.get('/ws', WEBSOCKET_MESSAGE_HANDLER.ws_handler),
         web.static('/res', 'view/res'),
         web.post('/indy', POST_MESSAGE_HANDLER.handle_message),
-        web.post('/offer', PROVISIONAL_CONNECTION_PROTOCOL_MESSAGE_HANLDER.handle_message)
     ]
 
     WEBAPP['agent'] = AGENT
