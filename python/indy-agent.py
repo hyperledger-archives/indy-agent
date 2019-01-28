@@ -20,7 +20,6 @@ from modules.admin_walletconnection import AdminWalletConnection
 from modules.basicmessage import AdminBasicMessage, BasicMessage
 from post_message_handler import PostMessageHandler
 from websocket_message_handler import WebSocketMessageHandler
-from provisional_connection_protocol_message_handler import ProvisionalConnectionProtocolMessageHandler
 from agent import Agent
 from message import Message
 
