@@ -6,6 +6,19 @@ This is an implementation of indy-agent written in Python.
 This agent seeks to be as simple as possible while accurately representing
 the Sovrin protocol. See [Scope](scope.md) for goal and scope details.
 
+_**!!!! This version of the python reference agent requires special steps to run !!!!**_
+
+This branch of the python agent is dependent on `pack` and `unpack` methods recently introduced into the Indy-SDK but
+not yet included in an official release. To run this version of the agent, you will have to build `libindy` yourself,
+specifying the library path in the `LD_LIBRARY_PATH` environment variable and then, from within your python virtual
+environment, force reinstall your dependencies with:
+
+```
+$ pip install -force-reinstall -r requirements.txt
+```
+
+For more details on building `libindy` and for setting your environment variables, see [Building Libindy](https://github.com/hyperledger/indy-sdk#how-to-build-indy-sdk-from-source).
+
 Requirements
 ------------
 - Python 3.6

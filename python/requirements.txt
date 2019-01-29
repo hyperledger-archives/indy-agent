@@ -1,4 +1,4 @@
-python3-indy==1.6.5
+-e git+http:///github.com/hyperledger/indy-sdk@master#egg=python3-indy&subdirectory=wrappers/python
 aiohttp==3.4.4
 serpy==0.3.1
 aiohttp-index==0.1
