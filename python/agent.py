@@ -7,6 +7,7 @@ import traceback
 import aiohttp
 from indy import wallet, did, error, crypto, pairwise, non_secrets
 
+import indy_sdk_utils as utils
 from serializer import json_serializer as Serializer
 from helpers import bytes_to_str, serialize_bytes_json, str_to_bytes
 from message import Message
@@ -120,56 +121,6 @@ class Agent:
 
             raise WalletConnectionException
 
-    async def create_my_did(self):
-        (my_did, my_vk) = await did.create_and_store_my_did(self.wallet_handle, '{}')
-
-        await non_secrets.add_wallet_record(
-            self.wallet_handle,
-            'key-to-did',
-            my_vk,
-            my_did,
-            '{}'
-        )
-
-        return (my_did, my_vk)
-
-    async def store_their_did_and_key(self, their_did, their_vk):
-        await did.store_their_did(
-            self.wallet_handle,
-            json.dumps({
-                'did': their_did,
-                'verkey': their_vk,
-            })
-        )
-
-        await non_secrets.add_wallet_record(
-            self.wallet_handle,
-            'key-to-did',
-            their_vk,
-            their_did,
-            '{}'
-        )
-
-
-    async def get_did_for_key(self, key):
-        did = None
-        try:
-            did = json.loads(
-                await non_secrets.get_wallet_record(
-                    self.wallet_handle,
-                    'key-to-did',
-                    key,
-                    '{}'
-                )
-            )['value']
-        except error.IndyError as e:
-            if e.error_code is error.ErrorCode.WalletItemNotFound:
-                pass
-            else:
-                raise e
-
-        return did
-
 
     async def unpack_agent_message(self, wire_msg_bytes):
 
@@ -184,8 +135,8 @@ class Agent:
         if 'sender_verkey' in unpacked:
             from_key = unpacked['sender_verkey']
         to_key = unpacked['recipient_verkey']
-        from_did = await self.get_did_for_key(unpacked['sender_verkey'])
-        to_did = await self.get_did_for_key(unpacked['recipient_verkey'])
+        from_did = await utils.did_for_key(self.wallet_handle, unpacked['sender_verkey'])
+        to_did = await utils.did_for_key(self.wallet_handle, unpacked['recipient_verkey'])
 
         msg = Serializer.unpack(unpacked['message'])
 
@@ -229,8 +180,9 @@ class Agent:
 
         async with aiohttp.ClientSession() as session:
             async with session.post(their_endpoint, data=wire_message) as resp:
-                print(resp.status)
-                print(await resp.text())
+                if resp.status != 202:
+                    print(resp.status)
+                    print(await resp.text())
 
     async def send_admin_message(self, msg: Message):
         await self.outbound_admin_message_queue.put(msg.as_json())

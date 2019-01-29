@@ -11,6 +11,7 @@ import re
 import aiohttp
 from indy import crypto, did, pairwise, non_secrets
 
+import indy_sdk_utils as utils
 import serializer.json_serializer as Serializer
 from router.simple_router import SimpleRouter
 from . import Module
@@ -210,7 +211,7 @@ class AdminConnection(Module):
         their_endpoint = invite['endpoint']
 
         # Create my information for connection
-        (my_did, my_vk) = await self.agent.create_my_did()
+        (my_did, my_vk) = await utils.create_and_store_my_did(self.agent.wallet_handle)
 
         await did.set_did_metadata(
             self.agent.wallet_handle,
@@ -336,7 +337,7 @@ class Connection(Module):
         their_endpoint = msg['DIDDoc']['endpoint']
 
         # Store their information from request
-        await self.agent.store_their_did_and_key(their_did, their_vk)
+        await utils.store_their_did(self.agent.wallet_handle, their_did, their_vk)
 
         await did.set_did_metadata(
             self.agent.wallet_handle,
@@ -348,7 +349,7 @@ class Connection(Module):
         )
 
         # Create my information for connection
-        (my_did, my_vk) = await self.agent.create_my_did()
+        (my_did, my_vk) = await utils.create_and_store_my_did(self.agent.wallet_handle)
 
         # Create pairwise relationship between my did and their did
         await pairwise.create_pairwise(
@@ -407,7 +408,7 @@ class Connection(Module):
         # signature are decided.
 
         # Store their information from response
-        await self.agent.store_their_did_and_key(their_did, their_vk)
+        await utils.store_their_did(self.agent.wallet_handle, their_did, their_vk)
 
         await did.set_did_metadata(
             self.agent.wallet_handle,
