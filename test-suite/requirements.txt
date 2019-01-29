@@ -1,0 +1,4 @@
+-e git+http:///github.com/hyperledger/indy-sdk@master#egg=python3-indy&subdirectory=wrappers/python
+aiohttp==3.4.4
+toml
+pytest==3.6.4

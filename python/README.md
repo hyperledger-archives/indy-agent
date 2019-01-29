@@ -14,7 +14,7 @@ specifying the library path in the `LD_LIBRARY_PATH` environment variable and th
 environment, force reinstall your dependencies with:
 
 ```
-$ pip install -force-reinstall -r requirements.txt
+$ pip install --force-reinstall -r requirements.txt
 ```
 
 For more details on building `libindy` and for setting your environment variables, see [Building Libindy](https://github.com/hyperledger/indy-sdk#how-to-build-indy-sdk-from-source).
