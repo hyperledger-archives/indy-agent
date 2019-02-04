@@ -1,0 +1,37 @@
+{
+    "browser_action": {
+        "default_title": "Indy",
+        "default_popup": "indy.html",
+        "browser_style": true,
+        "default_icon": {
+            "128": "icons/sovrin.png"
+        }
+    },
+    "background": {
+        "page": "indy-bg.html"
+    },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["indy-ext-connector.js"],
+            "run_at": "document_idle"
+        }
+    ],
+    "web_accessible_resources": ["indy.js"],
+    "description": "Indy Browser Extension",
+    "manifest_version": 2,
+    "name": "Indy",
+    "permissions": [
+        "clipboardWrite",
+        "activeTab"
+    ],
+    "icons": {
+        "128": "icons/sovrin.png"
+    },
+    "version": "1.0",
+    "applications": {
+        "gecko": {
+            "strict_min_version": "55.0a1"
+        }
+    }
+}

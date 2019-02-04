@@ -1,0 +1,25 @@
+body {
+  padding-top: 5rem;
+  width: 400px;
+}
+.starter-template {
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+div#inputs div:not(:first-child) {
+    margin-top:.5em;
+}
+
+#controls {
+    margin-top: 1em;
+    display: flex;
+}
+
+.indy-controls {
+    margin-bottom: 1em;
+}
+
+main {
+    margin-bottom: 1em;
+}
