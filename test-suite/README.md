@@ -86,14 +86,14 @@ async def test_method():
 
 Several tools are made available through the test suite to simplify some common tasks.
 
-### Test Suite Tools
+------------------------------------------------------------------------------------------------------------------------
 
-#### Fixtures
+### Fixtures
 
 Several `pytest` fixtures are defined in `conftest.py`. You may view that file for details on each of these fixtures. A
 summary of each will be given here.
 
-##### Usage
+#### Usage
 
 Pytest will automatically inject fixtures into test functions when given as parameters matching the fixture names:
 
@@ -104,8 +104,11 @@ async def test_method(config, wallet_handle, transport):
 
 The above `test_method` will receive the fixture matching the names `config`, `wallet_handle`, and `transport`.
 
-##### Event Loop
+------------------------------------------------------------------------------------------------------------------------
 
+#### Event Loop
+
+Property| Value
 --------|-------------
 Fixture | `event_loop`
 Scope   | Session
@@ -115,8 +118,11 @@ Dependent Fixtures | `transport`
 **Description:** The `event_loop` fixture provides an asynchronous event loop for Python `asyncio` tasks. It is unlikely
 that you will need to use this fixture directly in your testing and is mostly used in starting transports.
 
-##### Config
+------------------------------------------------------------------------------------------------------------------------
 
+#### Config
+
+Property| Value
 --------|-------------
 Fixture | `config`
 Scope   | Session
@@ -125,8 +131,11 @@ Dependent Fixtures | `logger`, `wallet_handle`, `transport`
 
 **Description:** The `config` fixture is an object representation of the configuration options in `config.toml`
 
-##### Logger
+------------------------------------------------------------------------------------------------------------------------
 
+#### Logger
+
+Property| Value
 --------|-------------
 Fixture | `logger`
 Scope   | Session
@@ -136,8 +145,11 @@ Dependent Fixtures | `wallet_handle`, `transport`
 **Description:** The `logger` fixture is a python `logging.Logger` to be used for logging during tests. Pytest prints
 logs from failing tests after completion.
 
-##### Wallet Handle
+------------------------------------------------------------------------------------------------------------------------
 
+#### Wallet Handle
+
+Property| Value
 --------|-------------
 Fixture | `wallet_handle`
 Scope   | Session
@@ -148,9 +160,11 @@ Dependent Fixtures | None
 automatically closes and deletes (if the `clear_wallets` is configuration option is `true`) the wallet on test session
 termination.
 
+------------------------------------------------------------------------------------------------------------------------
 
-##### Transport
+#### Transport
 
+Property| Value
 --------|-------------
 Fixture | `transport`
 Scope   | Session
@@ -160,7 +174,9 @@ Dependent Fixtures | None
 **Description:** The `transport` fixture provides a transport mechanism based on the `transport` configuration option.
 At present, only HTTP transport is implemented.
 
-#### Helper Functions
+------------------------------------------------------------------------------------------------------------------------
+
+### Helper Functions
 
 Several helper functions are defined in `tests/__init__.py` and are available to all tests.
 
@@ -170,7 +186,9 @@ These methods can be imported into tests using the following, assuming the test 
 from tests import expect_message, validate_message, pack, unpack
 ```
 
-##### `expect_message`
+------------------------------------------------------------------------------------------------------------------------
+
+#### `expect_message`
 
 **Method Signature:**
 ```python
@@ -181,7 +199,9 @@ async def expect_message(transport: BaseTransport, timeout: int) -> bytes
 be received over the transport. If no message is received, the test containing the call will fail. If a message is
 received, the message bytes are returned to the caller.
 
-##### `validate_message`
+------------------------------------------------------------------------------------------------------------------------
+
+#### `validate_message`
 
 **Method Signature:**
 ```python
@@ -204,7 +224,9 @@ failing if an expected key is missing.
     )
 ```
 
-##### `pack`
+------------------------------------------------------------------------------------------------------------------------
+
+#### `pack`
 
 **Method Signature:**
 ```python
@@ -213,7 +235,9 @@ async def pack(wallet_handle: int, my_vk: str, their_vk: str, msg: Message) -> b
 
 **Description:** `pack` packs a message using the Indy-SDK `crypto.pack_message` and is wrapped here for convenience.
 
-##### `unpack`
+------------------------------------------------------------------------------------------------------------------------
+
+#### `unpack`
 
 **Method Signature:**
 ```python
@@ -228,3 +252,5 @@ The method will fail if the expected keys are not found.
 ```python
     response = await unpack(wallet_handle, response_bytes, expected_to_vk=my_vk, expected_from_vk=their_vk)
 ```
+------------------------------------------------------------------------------------------------------------------------
+
