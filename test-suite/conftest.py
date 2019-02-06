@@ -180,7 +180,7 @@ class FeatureTestFunction(pytest.Function):
 
     def repr_failure(self, excinfo):
         """ called when self.runtest() raises an exception. """
-        print(excinfo)
+        self.add_report_section("from failure", "information", excinfo.__str__())
         return "\n".join(
             [
                 "Agent failed to pass tests for feature"
