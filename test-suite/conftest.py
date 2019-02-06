@@ -107,7 +107,7 @@ async def wallet_handle(config, logger):
 
 
 @pytest.fixture(scope='session')
-async def transport(config, wallet_handle, event_loop, logger):
+async def transport(config, event_loop, logger):
     """ Transport fixture.
 
         Initializes the transport layer.

@@ -44,30 +44,187 @@ The defaults are as follows:
 
 Option | Value
 -------|-------
-Testing Agent (test-suite) Port | 3000
-Tested Agent Port | 3001
-
+Testing Agent (test-suite) Host and Port | `localhost:3000`
+Testing Agent Message URL | `http://localhost:3000/indy`
+Tested Agent Message URL | `http://localhost:3001/indy`
+Transport Protocol | HTTP
+Testing agent wallet | `testing-agent`
+Wallet Path | `.testing-wallets`
+Clear wallets (delete wallet after testing complete) | `true`
+Log level | Warning (`30`)
+Tests | `connection.manual`
 
 > **Note:** Some of these defaults don't make as much sense when considering other transport methods like bluetooth or
 > NFC or others. When the need (and implementation) arises for these other transport options, the structure of these
 > settings will likely change.
 
+You will need to alter the above settings to match your needs.
 
-### Step 3: Start the test suite
+### Step 3: Start the tested agent
+
+Follow the instructions for starting the agent you are attempting to test.
+
+### Step 4: Run the test suite
 
 ```sh
-python test.py
+pytest
 ```
 
-This will execute the tests contained in the folders listed in the `tests` configuration option.
+This will execute the tests selected in `config.toml`.
 
-```toml
-# A list of tests to be run by the test agent.
-tests = [
-    "hello_world",
-    "core"
-]
+Writing Tests
+-------------
+
+Tests follow standard `pytest` conventions. However, due to the asynchronous nature of most Indy-SDK calls and agent
+messaging, most tests will likely need `await` a promise and must be marked as asynchronous, e.g.:
+
+```python
+@pytest.mark.asyncio
+async def test_method():
+	await some_indy_sdk_call()
 ```
 
-The above `tests` configuration will execute tests contained in the `tests/hello_world` and the `tests/core`
-directories.
+Several tools are made available through the test suite to simplify some common tasks.
+
+### Test Suite Tools
+
+#### Fixtures
+
+Several `pytest` fixtures are defined in `conftest.py`. You may view that file for details on each of these fixtures. A
+summary of each will be given here.
+
+##### Usage
+
+Pytest will automatically inject fixtures into test functions when given as parameters matching the fixture names:
+
+```python
+async def test_method(config, wallet_handle, transport):
+	await some_indy_sdk_call(wallet_handle)
+```
+
+The above `test_method` will receive the fixture matching the names `config`, `wallet_handle`, and `transport`.
+
+##### Event Loop
+
+--------|-------------
+Fixture | `event_loop`
+Scope   | Session
+Depends on | None
+Dependent Fixtures | `transport`
+
+**Description:** The `event_loop` fixture provides an asynchronous event loop for Python `asyncio` tasks. It is unlikely
+that you will need to use this fixture directly in your testing and is mostly used in starting transports.
+
+##### Config
+
+--------|-------------
+Fixture | `config`
+Scope   | Session
+Depends on | None
+Dependent Fixtures | `logger`, `wallet_handle`, `transport`
+
+**Description:** The `config` fixture is an object representation of the configuration options in `config.toml`
+
+##### Logger
+
+--------|-------------
+Fixture | `logger`
+Scope   | Session
+Depends on | `config`
+Dependent Fixtures | `wallet_handle`, `transport`
+
+**Description:** The `logger` fixture is a python `logging.Logger` to be used for logging during tests. Pytest prints
+logs from failing tests after completion.
+
+##### Wallet Handle
+
+--------|-------------
+Fixture | `wallet_handle`
+Scope   | Session
+Depends on | `config`, `logger`
+Dependent Fixtures | None
+
+**Description:** The `wallet_handle` fixture provides a session persistent handle to the Indy-SDK wallet. This fixture
+automatically closes and deletes (if the `clear_wallets` is configuration option is `true`) the wallet on test session
+termination.
+
+
+##### Transport
+
+--------|-------------
+Fixture | `transport`
+Scope   | Session
+Depends on | `config`, `event_loop`, `logger`
+Dependent Fixtures | None
+
+**Description:** The `transport` fixture provides a transport mechanism based on the `transport` configuration option.
+At present, only HTTP transport is implemented.
+
+#### Helper Functions
+
+Several helper functions are defined in `tests/__init__.py` and are available to all tests.
+
+These methods can be imported into tests using the following, assuming the test module is within the `tests` directory:
+
+```python
+from tests import expect_message, validate_message, pack, unpack
+```
+
+##### `expect_message`
+
+**Method Signature:**
+```python
+async def expect_message(transport: BaseTransport, timeout: int) -> bytes
+```
+
+**Description:** `expect_message` takes a `transport` and `timeout` and waits a given number of seconds for a message to
+be received over the transport. If no message is received, the test containing the call will fail. If a message is
+received, the message bytes are returned to the caller.
+
+##### `validate_message`
+
+**Method Signature:**
+```python
+def validate_message(expected_attrs: [str], msg: Message)
+```
+
+**Description:** `validate_message` checks a `Message` object (essentially a python dictionary) for a given set of keys,
+failing if an expected key is missing.
+
+**Example:**
+```python
+    validate_message(
+        [
+            '@type',
+            'label',
+            'key',
+            'endpoint'
+        ],
+        invite_msg
+    )
+```
+
+##### `pack`
+
+**Method Signature:**
+```python
+async def pack(wallet_handle: int, my_vk: str, their_vk: str, msg: Message) -> bytes
+```
+
+**Description:** `pack` packs a message using the Indy-SDK `crypto.pack_message` and is wrapped here for convenience.
+
+##### `unpack`
+
+**Method Signature:**
+```python
+async def unpack(wallet_handle: int, wire_msg_bytes: bytes, **kwargs) -> Message
+```
+
+**Description:** `unpack` unpacks a message using the Indy-SDK `crypto.unpack_message`. Optionally, two keyword
+arguments can be specified to verify that the expected "from" and "to" verification keys were used to pack the message.
+The method will fail if the expected keys are not found.
+
+**Example:**
+```python
+    response = await unpack(wallet_handle, response_bytes, expected_to_vk=my_vk, expected_from_vk=their_vk)
+```
