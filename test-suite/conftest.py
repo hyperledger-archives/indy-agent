@@ -119,20 +119,13 @@ async def transport(config, wallet_handle, event_loop, logger):
 
 ### Test configuration loading ###
 
-def pytest_collection(session):
-    if os.path.isfile('tests.toml'):
-        yield TomlTestDefinitionFile('tests.toml', session=session)
-try:
-    items = self._perform_collect(args, genitems)
-            self.config.pluginmanager.check_pending()
-            hook.pytest_collection_modifyitems(
-                    session=self, config=self.config, items=items
-                    )
-finally:
-    hook.pytest_collection_finish(session=self)
-        self.testscollected = len(items)
-return items
+def pytest_ignore_collect(path, config):
+    if path.ext != ".toml":
+        return True
 
+def pytest_collect_file(path, parent):
+    if path.ext == ".toml" and path.basename.startswith("tests"):
+        return TomlTestDefinitionFile(path, parent)
 
 class TomlTestDefinitionFile(pytest.File):
     def collect(self):
@@ -150,6 +143,15 @@ class TestGroup(pytest.Module):
     def __init__(self, parent, name, path):
         super(TestGroup, self).__init__(path, parent=parent)
         self.name = name
+        self._nodeid = name
+
+    def collect(self):
+        items = super(TestGroup, self).collect()
+        for item in items:
+            if isinstance(item, pytest.Function):
+                yield FeatureTestFunction(self.name, item)
+            else:
+                yield item
 
     def repr_failure(self, excinfo):
         """ called when self.runtest() raises an exception. """
@@ -162,3 +164,28 @@ class TestGroup(pytest.Module):
 
     def reportinfo(self):
         return self.fspath, 0, "Feature: %s" % self.name
+
+class FeatureTestFunction(pytest.Function):
+    def __init__(self, feature, func):
+        self.feature = feature
+        self.func = func
+
+    def __getattribute__(self, name):
+        try:
+            attr = object.__getattribute__(self, name)
+        except AttributeError:
+            attr = self.func.__getattribute__(name)
+
+        return attr
+
+    def repr_failure(self, excinfo):
+        """ called when self.runtest() raises an exception. """
+        print(excinfo)
+        return "\n".join(
+            [
+                "Agent failed to pass tests for feature"
+            ]
+        )
+
+    def reportinfo(self):
+        return self.fspath, 0, "Feature: %s" % self.feature
