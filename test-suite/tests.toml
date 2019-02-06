@@ -1,0 +1,3 @@
+[[groups]]
+name="connection.manual"
+path="tests/connection/test_connection.py"

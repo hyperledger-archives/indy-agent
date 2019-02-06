@@ -6,17 +6,22 @@
     https://docs.pytest.org/en/latest/fixture.html#fixture
 """
 
-import pytest
 import asyncio
 import json
 import os
 import logging
+import importlib.util
+from inspect import getmembers, isfunction
+
+import pytest
 from indy import crypto, wallet
 from config import Config
 from transport.http_transport import HTTPTransport
 
 @pytest.fixture(scope='session')
 def logger():
+    """ Test logger
+    """
     return logging.getLogger()
 
 @pytest.fixture(scope='session')
@@ -110,3 +115,50 @@ async def transport(config, wallet_handle, event_loop, logger):
     logger.debug("Starting transport")
     event_loop.create_task(transport.start_server())
     return transport
+
+
+### Test configuration loading ###
+
+def pytest_collection(session):
+    if os.path.isfile('tests.toml'):
+        yield TomlTestDefinitionFile('tests.toml', session=session)
+try:
+    items = self._perform_collect(args, genitems)
+            self.config.pluginmanager.check_pending()
+            hook.pytest_collection_modifyitems(
+                    session=self, config=self.config, items=items
+                    )
+finally:
+    hook.pytest_collection_finish(session=self)
+        self.testscollected = len(items)
+return items
+
+
+class TomlTestDefinitionFile(pytest.File):
+    def collect(self):
+        import toml # we need a toml parser
+
+        DEFAULT_CONFIG_PATH = "test_config.toml"
+        conf = toml.load(DEFAULT_CONFIG_PATH)
+        tests = toml.load(self.fspath.open())
+        for test in tests['groups']:
+            if test['name'] in conf['tests']:
+                yield TestGroup(self, test['name'], test['path'])
+
+
+class TestGroup(pytest.Module):
+    def __init__(self, parent, name, path):
+        super(TestGroup, self).__init__(path, parent=parent)
+        self.name = name
+
+    def repr_failure(self, excinfo):
+        """ called when self.runtest() raises an exception. """
+        print(excinfo)
+        return "\n".join(
+            [
+                "Agent failed to pass tests for feature"
+            ]
+        )
+
+    def reportinfo(self):
+        return self.fspath, 0, "Feature: %s" % self.name
