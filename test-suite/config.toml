@@ -12,6 +12,10 @@ endpoint = 'http://localhost:3000/indy'
 # url of the tested agent
 tested_agent = 'http://localhost:3001/indy'
 
+# Transport protocol
+# Possible values: http
+transport = "http"
+
 # The default name used for wallets created by the test agent.
 wallet_name = 'testing-agent'
 

@@ -113,7 +113,10 @@ async def transport(config, wallet_handle, event_loop, logger):
         Initializes the transport layer.
     """
     MSG_Q = asyncio.Queue()
-    transport = HTTPTransport(config, logger, MSG_Q)
+    if config.transport == "http":
+        transport = HTTPTransport(config, logger, MSG_Q)
+    else:
+        transport = None
 
     logger.debug("Starting transport")
     event_loop.create_task(transport.start_server())

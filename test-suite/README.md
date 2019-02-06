@@ -10,15 +10,10 @@ As the test suite matures, documentation will be added on how to create and add 
 Requirements
 ------------
 - Python 3.6
-- `libindy` version 1.6.1 from https://github.com/hyperledger/indy-sdk
+- `libindy` version 1.8.0 from https://github.com/hyperledger/indy-sdk
 
 Quickstart
 ----------
-
-The test-suite contains two executable python scripts. One is the test suite itself, or the "testing agent," and the
-other is a testable but limited agent that can be used as the "tested agent."
-
-Complete the steps described here, and you will be able to run the test suite against the limited agent.
 
 ### Step 1: Install dependencies
 Create a python virtual environment for installing dependencies. From the `test-suite` directory:
@@ -28,28 +23,35 @@ python -m venv env
 source env/bin/activate
 ```
 
+You may have to specify `python3` depending on the default python version for your system.
+
 This will create and activate a virtual environment in the `env` directory using the python `venv` module. You may
 have to install this module through your system package manager or pip.
 
 Then install dependencies by running:
 
 ```sh
-pip install .
+pip install -r requirements.txt
 ```
 
 Ensure `libindy` is in your `LD_LIBRARY_PATH` (if you built from source).
 
-### Step 2: Start the tested agent
+### Step 2: Configure the test suite
 
-At this point, starting the tested agent is as simple as
+Configuration options are listed in `config.toml`. Descriptions of each option are given there.
 
-```sh
-python agent.py
-```
+The defaults are as follows:
 
-By default, this will start the agent listening on port 3001.
+Option | Value
+-------|-------
+Testing Agent (test-suite) Port | 3000
+Tested Agent Port | 3001
 
-You can further configure the agent by editing `agent_config.py`.
+
+> **Note:** Some of these defaults don't make as much sense when considering other transport methods like bluetooth or
+> NFC or others. When the need (and implementation) arises for these other transport options, the structure of these
+> settings will likely change.
+
 
 ### Step 3: Start the test suite
 

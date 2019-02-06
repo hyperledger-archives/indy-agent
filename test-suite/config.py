@@ -96,6 +96,7 @@ class Config():
         self.wallet_path: str = ''
         self.clear_wallets: bool = True
         self.tests: List[str] = ['core']
+        self.transport = "http"
         self.log_level: int = 10
 
     def update(self, options: Dict[str, Any]):
