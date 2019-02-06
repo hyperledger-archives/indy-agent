@@ -83,3 +83,6 @@ async def test_connection_started_by_tested_agent(config, wallet_handle, transpo
         ],
         response['DIDDoc']
     )
+
+def test_fail():
+    pytest.fail()
