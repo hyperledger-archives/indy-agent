@@ -1,6 +1,6 @@
 [[feature]]
 name="connection.manual"
-path="tests/connection/test_connection.py"
+path="tests/connection/manual.py"
 description="""
 
 This feature tests the connection protocol using a user input driven method.

@@ -19,12 +19,6 @@ from config import Config
 from transport.http_transport import HTTPTransport
 
 @pytest.fixture(scope='session')
-def logger():
-    """ Test logger
-    """
-    return logging.getLogger()
-
-@pytest.fixture(scope='session')
 def event_loop():
     """ Create a session scoped event loop.
 
@@ -34,11 +28,11 @@ def event_loop():
     return asyncio.get_event_loop()
 
 @pytest.fixture(scope='session')
-async def config(logger):
+async def config():
     """ Gather configuration and initialize the wallet.
     """
-    DEFAULT_CONFIG_PATH = 'test_config.toml'
-    logger.debug('Loading configuration from file: {}'.format(DEFAULT_CONFIG_PATH))
+    DEFAULT_CONFIG_PATH = 'config.toml'
+    print('Loading test configuration from file: {}'.format(DEFAULT_CONFIG_PATH))
 
     config = Config.from_file(DEFAULT_CONFIG_PATH)
     parser = Config.get_arg_parser()
@@ -50,6 +44,15 @@ async def config(logger):
     yield config
 
     # TODO: Cleanup?
+
+@pytest.fixture(scope='session')
+def logger(config):
+    """ Test logger
+    """
+    logger = logging.getLogger()
+    logger.setLevel(config.log_level)
+    return logging.getLogger()
+
 
 
 @pytest.fixture(scope='session')
@@ -110,7 +113,7 @@ async def transport(config, wallet_handle, event_loop, logger):
         Initializes the transport layer.
     """
     MSG_Q = asyncio.Queue()
-    transport = HTTPTransport(config, MSG_Q)
+    transport = HTTPTransport(config, logger, MSG_Q)
 
     logger.debug("Starting transport")
     event_loop.create_task(transport.start_server())
@@ -131,7 +134,7 @@ class TomlTestDefinitionFile(pytest.File):
     def collect(self):
         import toml # we need a toml parser
 
-        DEFAULT_CONFIG_PATH = "test_config.toml"
+        DEFAULT_CONFIG_PATH = "config.toml"
         conf = toml.load(DEFAULT_CONFIG_PATH)
         tests = toml.load(self.fspath.open())
         for test in tests['feature']:

@@ -21,8 +21,18 @@ wallet_path = ".testing-wallets"
 # Specify whether wallets should be deleted after testing.
 clear_wallets = true
 
+#Level     Numeric value
+#CRITICAL       50
+#ERROR          40
+#WARNING        30
+#INFO           20
+#DEBUG          10
+#NOTSET         0
+log_level = 30
+
 # A list of tests to be run but the test agent.
 # Each string in this list is the name of the module containing the test.
 tests = [
     "connection.manual"
 ]
+
