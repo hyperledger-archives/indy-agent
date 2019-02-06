@@ -254,3 +254,40 @@ The method will fail if the expected keys are not found.
 ```
 ------------------------------------------------------------------------------------------------------------------------
 
+Defining Features
+-----------------
+
+Logical grouping of functionality or "features" help to concisely state the capabilities of an agent. Tests in the Test
+Suite are grouped as "features" in python modules (`my_feature.py` is a python module). Metadata about these features as
+well as information crucial to test discovery and selection are stored in `tests.toml`. Below is an example of what the
+`tests.toml` file might look like:
+
+```toml
+[[feature]]
+name="connection.manual"
+path="tests/connection/manual.py"
+description="""
+
+This feature tests the connection protocol using a user input driven method.
+
+See this document for more details:
+https://github.com/hyperledger/indy-hipe/blob/a580d00be443990dfcbcf12be5ac85808340de1f/text/connection-protocol/README.md
+
+"""
+
+[[feature]]
+name="my.feature"
+path="tests/my/feature.py"
+description="""
+
+This is a description of my feature.
+
+"""
+```
+
+Each feature has three basic components; the `name`, `path` to the python module containing tests matching this feature,
+and a `description` which gives some human readable information about the feature with, potentially, links to resources
+to see more details.
+
+**At present, all tests that make up a feature must necessarily be contained within a single python module.** In the
+future, it may make sense for features to be comprised of a list of modules.
