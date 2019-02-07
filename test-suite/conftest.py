@@ -32,7 +32,7 @@ async def config():
     """ Gather configuration and initialize the wallet.
     """
     DEFAULT_CONFIG_PATH = 'config.toml'
-    print('Loading test configuration from file: {}'.format(DEFAULT_CONFIG_PATH))
+    print('\n\nLoading test configuration from file: {}'.format(DEFAULT_CONFIG_PATH))
 
     config = Config.from_file(DEFAULT_CONFIG_PATH)
     parser = Config.get_arg_parser()
@@ -126,10 +126,13 @@ async def transport(config, event_loop, logger):
 ### Test configuration loading ###
 
 def pytest_ignore_collect(path, config):
+    """ Only load tests from feature definition file. """
     if path.ext != ".toml":
         return True
+    return False
 
 def pytest_runtest_makereport(item, call):
+    """ Customize report printing. """
     from _pytest.runner import TestReport, ExceptionInfo, skip
     when = call.when
     duration = call.stop - call.start
@@ -167,18 +170,20 @@ def pytest_runtest_makereport(item, call):
         sections,
         duration,
         user_properties=item.user_properties,
-)
+        )
 
 def pytest_collect_file(path, parent):
-    if path.ext == ".toml" and path.basename.startswith("tests"):
+    """ Customize test collection. """
+    if path.ext == ".toml" and path.basename.startswith("features"):
         return TomlTestDefinitionFile(path, parent)
 
 class TomlTestDefinitionFile(pytest.File):
+    """ Test collection from Toml file. """
     def collect(self):
         import toml # we need a toml parser
 
-        DEFAULT_CONFIG_PATH = "config.toml"
-        conf = toml.load(DEFAULT_CONFIG_PATH)
+        default_config_path = "config.toml"
+        conf = toml.load(default_config_path)
         tests = toml.load(self.fspath.open())
         for test in tests['feature']:
             if test['name'] in conf['tests']:
@@ -186,6 +191,9 @@ class TomlTestDefinitionFile(pytest.File):
 
 
 class Feature(pytest.Collector):
+    """ A Pytest collector representing a feature. Features collect one or many
+        FeatureParts.
+    """
     def __init__(self, parent, name, paths, description):
         super(Feature, self).__init__(name, parent=parent)
         self.parent = parent
@@ -201,12 +209,15 @@ class Feature(pytest.Collector):
         yield from self.items
 
     def last_part(self):
+        """ Return last item. """
         if not self.items:
             return None
         return self.items[-1]
 
 
 class FeaturePart(pytest.Module):
+    """ A Part of a Feature. FeatureParts are python modules where test functions are defined.
+    """
     def __init__(self, parent, name, path):
         super(FeaturePart, self).__init__(path, parent=parent)
         self.name = '{}.{}'.format(name, path)
@@ -222,6 +233,7 @@ class FeaturePart(pytest.Module):
                 yield item
 
     def last_child(self):
+        """ Return last item. """
         if self.parent.last_part() != self:
             return None
         if not self.items:
@@ -231,10 +243,12 @@ class FeaturePart(pytest.Module):
 
     @property
     def description(self):
+        """ Return description of Feature. """
         return self.parent.description
 
     @property
     def test_failed(self):
+        """ Return whether Feature has failed a test or not. """
         return self.parent.test_failed
 
     @test_failed.setter
@@ -242,6 +256,10 @@ class FeaturePart(pytest.Module):
         self.parent.test_failed = val
 
 class FeatureTestFunction(pytest.Function):
+    """ A wrapper around Pytest Functions returned from Module collector.
+        Enables better reporting from tests.
+    """
+
     def __init__(self, feature, func):
         self.feature = feature
         self.func = func
