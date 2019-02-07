@@ -265,7 +265,7 @@ well as information crucial to test discovery and selection are stored in `tests
 ```toml
 [[feature]]
 name="connection.manual"
-path="tests/connection/manual.py"
+paths=["tests/connection/manual.py"]
 description="""
 
 This feature tests the connection protocol using a user input driven method.
@@ -277,7 +277,7 @@ https://github.com/hyperledger/indy-hipe/blob/a580d00be443990dfcbcf12be5ac858083
 
 [[feature]]
 name="my.feature"
-path="tests/my/feature.py"
+paths=["tests/my/feature.py"]
 description="""
 
 This is a description of my feature.
@@ -285,9 +285,6 @@ This is a description of my feature.
 """
 ```
 
-Each feature has three basic components; the `name`, `path` to the python module containing tests matching this feature,
-and a `description` which gives some human readable information about the feature with, potentially, links to resources
-to see more details.
-
-**At present, all tests that make up a feature must necessarily be contained within a single python module.** In the
-future, it may make sense for features to be comprised of a list of modules.
+Each feature has three basic components; the `name`, list of `paths` to the python modules containing tests matching
+this feature, and a `description` which gives some human readable information about the feature with, potentially, links
+to resources to see more details.
