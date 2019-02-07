@@ -129,70 +129,6 @@ def pytest_ignore_collect(path, config):
     if path.ext != ".toml":
         return True
 
-def pytest_collect_file(path, parent):
-    if path.ext == ".toml" and path.basename.startswith("tests"):
-        return TomlTestDefinitionFile(path, parent)
-
-class TomlTestDefinitionFile(pytest.File):
-    def collect(self):
-        import toml # we need a toml parser
-
-        DEFAULT_CONFIG_PATH = "config.toml"
-        conf = toml.load(DEFAULT_CONFIG_PATH)
-        tests = toml.load(self.fspath.open())
-        for test in tests['feature']:
-            if test['name'] in conf['tests']:
-                yield Feature(self, test['name'], test['path'], test['description'])
-
-
-class Feature(pytest.Module):
-    def __init__(self, parent, name, path, description):
-        super(Feature, self).__init__(path, parent=parent)
-        self.name = name
-        self._nodeid = name
-        self.description = description
-        self.test_failed = False
-        self.items = []
-
-    def collect(self):
-        self.items = super(Feature, self).collect()
-        for item in self.items:
-            if isinstance(item, pytest.Function):
-                yield FeatureTestFunction(self.name, item)
-            else:
-                yield item
-
-    def last_child(self):
-        if not self.items:
-            return None
-        return self.items[-1]
-
-class FeatureTestFunction(pytest.Function):
-    def __init__(self, feature, func):
-        self.feature = feature
-        self.func = func
-
-    def __getattribute__(self, name):
-        try:
-            attr = object.__getattribute__(self, name)
-        except AttributeError:
-            attr = self.func.__getattribute__(name)
-
-        return attr
-
-    def repr_failure(self, excinfo):
-        """ called when self.runtest() raises an exception. """
-        if not self.parent.test_failed:
-            self.parent.test_failed = True
-
-        if self.parent.test_failed and self.parent.last_child() == self.func:
-            self.add_report_section(self.feature, "Feature Description:", self.parent.description)
-
-        return self._repr_failure_py(excinfo, style="long")
-
-    def reportinfo(self):
-        return self.fspath, 0, "Feature: %s, Test: %s" % (self.feature, self.name)
-
 def pytest_runtest_makereport(item, call):
     from _pytest.runner import TestReport, ExceptionInfo, skip
     when = call.when
@@ -232,3 +168,101 @@ def pytest_runtest_makereport(item, call):
         duration,
         user_properties=item.user_properties,
 )
+
+def pytest_collect_file(path, parent):
+    if path.ext == ".toml" and path.basename.startswith("tests"):
+        return TomlTestDefinitionFile(path, parent)
+
+class TomlTestDefinitionFile(pytest.File):
+    def collect(self):
+        import toml # we need a toml parser
+
+        DEFAULT_CONFIG_PATH = "config.toml"
+        conf = toml.load(DEFAULT_CONFIG_PATH)
+        tests = toml.load(self.fspath.open())
+        for test in tests['feature']:
+            if test['name'] in conf['tests']:
+                yield Feature(self, test['name'], test['paths'], test['description'])
+
+
+class Feature(pytest.Collector):
+    def __init__(self, parent, name, paths, description):
+        super(Feature, self).__init__(name, parent=parent)
+        self.parent = parent
+        self.name = name
+        self.paths = paths
+        self.description = description
+        self.test_failed = False
+        self.items = []
+
+    def collect(self):
+        for path in self.paths:
+            self.items.append(FeaturePart(self, self.name, path))
+        yield from self.items
+
+    def last_part(self):
+        if not self.items:
+            return None
+        return self.items[-1]
+
+
+class FeaturePart(pytest.Module):
+    def __init__(self, parent, name, path):
+        super(FeaturePart, self).__init__(path, parent=parent)
+        self.name = '{}.{}'.format(name, path)
+        self._nodeid = name
+        self.items = []
+
+    def collect(self):
+        self.items = super(FeaturePart, self).collect()
+        for item in self.items:
+            if isinstance(item, pytest.Function):
+                yield FeatureTestFunction(self.name, item)
+            else:
+                yield item
+
+    def last_child(self):
+        if self.parent.last_part() != self:
+            return None
+        if not self.items:
+            return None
+
+        return self.items[-1]
+
+    @property
+    def description(self):
+        return self.parent.description
+
+    @property
+    def test_failed(self):
+        return self.parent.test_failed
+
+    @test_failed.setter
+    def test_failed(self, val):
+        self.parent.test_failed = val
+
+class FeatureTestFunction(pytest.Function):
+    def __init__(self, feature, func):
+        self.feature = feature
+        self.func = func
+
+    def __getattribute__(self, name):
+        try:
+            attr = object.__getattribute__(self, name)
+        except AttributeError:
+            attr = self.func.__getattribute__(name)
+
+        return attr
+
+    def repr_failure(self, excinfo):
+        """ called when self.runtest() raises an exception. """
+        if not self.parent.test_failed:
+            self.parent.test_failed = True
+
+        if self.parent.test_failed and self.parent.last_child() == self.func:
+            self.add_report_section(self.feature, "Feature Description:", self.parent.description)
+
+        return self._repr_failure_py(excinfo, style="long")
+
+    def reportinfo(self):
+        return self.fspath, 0, "Feature: %s, Test: %s" % (self.feature, self.name)
