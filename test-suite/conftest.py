@@ -10,8 +10,6 @@ import asyncio
 import json
 import os
 import logging
-import importlib.util
-from inspect import getmembers, isfunction
 
 import pytest
 from indy import crypto, wallet
@@ -265,6 +263,7 @@ class FeatureTestFunction(pytest.Function):
         self.func = func
 
     def __getattribute__(self, name):
+        """ A bit of a hack to easily wrap pytest Function. """
         try:
             attr = object.__getattribute__(self, name)
         except AttributeError:
