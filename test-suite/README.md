@@ -259,8 +259,8 @@ Defining Features
 
 Logical grouping of functionality or "features" help to concisely state the capabilities of an agent. Tests in the Test
 Suite are grouped as "features" in python modules (`my_feature.py` is a python module). Metadata about these features as
-well as information crucial to test discovery and selection are stored in `tests.toml`. Below is an example of what the
-`tests.toml` file might look like:
+well as information crucial to test discovery and selection are stored in `features.toml`. Below is an example of what the
+`features.toml` file might look like:
 
 ```toml
 [[feature]]
