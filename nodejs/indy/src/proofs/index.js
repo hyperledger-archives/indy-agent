@@ -11,55 +11,43 @@ exports.MESSAGE_TYPES = MESSAGE_TYPES;
 
 exports.handlers = require('./handlers');
 
-let proofRequests;
+exports.getProofRequests = async function() {
 
-exports.getProofRequests = async function(force) {
-    if(force || !proofRequests) {
-        proofRequests = {};
-        proofRequests['General-Identity'] = {
-            name: 'General-Identity',
-            version: '0.2',
-            requested_attributes: {
-                attr1_referent: {
-                    name: 'name',
-                    restrictions: [{'cred_def_id': await indy.did.getGovIdCredDefId()}]
-                }
-            },
-            requested_predicates: {}
+    let proofRequests = {};
+
+    // Get the credential definitions
+    let credDefs = await indy.did.getEndpointDidAttribute('credential_definitions');
+    // Iterate over credential definitions
+  try {
+    for (let credDef of credDefs) {
+      // Create generic proof request from credential definition
+      let proofRequest = {
+        name: credDef.tag + '-Proof',
+        version: '0.1',
+        requested_attributes: {},
+        requested_predicates: {}
+      };
+
+      let schema = await indy.issuer.getSchema(credDef.schemaId_long);
+
+      // Iterate over attributes defined in credential definition for the requested_attributes section
+      for (let i = 0; i < schema.attrNames.length; i++) {
+        let attr_referent = {
+          name: schema.attrNames[i],
+          restrictions: [{cred_def_id: credDef.id}]
         };
-        let transcriptCredDef = await indy.issuer.getCredDefByTag('MyTranscript');
-        if(transcriptCredDef) {
-            proofRequests['Transcript-Data'] = {
-                name: 'Transcript-Data',
-                version: '0.1',
-                requested_attributes: {
-                    'attr1_referent': {
-                        'name': 'degree',
-                        'restrictions': [{'cred_def_id': transcriptCredDef.id}]
-                    },
-                    'attr2_referent': {
-                        'name': 'status',
-                        'restrictions': [{'cred_def_id': transcriptCredDef.id}]
-                    },
-                    'attr3_referent': {
-                        'name': 'year',
-                        'restrictions': [{'cred_def_id': transcriptCredDef.id}]
-                    }
-                },
-                requested_predicates: {}
-            }
-        }
+        proofRequest.requested_attributes['attr' + (i+1) + '_referent'] = attr_referent;
+      }
+      proofRequests[proofRequest.name] = proofRequest;
     }
+  } catch (e) {
+    console.log(e);
+  }
+
     return proofRequests;
 };
-exports.sendRequest = async function(myDid, theirDid, proofRequestId, otherProofRequest) {
-    let proofRequest;
-    if(proofRequestId === "proofRequestOther") {
-        proofRequest = JSON.parse(otherProofRequest);
-    } else {
-        await exports.getProofRequests(); // loads data into proofRequests if not already there.
-        proofRequest = proofRequests[proofRequestId];
-    }
+exports.sendRequest = async function(myDid, theirDid, proofRequestText) {
+    let proofRequest = JSON.parse(proofRequestText);
     proofRequest.nonce = randomNonce();
 
     indy.store.pendingProofRequests.write(proofRequest);

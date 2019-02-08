@@ -7,4 +7,4 @@ exports.request = function (message) {
 
 exports.credential = function(message) {
     return indy.credentials.acceptCredential(message.origin, message.message);
-}
+};

@@ -1,6 +1,3 @@
-
-    const TOKEN = document.getElementById("ui_token").innerText;
-
     const MESSAGE_TYPES = {
         CONN_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/",
         ADMIN_CONNECTIONS_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin_connections/1.0/",
@@ -24,9 +21,10 @@
         CONNECTION_LIST: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "connection_list",
         CONNECTION_LIST_REQUEST: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "connection_list_request",
 
-        SEND_INVITE: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "send_invite",
-        INVITE_SENT: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "invite_sent",
+        GENERATE_INVITE: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "generate_invite",
+        INVITE_GENERATED: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "invite_generated",
         INVITE_RECEIVED: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "invite_received",
+        RECEIVE_INVITE: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "receive_invite",
 
         SEND_REQUEST: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "send_request",
         REQUEST_SENT: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "request_sent",
@@ -93,9 +91,12 @@
         agent_name: '',
         passphrase: '',
         current_tab: 'login',
-        new_connection_offer: {
-            name: "",
-            endpoint: ""
+        generated_invite: {
+            invite: ""
+        },
+        receive_invite_info: {
+            label: "",
+            invite: ""
         },
         connections: [],
         pairwise_connections:[],
@@ -124,84 +125,83 @@
             }
         },
         methods: {
-            send_invite: function () {
+            generate_invite: function () {
                 msg = {
-                    '@type': ADMIN_CONNECTION.SEND_INVITE,
-                    name: this.new_connection_offer.name,
-                    endpoint: this.new_connection_offer.endpoint
+                    '@type': ADMIN_CONNECTION.GENERATE_INVITE,
                 };
                 sendMessage(msg);
             },
-            invite_sent: function (msg) {
-                this.connections.push({
-                    name: msg.content.name,
-                    status: "Invite Sent",
-                    history: []
-                });
+            invite_generated: function (msg) {
+                this.generated_invite.invite = msg.invite;
+                $('#generated_invite_modal').modal('show');
+            },
+            copy_invite: function() {
+                document.getElementById('invite').select();
+                console.log(document.execCommand('copy'));
             },
             invite_received: function (msg) {
                 this.connections.push({
-                    name: msg.content.name,
+                    label: msg.label,
                     invitation: {
-                        key: msg.content.connection_key,
-                        endpoint: msg.content.endpoint
+                        key: msg.key,
+                        endpoint: msg.endpoint
                     },
                     status: "Invite Received",
-                    history: [history_format(msg.content.history)]
+                    history: [history_format(msg.history)]
                 });
             },
 
+            receive_invite: function (c) {
+                msg = {
+                    '@type': ADMIN_CONNECTION.RECEIVE_INVITE,
+                    label: this.receive_invite_info.label,
+                    invite: this.receive_invite_info.invite
+                };
+                sendMessage(msg);
+            },
             send_request: function (c) {
                 msg = {
                     '@type': ADMIN_CONNECTION.SEND_REQUEST,
-                    content: {
-                            name: c.name,
-                            endpoint: c.invitation.endpoint.url,
-                            key: c.invitation.key
-                    }
+                    key: c.invitation.key
                 };
                 sendMessage(msg);
             },
             request_sent: function (msg) {
-                var c = this.get_connection_by_name(msg.content.name);
+                var c = this.get_connection_by_name(msg.label);
                 c.status = "Request Sent";
             },
             request_received: function (msg) {
-                var c = this.get_connection_by_name(msg.content.name);
-                c.status = "Request Received";
-                c.connecton_request = msg.content;
-                c.history.push(history_format(msg.content.history));
-                // now request a state update to see the new pairwise connection
+                this.connections.push({
+                    label: msg.label,
+                    did: msg.did,
+                    status: "Request Received",
+                    history: [history_format(msg.history)]
+                })
                 sendMessage({'@type': ADMIN.STATE_REQUEST});
             },
-            send_response: function (prevMsg) {
+            send_response: function (c) {
                 msg = {
                     '@type': ADMIN_CONNECTION.SEND_RESPONSE,
-                    content: {
-                            name: prevMsg.name,
-                            // endpoint_key: prevMsg.endpoint_key,
-                            // endpoint_uri: prevMsg.endpoint_uri,
-                            endpoint_did: prevMsg.endpoint_did
-                    }
+                    'did': c.did,
                 };
                 sendMessage(msg);
             },
             response_sent: function (msg) {
-                var c = this.get_connection_by_name(msg.content.name);
+                var c = this.get_connection_by_name(msg.label);
                 c.status = "Response sent";
                 c.message_capable = true;
-                c.history.push(history_format(msg.content));
+                c.history.push(history_format(msg.history));
                 // remove from pending connections list
                 this.connections.splice(this.connections.indexOf(c), 1);
 
             },
             response_received: function (msg) {
-                var c = this.get_connection_by_name(msg.content.name);
+                var c = this.get_connection_by_name(msg.label);
                 c.status = "Response received";
                 c.response_msg = msg;
-                c.their_did = msg.content.their_did;
+                c.their_did = msg.their_did;
                 c.message_capable = true;
-                c.history.push(history_format(msg.content.history));
+                c.history.push(history_format(msg.history));
 
                 // remove from pending connections list
                 this.connections.splice(this.connections.indexOf(c), 1);
@@ -242,8 +242,8 @@
                 console.log(this.history_view);
                 $('#historyModal').modal({});
             },
-            get_connection_by_name: function(name){
-               return this.connections.find(function(x){return x.name === msg.content.name;});
+            get_connection_by_name: function(label){
+               return this.connections.find(function(x){return x.label === msg.label;});
             },
             show_connection: function(c){
                 this.connection = c;
@@ -367,7 +367,7 @@
 
     // Message Routes {{{
     msg_router.register(ADMIN.STATE, ui_agent.update);
-    msg_router.register(ADMIN_CONNECTION.INVITE_SENT, ui_relationships.invite_sent);
+    msg_router.register(ADMIN_CONNECTION.INVITE_GENERATED, ui_relationships.invite_generated);
     msg_router.register(ADMIN_CONNECTION.INVITE_RECEIVED, ui_relationships.invite_received);
     msg_router.register(ADMIN_CONNECTION.REQUEST_SENT, ui_relationships.request_sent);
     msg_router.register(ADMIN_CONNECTION.RESPONSE_SENT, ui_relationships.response_sent);
@@ -397,7 +397,6 @@
 
     function sendMessage(msg, thread_cb){
         //decorate message as necessary
-        msg.ui_token = TOKEN; // deprecated
         msg.id = (new Date()).getTime(); // ms since epoch
 
         // register thread callback

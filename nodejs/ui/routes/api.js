@@ -29,12 +29,12 @@ router.post('/issuer/create_schema', auth.isLoggedIn, async function (req, res) 
 });
 
 router.post('/issuer/create_cred_def', auth.isLoggedIn, async function (req, res) {
-    await indy.issuer.createCredDef(req.body.schema_id, req.body.tag);
+    await indy.issuer.createCredDef(req.body.schema_id, req.body.tag, req.body.cred_handler);
     res.redirect('/#issuing');
 });
 
 router.post('/issuer/send_credential_offer', auth.isLoggedIn, async function (req, res) {
-    await indy.credentials.sendOffer(req.body.their_relationship_did, req.body.cred_def_id);
+    await indy.credentials.sendOffer(req.body.their_relationship_did, req.body.cred_def_id, req.body.cred_data);
     res.redirect('/#issuing');
 });
 
@@ -79,7 +79,7 @@ router.post('/proofs/accept', auth.isLoggedIn, async function(req, res) {
 
 router.post('/proofs/send_request', auth.isLoggedIn, async function(req, res) {
     let myDid = await indy.pairwise.getMyDid(req.body.their_relationship_did);
-    await indy.proofs.sendRequest(myDid, req.body.their_relationship_did, req.body.proof_request_id, req.body.manual_entry);
+    await indy.proofs.sendRequest(myDid, req.body.their_relationship_did, req.body.request_entry);
     res.redirect('/#proofs');
 });
 

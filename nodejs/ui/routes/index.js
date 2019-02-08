@@ -26,7 +26,7 @@ router.get('/', auth.isLoggedIn, async function (req, res) {
         }
     }
 
-    let proofRequests = await indy.proofs.getProofRequests(true);
+    let proofRequests = await indy.proofs.getProofRequests();
     for(let prKey of Object.keys(proofRequests)) {
         proofRequests[prKey].string = prettyStringify(proofRequests[prKey]);
     }
@@ -40,7 +40,7 @@ router.get('/', auth.isLoggedIn, async function (req, res) {
         relationships: relationships,
         credentials: credentials,
         schemas: await indy.issuer.getSchemas(),
-        credentialDefinitions: await indy.did.getEndpointDidAttribute('credential_definitions'),
+        credentialDefinitions: await getEnrichedCredentialDefinitions(),
         endpointDid: await indy.did.getEndpointDid(),
         proofRequests: proofRequests,
         name: config.userInformation.name
@@ -50,6 +50,25 @@ router.get('/', auth.isLoggedIn, async function (req, res) {
         delete proofRequests[prKey].string;
     }
 });
+
+async function getEnrichedCredentialDefinitions() {
+  try {
+    let credDefs = await indy.did.getEndpointDidAttribute('credential_definitions');
+    for (let credDef of credDefs) {
+      // Create generic credential data for credential from credential definition
+      let credentialData = {};
+      let schema = await indy.issuer.getSchema(credDef.schemaId_long);
+      // Iterate over attributes defined in credential definition and set to empty data
+      for (let attr of schema.attrNames) {
+          credentialData[attr] = "";
+      }
+      credDef.credentialData = credentialData;
+    }
+    return credDefs;
+  } catch (e) {
+    console.log(e);
+  }
+}
 
 router.get('/login', function(req, res) {
    res.render('login', {

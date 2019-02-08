@@ -74,40 +74,57 @@
         <!-- relationships page -->
         <div id="relationships" class="tab" v-if="tab_active">
             <!-- Modal -->
-            <div class="modal fade" id="send_req_modal" tabindex="-1" role="dialog" aria-labelledby="send_req_modal_label" aria-hidden="true">
+            <div class="modal fade" id="generated_invite_modal" tabindex="-1" role="dialog" aria-labelledby="generated_invite_modal_label" aria-hidden="true">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="send_req_modal_label">Send Connection Offer</h5>
+                            <h5 class="modal-title" id="generated_invite_modal_label">Generated Connection Invitation</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
                         <div class="modal-body">
-                            <form>
-                                <p>This Connection Offer is sent "out-of-band" to it's destination meaning it is not sent through Sovrin.
-                                In the real world, this offer would be sent through a previously established and trusted method;
-                                for example, a QR code, text message, university communications, etc.
-                                </p>
-                                <div class="form-group">
-                                    <label for="send_name">Connection Name</label>
-                                    <input type="text" v-model="new_connection_offer.name" class="form-control" id="send_name" aria-describedby="emailHelp" placeholder="Name">
-                                    <small id="emailHelp" class="form-text text-muted">This will name will be used to identify the connection.</small>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Invite</span>
                                 </div>
-                                <div class="form-group">
-                                    <label for="send_endpoint">Endpoint</label>
-                                    <input type="text" v-model="new_connection_offer.endpoint" class="form-control" id="send_endpoint" placeholder="Endpoint">
-                                </div>
-                            </form>
+                                <input type="text" class="form-control" v-model="generated_invite.invite" id="invite">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" type="button" id="copy-invite" v-on:click="copy_invite">Copy</button>
+                                </span>
+                            </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                            <button id="send_offer" v-on:click="send_invite" type="button" class="btn btn-primary" data-dismiss="modal">Send Offer</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <div class="modal fade" id="receive_invite_modal" tabindex="-1" role="dialog" aria-labelledby="receive_invite_modal_label" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="receive_invite_modal_label">Receive Invite</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Invite</span>
+                                </div>
+                                <input type="text" class="form-control" v-model="receive_invite_info.invite" id="request_invite">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button id="generate_invite" v-on:click="receive_invite" type="button" class="btn btn-primary" data-dismiss="modal">Receive Invite</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <nav class="navbar navbar-expand-lg navbar-light bg-light" style="margin-top:2em;">
               <a class="h3 navbar-brand" href="#">Pending Connections</a>
@@ -115,8 +132,10 @@
                 <ul class="navbar-nav mr-auto">
 
                 </ul>
-                <button type="button" class="btn btn-outline-primary btn-small navbar-btn" data-toggle="modal" data-target="#send_req_modal">Send connection offer</button>
+                <button type="button" class="btn btn-outline-primary btn-small navbar-btn" v-on:click="generate_invite">Generate Connection Invitation</button>
+                <button type="button" class="btn btn-outline-primary btn-small navbar-btn ml-1" data-toggle="modal" data-target="#receive_invite_modal">Receive Invite</button>
               </div>
+
             </nav>
 
 
@@ -134,14 +153,14 @@
                 <tbody>
                     <tr v-for="c in connections">
                         <td></td>
-                        <td>{{ c.name }}</td>
+                        <td>{{ c.label }}</td>
                         <td>{{ c.status }}</td>
                         <td>
                             <button type="button" class="btn btn-info" v-on:click="display_history(c)">View</button>
                         </td>
                         <td>
                             <button type="button" class="btn btn-warning" v-if="c.status == 'Invite Received'" v-on:click="send_request(c)">Send Request</button>
-                            <button type="button" class="btn btn-warning" v-if="c.status == 'Request Received'" v-on:click="send_response(c.connecton_request)">Send Response</button>
+                            <button type="button" class="btn btn-warning" v-if="c.status == 'Request Received'" v-on:click="send_response(c)">Send Response</button>
                         </td>
                     </tr>
                 </tbody>
@@ -149,11 +168,6 @@
 
             <nav class="navbar navbar-expand-lg navbar-light bg-light">
               <a class="h3 navbar-brand" href="#">Pairwise Connections</a>
-              <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav mr-auto">
-
-                </ul>
-              </div>
             </nav>
 
             <table class="table table-bordered">
@@ -165,7 +179,7 @@
                 </thead>
                 <tbody>
                     <tr v-for="c in pairwise_connections">
-                        <td style="cursor:pointer;" v-on:click="show_connection(c)">{{ c.metadata.conn_name }}</td>
+                        <td style="cursor:pointer;" v-on:click="show_connection(c)">{{ c.metadata.label }}</td>
                         <td>
 
                         </td>
@@ -202,7 +216,7 @@
 
         <!-- relationships page -->
         <div id="connection" class="tab" v-if="tab_active">
-            <h3>Connection: {{connection.metadata.conn_name}}</h3>
+            <h3>Connection: {{connection.label}}</h3>
             <p>My DID: {{connection.my_did}}</p>
             <p>Their DID: {{connection.their_did}}</p>
 
@@ -224,7 +238,7 @@
 {% endraw %}
     <footer class="footer">
       <div class="container">
-          <span class="text-muted">Your UI token is <span id="ui_token">{{ ui_token }}</span></span>
+          <span class="text-muted"></span></span>
       </div>
     </footer>
 
