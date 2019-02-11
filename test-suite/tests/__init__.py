@@ -95,7 +95,7 @@ async def sign_field(wallet_handle, my_vk, field_value):
         await crypto.crypto_sign(
             wallet_handle,
             my_vk,
-            result["sig_data"]
+            sig_data
         )
     ).decode('utf-8')
 

@@ -37,7 +37,34 @@ class Connection:
 
             return invite_msg
 
+        @staticmethod
+        def build(connection_key: str, endpoint: str) -> str:
+            msg = Message({
+                '@type': Connection.Message.INVITE,
+                'label': 'testing-agent',
+                'recipient_keys': [connection_key],
+                'serviceEndpoint': endpoint,
+                # routing_keys not specified, but here is where they would be put in the invite.
+            })
+
+            b64_invite = base64.urlsafe_b64encode(
+                bytes(
+                    Serializer.pack(msg),
+                    'utf-8'
+                )
+            ).decode('ascii')
+
+            return '{}?c_i={}'.format(endpoint, b64_invite)
+
     class Request:
+        @staticmethod
+        def parse(request: Message):
+            return (
+                request['connection']['DIDDoc']['publicKey'][0]['controller'],
+                request['connection']['DIDDoc']['publicKey'][0]['publicKeyBase58'],
+                request['connection']['DIDDoc']['service'][0]['serviceEndpoint']
+            )
+
         @staticmethod
         def build(label: str, my_did: str, my_vk: str, endpoint: str) -> Message:
             return Message({
@@ -62,6 +89,27 @@ class Connection:
                     }
                 }
             })
+
+        @staticmethod
+        def validate(request):
+            validate_message(
+                [
+                    ('@type', Connection.Message.REQUEST),
+                    'label',
+                    'connection'
+                ],
+                request
+            )
+
+            validate_message(
+                [
+                    'DID',
+                    'DIDDoc'
+                ],
+                request['connection']
+            )
+
+            Connection.DIDDoc.validate(request['connection']['DIDDoc'])
 
     class Response:
         @staticmethod
@@ -116,16 +164,21 @@ class Connection:
                 response['connection']
             )
 
+            Connection.DIDDoc.validate(response['connection']['DIDDoc'])
+
+    class DIDDoc:
+        @staticmethod
+        def validate(diddoc):
             validate_message(
                 [
                     '@context',
                     'publicKey',
                     'service'
                 ],
-                response['connection']['DIDDoc']
+                diddoc
             )
 
-            for publicKeyBlock in response['connection']['DIDDoc']['publicKey']:
+            for publicKeyBlock in diddoc['publicKey']:
                 validate_message(
                     [
                         'id',
@@ -136,7 +189,7 @@ class Connection:
                     publicKeyBlock
                 )
 
-            for serviceBlock in response['connection']['DIDDoc']['service']:
+            for serviceBlock in diddoc['service']:
                 validate_message(
                     [
                         ('type', 'IndyAgent'),
