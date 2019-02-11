@@ -289,7 +289,7 @@ class AdminConnection(Module):
         label = pairwise_meta['label']
         my_vk = await did.key_for_local_did(self.agent.wallet_handle, my_did)
 
-        msg = Message({
+        response_msg = Message({
             '@type': Connection.RESPONSE,
             'connection': {
                 'DID': my_did,
@@ -311,7 +311,11 @@ class AdminConnection(Module):
             }
         })
 
-        await self.agent.send_message_to_agent(their_did, msg)
+        # Apply signature to connection field, sign it with the key used in the invitation and request
+        response_msg['connection~sig'] = await self.agent.sign_agent_message_field(response_msg['connection'], pairwise_meta["connection_key"])
+        del response_msg['connection']
+
+        await self.agent.send_message_to_agent(their_did, response_msg)
 
         await self.agent.send_admin_message(
             Message({
@@ -386,7 +390,8 @@ class Connection(Module):
             their_did,
             json.dumps({
                 'label': label,
-                'endpoint': their_endpoint
+                'endpoint': their_endpoint,
+
             })
         )
 
@@ -402,7 +407,8 @@ class Connection(Module):
                 'label': label,
                 'their_endpoint': their_endpoint,
                 'their_vk': their_vk,
-                'my_vk': my_vk
+                'my_vk': my_vk,
+                'connection_key': connection_key  # used to sign the response
             })
         )
 
@@ -431,6 +437,12 @@ class Connection(Module):
         """
         my_did = msg.context['to_did']
         my_vk = await did.key_for_local_did(self.agent.wallet_handle, my_did)
+
+        #process signed field
+        msg['connection'], sig_verified = await self.agent.unpack_and_verify_signed_agent_message_field(msg['connection~sig'])
+        # connection~sig remains for metadata
+
+
         their_did = msg['connection']['DID']
         their_vk = msg['connection']['DIDDoc']['publicKey'][0]['publicKeyBase58']
         their_endpoint = msg['connection']['DIDDoc']['service'][0]['serviceEndpoint']
