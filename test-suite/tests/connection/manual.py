@@ -47,8 +47,7 @@ async def test_connection_started_by_tested_agent(config, wallet_handle, transpo
 
     Connection.Response.validate(response)
 
-@pytest.mark.asyncio
-async def test_connection_started_by_suite(config, wallet_handle, transport):
+async def get_connection_started_by_suite(config, wallet_handle, transport):
     connection_key = await did.create_key(wallet_handle, '{}')
 
     invite_str = Connection.Invite.build(connection_key, config.endpoint)
@@ -83,3 +82,15 @@ async def test_connection_started_by_suite(config, wallet_handle, transport):
             response
         )
     )
+
+    return {
+        'my_did': my_did,
+        'my_vk': my_vk,
+        'their_did': their_did,
+        'their_vk': their_vk,
+        'their_endpoint': their_endpoint
+    }
+
+@pytest.mark.asyncio
+async def test_connection_started_by_suite(config, wallet_handle, transport):
+    await get_connection_started_by_suite(config, wallet_handle, transport)
