@@ -120,6 +120,11 @@ async def transport(config, event_loop, logger):
     event_loop.create_task(transport.start_server())
     return transport
 
+@pytest.fixture(scope='session')
+async def connection(config, wallet_handle, transport):
+    from tests.connection.manual import get_connection_started_by_suite
+
+    yield await get_connection_started_by_suite(config, wallet_handle, transport)
 
 ### Test configuration loading ###
 
