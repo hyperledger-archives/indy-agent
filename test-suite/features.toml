@@ -1,0 +1,11 @@
+[[feature]]
+name="connection.manual"
+paths=["tests/connection/manual.py"]
+description="""
+
+This feature tests the connection protocol using a user input driven method.
+
+See this document for more details:
+https://github.com/hyperledger/indy-hipe/blob/a580d00be443990dfcbcf12be5ac85808340de1f/text/connection-protocol/README.md
+
+"""
