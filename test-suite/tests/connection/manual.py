@@ -1,7 +1,7 @@
 import asyncio
 import pytest
 from message import Message
-from tests import pretty_print_message, expect_message, validate_message, pack, unpack, sign_field, unpack_and_verify_signed_field
+from tests import expect_message, validate_message, pack, unpack, sign_field, unpack_and_verify_signed_field
 from indy import did
 from . import Connection
 
