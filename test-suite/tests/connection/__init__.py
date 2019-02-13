@@ -29,7 +29,7 @@ class Connection:
                 [
                     ('@type', Connection.Message.INVITE),
                     'label',
-                    'recipient_keys',
+                    'recipientKeys',
                     'serviceEndpoint'
                 ],
                 invite_msg
@@ -42,7 +42,7 @@ class Connection:
             msg = Message({
                 '@type': Connection.Message.INVITE,
                 'label': 'testing-agent',
-                'recipient_keys': [connection_key],
+                'recipientKeys': [connection_key],
                 'serviceEndpoint': endpoint,
                 # routing_keys not specified, but here is where they would be put in the invite.
             })
@@ -82,8 +82,8 @@ class Connection:
                         }],
                         "service": [{
                             "type": "IndyAgent",
-                            "recipient_keys": [my_vk],
-                            #"routing_keys": ["<example-agency-verkey>"],
+                            "recipientKeys": [my_vk],
+                            #"routingKeys": ["<example-agency-verkey>"],
                             "serviceEndpoint": endpoint,
                         }],
                     }
@@ -128,8 +128,8 @@ class Connection:
                         }],
                         "service": [{
                             "type": "IndyAgent",
-                            "recipient_keys": [my_vk],
-                            #"routing_keys": ["<example-agency-verkey>"],
+                            "recipientKeys": [my_vk],
+                            #"routingKeys": ["<example-agency-verkey>"],
                             "serviceEndpoint": endpoint,
                         }],
                     }
@@ -193,7 +193,7 @@ class Connection:
                 validate_message(
                     [
                         ('type', 'IndyAgent'),
-                        'recipient_keys',
+                        'recipientKeys',
                         'serviceEndpoint'
                     ],
                     serviceBlock
