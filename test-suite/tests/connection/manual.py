@@ -11,6 +11,8 @@ async def test_connection_started_by_tested_agent(config, wallet_handle, transpo
 
     invite_msg = Connection.Invite.parse(invite_url)
 
+    print("\nReceived Invite:\n", invite_msg.pretty_print())
+
     # Create my information for connection
     (my_did, my_vk) = await did.create_and_store_my_did(wallet_handle, '{}')
 
@@ -21,6 +23,8 @@ async def test_connection_started_by_tested_agent(config, wallet_handle, transpo
         my_vk,
         config.endpoint
     )
+
+    print("\nSending Request:\n", request.pretty_print())
 
     await transport.send(
         invite_msg['serviceEndpoint'],
@@ -33,6 +37,7 @@ async def test_connection_started_by_tested_agent(config, wallet_handle, transpo
     )
 
     # Wait for response
+    print("Awaiting response from tested agent...")
     response_bytes = await expect_message(transport, 60)
 
     response = await unpack(
@@ -42,10 +47,12 @@ async def test_connection_started_by_tested_agent(config, wallet_handle, transpo
     )
 
     Connection.Response.validate_pre_sig(response)
+    print("\nReceived Response (pre signature verification):\n", response.pretty_print())
 
     response['connection'] = await unpack_and_verify_signed_field(response['connection~sig'])
 
     Connection.Response.validate(response)
+    print("\nReceived Response (post signature verification):\n", response.pretty_print())
 
 async def get_connection_started_by_suite(config, wallet_handle, transport):
     connection_key = await did.create_key(wallet_handle, '{}')
@@ -54,6 +61,7 @@ async def get_connection_started_by_suite(config, wallet_handle, transport):
 
     print("\n\nInvitation encoded as URL: ", invite_str)
 
+    print("Awaiting request from tested agent...")
     request_bytes = await expect_message(transport, 90) # A little extra time to copy-pasta
 
     request = await unpack(
@@ -63,15 +71,18 @@ async def get_connection_started_by_suite(config, wallet_handle, transport):
     )
 
     Connection.Request.validate(request)
+    print("\nReceived request:\n", request.pretty_print())
 
     (their_did, their_vk, their_endpoint) = Connection.Request.parse(request)
 
     (my_did, my_vk) = await did.create_and_store_my_did(wallet_handle, '{}')
 
     response = Connection.Response.build(my_did, my_vk, config.endpoint)
+    print("\nSending Response (pre signature packing):\n", response.pretty_print())
 
     response['connection~sig'] = await sign_field(wallet_handle, connection_key, response['connection'])
     del response['connection']
+    print("\nSending Response (post signature packing):\n", response.pretty_print())
 
     await transport.send(
         their_endpoint,
