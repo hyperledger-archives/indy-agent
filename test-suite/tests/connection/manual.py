@@ -61,6 +61,7 @@ async def get_connection_started_by_suite(config, wallet_handle, transport):
 
     print("\n\nInvitation encoded as URL: ", invite_str)
 
+    print("Awaiting request from tested agent...")
     request_bytes = await expect_message(transport, 90) # A little extra time to copy-pasta
 
     request = await unpack(
