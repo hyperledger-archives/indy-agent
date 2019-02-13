@@ -97,9 +97,9 @@ class AdminConnection(Module):
         invite_msg = Message({
             '@type': Connection.INVITE,
             'label': self.agent.owner,
-            'recipient_keys': [connection_key],
+            'recipientKeys': [connection_key],
             'serviceEndpoint': self.agent.endpoint,
-            # routing_keys not specified, but here is where they would be put in the invite.
+            # routingKeys not specified, but here is where they would be put in the invite.
         })
 
         b64_invite = \
@@ -162,14 +162,14 @@ class AdminConnection(Module):
         await self.agent.send_admin_message(Message({
             '@type': AdminConnection.INVITE_RECEIVED,
             'label': invite_msg['label'],
-            'key': invite_msg['recipient_keys'][0],
+            'key': invite_msg['recipientKeys'][0],
             'endpoint': invite_msg['serviceEndpoint']
         }))
 
         await non_secrets.add_wallet_record(
             self.agent.wallet_handle,
             'invitation',
-            invite_msg['recipient_keys'][0],
+            invite_msg['recipientKeys'][0],
             Serializer.pack(invite_msg),
             '{}'
         )
@@ -208,7 +208,7 @@ class AdminConnection(Module):
 
         my_label = self.agent.owner
         label = invite['label']
-        their_connection_key = invite['recipient_keys'][0]
+        their_connection_key = invite['recipientKeys'][0]
         their_endpoint = invite['serviceEndpoint']
 
         # Create my information for connection
@@ -239,8 +239,8 @@ class AdminConnection(Module):
                     }],
                     "service": [{
                         "type": "IndyAgent",
-                        "recipient_keys": [my_vk],
-                        #"routing_keys": ["<example-agency-verkey>"],
+                        "recipientKeys": [my_vk],
+                        #"routingKeys": ["<example-agency-verkey>"],
                         "serviceEndpoint": self.agent.endpoint,
                     }],
                 }
@@ -303,8 +303,8 @@ class AdminConnection(Module):
                     }],
                     "service": [{
                         "type": "IndyAgent",
-                        "recipient_keys": [my_vk],
-                        #"routing_keys": ["<example-agency-verkey>"],
+                        "recipientKeys": [my_vk],
+                        #"routingKeys": ["<example-agency-verkey>"],
                         "serviceEndpoint": self.agent.endpoint,
                     }],
                 }
@@ -365,8 +365,8 @@ class Connection(Module):
                           }],
                           "service": [{
                             "type": "IndyAgent",
-                            "recipient_keys" : [ "<verkey>" ], //pick one
-                            "routing_keys": ["<example-agency-verkey>"],
+                            "recipientKeys" : [ "<verkey>" ], //pick one
+                            "routingKeys": ["<example-agency-verkey>"],
                             "serviceEndpoint": "https://example.agency.com",
                           }]
                       }

@@ -27,7 +27,7 @@ async def test_connection_started_by_tested_agent(config, wallet_handle, transpo
         await pack(
             wallet_handle,
             my_vk,
-            invite_msg['recipient_keys'][0],
+            invite_msg['recipientKeys'][0],
             request
         )
     )
