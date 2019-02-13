@@ -203,7 +203,10 @@ class Agent:
         )
 
         async with aiohttp.ClientSession() as session:
-            async with session.post(their_endpoint, data=wire_message) as resp:
+            headers = {
+                'content-type': 'application/ssi-agent-wire'
+            }
+            async with session.post(their_endpoint, data=wire_message, headers=headers) as resp:
                 if resp.status != 202:
                     print(resp.status)
                     print(await resp.text())
