@@ -1,6 +1,5 @@
 // Extension UI Communication {{{
-function ui_message_listener(message, sender, sendResponse) {
-    console.log(sender);
+function caller(message, sender, sendResponse) {
     let ret_val = null;
     switch (message.method) {
         case "generateKeys":
@@ -12,15 +11,18 @@ function ui_message_listener(message, sender, sendResponse) {
         case "getPublicKey":
             ret_val = getPublicKey();
             break;
+        case "pack":
+            keys = getKeys();
+            ret_val = indy.pack_message(message.message, message.to_keys, keys);
         default:
-            console.error("Unrecognized UI message: " + JSON.stringify(message));
+            console.error("Unrecognized caller data: " + JSON.stringify(message));
             break;
     }
     if (ret_val) {
         sendResponse({ret: ret_val});
     }
 }
-browser.runtime.onMessage.addListener(ui_message_listener);
+browser.runtime.onMessage.addListener(caller);
 // }}}
 
 // Key Management {{{

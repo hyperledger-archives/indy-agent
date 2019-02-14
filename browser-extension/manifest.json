@@ -13,11 +13,10 @@
     "content_scripts": [
         {
             "matches": ["<all_urls>"],
-            "js": ["indy-ext-connector.js"],
+            "js": ["indy-content.js"],
             "run_at": "document_idle"
         }
     ],
-    "web_accessible_resources": ["indy.js"],
     "description": "Indy Browser Extension",
     "manifest_version": 2,
     "name": "Indy",
