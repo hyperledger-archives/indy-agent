@@ -39,7 +39,7 @@ def validate_message(expected_attrs: [Any], msg: Message):
             assert attribute[0] in msg, \
                 'Attribute "{}" is missing from message: \n{}'.format(attribute[0], msg)
             assert msg[attribute[0]] == attribute[1], \
-                'Message.{} != {}'.format(attribute[0], attribute[1])
+                'Message.{}: {} != {}'.format(attribute[0], msg[attribute[0]], attribute[1])
         else:
             assert attribute in msg, \
                 'Attribute "{}" is missing from message: \n{}'.format(attribute, msg)

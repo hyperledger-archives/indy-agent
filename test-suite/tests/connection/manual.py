@@ -18,7 +18,7 @@ async def test_connection_started_by_tested_agent(config, wallet_handle, transpo
 
     # Send Connection Request to inviter
     request = Connection.Request.build(
-        'testing-agent',
+        'test-connection-started-by-tested-agent',
         my_did,
         my_vk,
         config.endpoint
@@ -54,10 +54,13 @@ async def test_connection_started_by_tested_agent(config, wallet_handle, transpo
     Connection.Response.validate(response)
     print("\nReceived Response (post signature verification):\n", response.pretty_print())
 
-async def get_connection_started_by_suite(config, wallet_handle, transport):
+async def get_connection_started_by_suite(config, wallet_handle, transport, label):
+    if label is None:
+        label = 'test-suite'
+
     connection_key = await did.create_key(wallet_handle, '{}')
 
-    invite_str = Connection.Invite.build(connection_key, config.endpoint)
+    invite_str = Connection.Invite.build(label, connection_key, config.endpoint)
 
     print("\n\nInvitation encoded as URL: ", invite_str)
 
@@ -104,4 +107,4 @@ async def get_connection_started_by_suite(config, wallet_handle, transport):
 
 @pytest.mark.asyncio
 async def test_connection_started_by_suite(config, wallet_handle, transport):
-    await get_connection_started_by_suite(config, wallet_handle, transport)
+    await get_connection_started_by_suite(config, wallet_handle, transport, 'test-connection-started-by-suite')
