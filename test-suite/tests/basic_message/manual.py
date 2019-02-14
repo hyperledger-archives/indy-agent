@@ -1,6 +1,7 @@
 import asyncio
 import pytest
 import datetime
+import random
 from message import Message
 from tests import expect_message, validate_message, pack, unpack, sign_field, unpack_and_verify_signed_field
 
@@ -8,7 +9,9 @@ from . import BasicMessage
 
 @pytest.mark.asyncio
 async def test_basic_message(config, wallet_handle, transport, connection):
-    msg = BasicMessage.build("Reply with: donut")
+    possible_random_messages = ['donut', 'cake', 'milk', 'cookies', 'cupcake', 'pie']
+    random_message = possible_random_messages[random.randint(0,5)]
+    msg = BasicMessage.build("Reply with: {}".format(random_message))
 
     print("\nSending Message:\n", msg.pretty_print())
     await transport.send(
@@ -33,4 +36,4 @@ async def test_basic_message(config, wallet_handle, transport, connection):
     BasicMessage.validate(response)
     print("\nReceived Message:\n", response.pretty_print())
 
-    assert response['content'] == 'donut', 'Did not respond with donut!'
+    assert response['content'] == random_message, 'Did not respond with {}!'.format(random_message)
