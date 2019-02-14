@@ -3,7 +3,8 @@
         ADMIN_CONNECTIONS_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin_connections/1.0/",
         ADMIN_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin/1.0/",
         ADMIN_WALLETCONNECTION_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin_walletconnection/1.0/",
-        ADMIN_BASICMESSAGE_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin_basicmessage/1.0/"
+        ADMIN_BASICMESSAGE_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin_basicmessage/1.0/",
+        ADMIN_TRUSTPING_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin_trustping/1.0/"
     };
 
     const ADMIN = {
@@ -41,6 +42,13 @@
         MESSAGE_RECEIVED: MESSAGE_TYPES.ADMIN_BASICMESSAGE_BASE + "message_received",
         GET_MESSAGES: MESSAGE_TYPES.ADMIN_BASICMESSAGE_BASE + "get_messages",
         MESSAGES: MESSAGE_TYPES.ADMIN_BASICMESSAGE_BASE + "messages"
+    };
+
+    const ADMIN_TRUSTPING = {
+        SEND_TRUSTPING: MESSAGE_TYPES.ADMIN_TRUSTPING_BASE + "send_trustping",
+        TRUSTPING_SENT: MESSAGE_TYPES.ADMIN_TRUSTPING_BASE + "trustping_sent",
+        TRUSTPING_RECEIVED: MESSAGE_TYPES.ADMIN_TRUSTPING_BASE + "trustping_received",
+        TRUSTPING_RESPONSE: MESSAGE_TYPES.ADMIN_TRUSTPING_BASE + "trustping_response"
     };
 
     // Message Router {{{
@@ -244,6 +252,27 @@
                 console.log(this.history_view);
                 $('#historyModal').modal({});
             },
+            trustping_received: function (msg) {
+                if(msg.with == this.connection.their_did){
+                    //connection view currently open
+                    sendMessage({
+                        '@type': ADMIN_TRUSTPING.TRUSTPING_RECEIVED,
+                        with: msg.with
+                    });
+                } else {
+                    //connection not currently open. set unread flag on connection details?
+                }
+            },
+            ,
+            send_trustping: function(){
+                msg = {
+                    '@type': ADMIN_TRUSTPING.SEND_TRUSTPING,
+                    to: this.connection.their_did,
+                    from: this.connection.did,
+                    message: "Send trustping"
+                };
+                sendMessage(msg);
+            },
             get_connection_by_name: function(label){
                return this.connections.find(function(x){return x.label === msg.label;});
             },
@@ -378,6 +407,9 @@
     msg_router.register(ADMIN_CONNECTION.REQUEST_RECEIVED, ui_relationships.request_received);
     msg_router.register(ADMIN_BASICMESSAGE.MESSAGE_RECEIVED, ui_relationships.message_received);
     msg_router.register(ADMIN_BASICMESSAGE.MESSAGES, ui_relationships.messages);
+    msg_router.register(ADMIN_TRUSTPING.TRUSTPING_SENT, ui_relationships.messages);
+    msg_router.register(ADMIN_TRUSTPING.TRUSTPING_RECEIVED, ui_relationships.trustping_received);
+    msg_router.register(ADMIN_TRUSTPING.TRUSTPING_RESPONSE, ui_relationships.messages);
 
     // }}}
 
