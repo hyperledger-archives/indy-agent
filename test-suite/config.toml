@@ -41,6 +41,7 @@ log_level = 30
 # A list of tests to be run by the test agent.
 # Each string in this list is the name of the module containing the test.
 tests = [
-    "connection.manual"
+    "connection.manual",
+    "basic_message.manual"
 ]
 

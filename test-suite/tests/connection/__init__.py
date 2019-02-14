@@ -11,7 +11,7 @@ class Connection:
         VERSION = "1.0"
         FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
 
-        INVITE = FAMILY + "invite"
+        INVITE = FAMILY + "invitation"
         REQUEST = FAMILY + "request"
         RESPONSE = FAMILY + "response"
 
@@ -38,10 +38,10 @@ class Connection:
             return invite_msg
 
         @staticmethod
-        def build(connection_key: str, endpoint: str) -> str:
+        def build(label: str, connection_key: str, endpoint: str) -> str:
             msg = Message({
                 '@type': Connection.Message.INVITE,
-                'label': 'testing-agent',
+                'label': label,
                 'recipientKeys': [connection_key],
                 'serviceEndpoint': endpoint,
                 # routing_keys not specified, but here is where they would be put in the invite.
