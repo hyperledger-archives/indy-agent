@@ -54,7 +54,7 @@ async def test_connection_started_by_tested_agent(config, wallet_handle, transpo
     Connection.Response.validate(response)
     print("\nReceived Response (post signature verification):\n", response.pretty_print())
 
-async def get_connection_started_by_suite(config, wallet_handle, transport, label):
+async def get_connection_started_by_suite(config, wallet_handle, transport, label=None):
     if label is None:
         label = 'test-suite'
 
