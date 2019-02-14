@@ -106,6 +106,8 @@
         history_view: []
     };
 
+    Vue.use(vueMoment);
+
     var ui_credentials = new Vue({
         el: '#credentials',
         data: ui_data,
