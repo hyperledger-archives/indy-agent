@@ -231,6 +231,7 @@ class AdminConnection(Module):
                 'DID': my_did,
                 'DIDDoc': {
                     "@context": "https://w3id.org/did/v1",
+                    "id": my_did,
                     "publicKey": [{
                         "id": my_did + "#keys-1",
                         "type": "Ed25519VerificationKey2018",
@@ -238,6 +239,7 @@ class AdminConnection(Module):
                         "publicKeyBase58": my_vk
                     }],
                     "service": [{
+                        "id": my_did + ";indy",
                         "type": "IndyAgent",
                         "recipientKeys": [my_vk],
                         #"routingKeys": ["<example-agency-verkey>"],
@@ -295,6 +297,7 @@ class AdminConnection(Module):
                 'DID': my_did,
                 'DIDDoc': {
                     "@context": "https://w3id.org/did/v1",
+                    "id": my_did,
                     "publicKey": [{
                         "id": my_did + "#keys-1",
                         "type": "Ed25519VerificationKey2018",
@@ -302,6 +305,7 @@ class AdminConnection(Module):
                         "publicKeyBase58": my_vk
                     }],
                     "service": [{
+                        "id": my_did + ";indy",
                         "type": "IndyAgent",
                         "recipientKeys": [my_vk],
                         #"routingKeys": ["<example-agency-verkey>"],
