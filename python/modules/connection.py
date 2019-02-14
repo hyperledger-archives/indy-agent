@@ -335,7 +335,7 @@ class Connection(Module):
     VERSION = "1.0"
     FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
 
-    INVITE = FAMILY + "invite"
+    INVITE = FAMILY + "invitation"
     REQUEST = FAMILY + "request"
     RESPONSE = FAMILY + "response"
 
