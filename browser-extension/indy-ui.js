@@ -26,7 +26,15 @@ function copyPublicKey() {
     document.execCommand('copy');
 }
 
+function saveAgentKey() {
+    browser.runtime.sendMessage({
+        method: "saveAgentKey",
+        key: document.getElementById('agent-key').value
+    });
+}
+
 getPublicKey();
 document.getElementById('generate-keys').addEventListener('click', generateKeys);
+document.getElementById('save-agent-key').addEventListener('click', saveAgentKey);
 document.getElementById('remove-keys').addEventListener('click', removeKeys);
 document.getElementById('copy-public-key').addEventListener('click', copyPublicKey);

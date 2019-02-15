@@ -1,16 +1,30 @@
 window.indy_connector = {};
+window.indy_connector.extension_exists = false;
 
 (function() {
 
-    function pack_message(message, to_keys) {
+    register_cb('pong', pong);
+
+    function pong() {
+        window.indy_connector.extension_exists = true;
+    }
+
+    function ping() {
         window.postMessage(
             {
                 direction: "from-page-script",
-                call: {
-                    method: 'pack',
-                    to_keys: to_keys,
-                    message: message
-                }
+                method: "ping"
+            },
+            "*"
+        );
+    }
+
+    function pack_message(message) {
+        window.postMessage(
+            {
+                direction: "from-page-script",
+                method: 'pack',
+                message: message
             },
             "*"
         );
@@ -20,10 +34,8 @@ window.indy_connector = {};
         window.postMessage(
             {
                 direction: "from-page-script",
-                call: {
-                    method: 'unpack',
-                    message: message
-                }
+                method: 'unpack',
+                message: message
             },
             "*"
         );
@@ -52,4 +64,5 @@ window.indy_connector = {};
     indy_connector.unpack_message = unpack_message;
     indy_connector.register_pack_cb = register_pack_cb;
     indy_connector.register_unpack_cb = register_unpack_cb;
+    indy_connector.ping = ping;
 }).call(this);

@@ -1,4 +1,4 @@
-// Extension UI Communication {{{
+// Extension Communication {{{
 function caller(message, sender, sendResponse) {
     let ret_val = null;
     switch (message.method) {
@@ -11,15 +11,24 @@ function caller(message, sender, sendResponse) {
         case "getPublicKey":
             ret_val = getPublicKey();
             break;
+        case "saveAgentKey":
+            saveAgentKey(message.key);
+            break;
         case "pack":
             keys = getKeys();
-            ret_val = indy.pack_message(message.message, message.to_keys, keys);
+            agent_key = getAgentKey();
+            ret_val = indy.pack_message(message.message, [agent_key], keys);
+            break;
+        case "unpack":
+            keys = getKeys();
+            ret_val = indy.unpack_message(message.message, keys);
+            break;
         default:
             console.error("Unrecognized caller data: " + JSON.stringify(message));
             break;
     }
     if (ret_val) {
-        sendResponse({ret: ret_val});
+        sendResponse(ret_val);
     }
 }
 browser.runtime.onMessage.addListener(caller);
@@ -39,7 +48,6 @@ function generateKeys() {
         localStorage.setItem('keys', serializeKeys(keys));
     }
 }
-
 function removeKeys() {
     localStorage.removeItem('keys');
 }
@@ -60,5 +68,15 @@ function getPublicKey() {
         return "";
     }
     return keys.publicKey;
+}
+function saveAgentKey(key) {
+    localStorage.setItem('agent-key', key);
+}
+function getAgentKey() {
+    let key = localStorage.getItem('agent-key');
+    if (!key) {
+        return null;
+    }
+    return Base58.decode(key);
 }
 // }}}

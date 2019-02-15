@@ -9,15 +9,15 @@ window.sodium = {
 (function() {
     console.log("Loading pack and unpack...");
     function b64url(bytes) {
-        return sodium.to_base64(bytes, sodium.base64_variants.URLSAFE_NO_PADDING);
+        return sodium.to_base64(bytes, sodium.base64_variants.URLSAFE);
     }
 
     function b64dec(str) {
-        return sodium.from_base64(str, sodium.base64_variants.URLSAFE_NO_PADDING);
+        return sodium.from_base64(str, sodium.base64_variants.URLSAFE);
     }
 
     function str_b64dec(input) {
-        return sodium.to_string(sodium.from_base64(input, sodium.base64_variants.URLSAFE_NO_PADDING));
+        return sodium.to_string(sodium.from_base64(input, sodium.base64_variants.URLSAFE));
     }
 
     function encrypt_plaintext(message, add_data, key) {

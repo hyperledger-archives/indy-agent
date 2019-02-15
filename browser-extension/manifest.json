@@ -1,7 +1,7 @@
 {
     "browser_action": {
         "default_title": "Indy",
-        "default_popup": "indy.html",
+        "default_popup": "indy-ui.html",
         "browser_style": true,
         "default_icon": {
             "128": "icons/sovrin.png"
@@ -14,7 +14,7 @@
         {
             "matches": ["<all_urls>"],
             "js": ["indy-content.js"],
-            "run_at": "document_idle"
+            "run_at": "document_start"
         }
     ],
     "description": "Indy Browser Extension",

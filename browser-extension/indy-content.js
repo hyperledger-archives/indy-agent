@@ -1,10 +1,19 @@
 let port = browser.runtime.connect({name: 'connector'});
-
 window.addEventListener("message", function(event) {
     if (event.source == window &&
         event.data &&
         event.data.direction == "from-page-script") {
-        call_to_background(event.data.call);
+        if (event.data.method == "ping") {
+            window.postMessage(
+                {
+                    direction: "from-content-script",
+                    method: "pong"
+                },
+                "*"
+            );
+        } else {
+            call_to_background(event.data);
+        }
     }
 });
 
@@ -14,9 +23,10 @@ function call_to_background(call_data) {
         window.postMessage(
             {
                 direction: "from-content-script",
-                method: call_data.method
-                response: response,
-            }
-        )
+                method: call_data.method,
+                response: response
+            },
+            "*"
+        );
     })
 }
