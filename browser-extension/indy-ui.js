@@ -17,7 +17,7 @@ function getPublicKey() {
         method: "getPublicKey"
     });
     res.then(function(response) {
-        document.getElementById('public-key').value = response.ret;
+        document.getElementById('public-key').value = response;
     })
 }
 
