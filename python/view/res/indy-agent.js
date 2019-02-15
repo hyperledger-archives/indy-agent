@@ -48,7 +48,7 @@
         SEND_TRUSTPING: MESSAGE_TYPES.ADMIN_TRUSTPING_BASE + "send_trustping",
         TRUSTPING_SENT: MESSAGE_TYPES.ADMIN_TRUSTPING_BASE + "trustping_sent",
         TRUSTPING_RECEIVED: MESSAGE_TYPES.ADMIN_TRUSTPING_BASE + "trustping_received",
-        TRUSTPING_RESPONSE: MESSAGE_TYPES.ADMIN_TRUSTPING_BASE + "trustping_response"
+        TRUSTPING_RESPONSE_RECEIVED: MESSAGE_TYPES.ADMIN_TRUSTPING_BASE + "trustping_response_received"
     };
 
     // Message Router {{{
@@ -252,31 +252,11 @@
                 console.log(this.history_view);
                 $('#historyModal').modal({});
             },
-            trustping_received: function (msg) {
-                if(msg.with == this.connection.their_did){
-                    //connection view currently open
-                    sendMessage({
-                        '@type': ADMIN_TRUSTPING.TRUSTPING_RECEIVED,
-                        with: msg.with
-                    });
-                } else {
-                    //connection not currently open. set unread flag on connection details?
-                }
-            },
-            ,
-            send_trustping: function(){
-                msg = {
-                    '@type': ADMIN_TRUSTPING.SEND_TRUSTPING,
-                    to: this.connection.their_did,
-                    from: this.connection.did,
-                    message: "Send trustping"
-                };
-                sendMessage(msg);
-            },
             get_connection_by_name: function(label){
                return this.connections.find(function(x){return x.label === msg.label;});
             },
             show_connection: function(c){
+                Vue.set(c, 'trustping_state', ""); // set here to allow vue to bind.
                 this.connection = c;
                 ui_connection.load();
                 this.current_tab = "connection";
@@ -308,7 +288,37 @@
                     '@type': ADMIN_BASICMESSAGE.GET_MESSAGES,
                     with: this.connection.their_did
                 });
-            }
+            },
+            send_trustping: function(){
+                msg = {
+                    '@type': ADMIN_TRUSTPING.SEND_TRUSTPING,
+                    to: this.connection.their_did,
+                    from: this.connection.did,
+                    message: "Send trustping"
+                };
+                Vue.set(this.connection, 'trustping_state', "Sending...");
+                sendMessage(msg);
+            },
+            trustping_sent: function(msg){
+                console.log("sent", msg);
+                Vue.set(this.connection, 'trustping_state', "Sent.");
+            },
+            trustping_received: function (msg) {
+                if(msg.from == this.connection.their_did){
+                    //connection view currently open
+                    Vue.set(this.connection, 'trustping_state', "Received Ping.");
+                } else {
+                    //connection not currently open. set unread flag on connection details?
+                }
+            },
+            trustping_response_received: function (msg) {
+                if(msg.from == this.connection.their_did){
+                    //connection view currently open
+                    Vue.set(this.connection, 'trustping_state', "Received Response.");
+                } else {
+                    //connection not currently open. set unread flag on connection details?
+                }
+            },
         }
     });
 
@@ -407,9 +417,9 @@
     msg_router.register(ADMIN_CONNECTION.REQUEST_RECEIVED, ui_relationships.request_received);
     msg_router.register(ADMIN_BASICMESSAGE.MESSAGE_RECEIVED, ui_relationships.message_received);
     msg_router.register(ADMIN_BASICMESSAGE.MESSAGES, ui_relationships.messages);
-    msg_router.register(ADMIN_TRUSTPING.TRUSTPING_SENT, ui_relationships.messages);
-    msg_router.register(ADMIN_TRUSTPING.TRUSTPING_RECEIVED, ui_relationships.trustping_received);
-    msg_router.register(ADMIN_TRUSTPING.TRUSTPING_RESPONSE, ui_relationships.messages);
+    msg_router.register(ADMIN_TRUSTPING.TRUSTPING_SENT, ui_connection.trustping_sent);
+    msg_router.register(ADMIN_TRUSTPING.TRUSTPING_RECEIVED, ui_connection.trustping_received);
+    msg_router.register(ADMIN_TRUSTPING.TRUSTPING_RESPONSE_RECEIVED, ui_connection.trustping_response_received);
 
     // }}}
 
