@@ -19,12 +19,13 @@ window.indy_connector.extension_exists = false;
         );
     }
 
-    function pack_message(message) {
+    function pack_message(message, to_key) {
         window.postMessage(
             {
                 direction: "from-page-script",
                 method: 'pack',
-                message: message
+                message: message,
+                to_key: to_key
             },
             "*"
         );

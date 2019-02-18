@@ -52,6 +52,7 @@
     };
 
     window.indy_connector.ping();
+    const agent_admin_key = document.head.querySelector("[name=agent_admin_key][content]").content;
 
     // Create WebSocket connection.
     const socket = new WebSocket('ws://' + window.location.hostname + ':' + window.location.port + '/ws');
@@ -87,7 +88,7 @@
         // TODO: Encode properly when wire protocol is finished
         if (indy_connector.extension_exists) {
             console.log("Packing message: ", msg);
-            indy_connector.pack_message(JSON.stringify(msg));
+            indy_connector.pack_message(JSON.stringify(msg), agent_admin_key);
         } else {
             console.log("sending message", msg);
             socket.send(JSON.stringify(msg));

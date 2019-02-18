@@ -11,13 +11,10 @@ function caller(message, sender, sendResponse) {
         case "getPublicKey":
             ret_val = getPublicKey();
             break;
-        case "saveAgentKey":
-            saveAgentKey(message.key);
-            break;
         case "pack":
             keys = getKeys();
-            agent_key = getAgentKey();
-            ret_val = indy.pack_message(message.message, [agent_key], keys);
+            to_key = Base58.decode(message.to_key);
+            ret_val = indy.pack_message(message.message, [to_key], keys);
             break;
         case "unpack":
             keys = getKeys();
@@ -68,15 +65,5 @@ function getPublicKey() {
         return "";
     }
     return keys.publicKey;
-}
-function saveAgentKey(key) {
-    localStorage.setItem('agent-key', key);
-}
-function getAgentKey() {
-    let key = localStorage.getItem('agent-key');
-    if (!key) {
-        return null;
-    }
-    return Base58.decode(key);
 }
 // }}}

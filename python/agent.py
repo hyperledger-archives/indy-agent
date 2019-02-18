@@ -66,6 +66,7 @@ class Agent:
                         msg = await self.unpack_agent_message(wire_msg_bytes)
                     except Exception as e:
                         print('Failed to unpack message: {}\n\nError: {}'.format(wire_msg_bytes, e))
+                        traceback.print_exc()
                         continue  # handle next message in loop
 
                 await self.route_message_to_module(msg)
@@ -149,10 +150,12 @@ class Agent:
 
 
     async def unpack_agent_message(self, wire_msg_bytes):
+        if isinstance(wire_msg_bytes, str):
+            wire_msg_bytes = bytes(wire_msg_bytes, 'utf-8')
         unpacked = json.loads(
             await crypto.unpack_message(
                 self.wallet_handle,
-                bytes(wire_msg_bytes, 'utf-8')
+                wire_msg_bytes
             )
         )
 

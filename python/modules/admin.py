@@ -74,10 +74,8 @@ class Admin(Module):
 
 @aiohttp_jinja2.template('index.html')
 async def root(request):
-    print(request)
     agent = request.app['agent']
     agent.offer_endpoint = request.url.scheme + '://' + request.url.host
-    print(agent.offer_endpoint)
     agent.endpoint = request.url.scheme + '://' + request.url.host
     if request.url.port is not None:
         agent.endpoint += ':' + str(request.url.port) + '/indy'
@@ -85,4 +83,4 @@ async def root(request):
     else:
         agent.endpoint += '/indy'
         agent.offer_endpoint += '/offer'
-    return {'ui_token': agent.ui_token}
+    return {'agent_admin_key': agent.agent_admin_key}
