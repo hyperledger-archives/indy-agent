@@ -26,6 +26,10 @@ class Message(UserDict):
     def type(self):
         return self.data["@type"]
 
+    @property
+    def id(self):
+        return self.data["@id"]
+
     class MessageEncoder(json.JSONEncoder):
         def default(self, obj):
             if isinstance(obj, Message):

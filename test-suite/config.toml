@@ -42,6 +42,7 @@ log_level = 30
 # Each string in this list is the name of the module containing the test.
 tests = [
     "connection.manual",
-    "basic_message.manual"
+    "basicmessage.manual",
+    "trustping.manual"
 ]
 
