@@ -172,8 +172,9 @@ class Agent:
         from_key = None
         if 'sender_verkey' in unpacked:
             from_key = unpacked['sender_verkey']
+            from_did = await utils.did_for_key(self.wallet_handle, unpacked['sender_verkey'])
+
         to_key = unpacked['recipient_verkey']
-        from_did = await utils.did_for_key(self.wallet_handle, unpacked['sender_verkey'])
         to_did = await utils.did_for_key(self.wallet_handle, unpacked['recipient_verkey'])
 
         msg = Serializer.unpack(unpacked['message'])

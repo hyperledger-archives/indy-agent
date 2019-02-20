@@ -57,7 +57,7 @@ class AdminTrustPing(Module):
 
 
 class TrustPing(Module):
-    FAMILY_NAME = "trustping"
+    FAMILY_NAME = "trust_ping"
     VERSION = "1.0"
     FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
 
