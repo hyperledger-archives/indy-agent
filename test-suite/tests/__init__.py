@@ -88,21 +88,21 @@ async def unpack_and_verify_signed_field(signed_field):
 async def sign_field(wallet_handle, my_vk, field_value):
     timestamp_bytes = struct.pack(">Q", int(time.time()))
 
-    sig_data = base64.urlsafe_b64encode(
-        timestamp_bytes + json.dumps(field_value).encode('ascii')
-    ).decode('ascii')
+    sig_data_bytes = timestamp_bytes + json.dumps(field_value).encode('ascii')
+    sig_data = base64.urlsafe_b64encode(sig_data_bytes).decode('ascii')
 
+    signature_bytes = await crypto.crypto_sign(
+        wallet_handle,
+        my_vk,
+        sig_data_bytes
+    )
     signature = base64.urlsafe_b64encode(
-        await crypto.crypto_sign(
-            wallet_handle,
-            my_vk,
-            sig_data
-        )
+        signature_bytes
     ).decode('ascii')
 
     return {
         "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/signature/1.0/ed25519Sha512_single",
-        "sig_data": sig_data,
         "signer": my_vk,
+        "sig_data": sig_data,
         "signature": signature
     }
