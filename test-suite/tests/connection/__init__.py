@@ -22,7 +22,7 @@ class Connection:
             assert matches, 'Improperly formatted invite url!'
 
             invite_msg = Serializer.unpack(
-                base64.urlsafe_b64decode(matches.group(2)).decode('utf-8')
+                base64.urlsafe_b64decode(matches.group(2)).decode('ascii')
             )
 
             validate_message(
@@ -50,7 +50,7 @@ class Connection:
             b64_invite = base64.urlsafe_b64encode(
                 bytes(
                     Serializer.pack(msg),
-                    'utf-8'
+                    'ascii'
                 )
             ).decode('ascii')
 
