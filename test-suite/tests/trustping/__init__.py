@@ -3,7 +3,7 @@ from tests import validate_message
 from message import Message
 
 class TrustPing():
-    FAMILY_NAME = "trustping"
+    FAMILY_NAME = "trust_ping"
     VERSION = "1.0"
     FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
 

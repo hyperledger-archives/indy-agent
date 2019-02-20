@@ -124,26 +124,40 @@ class Agent:
 
             raise WalletConnectionException
 
-    async def sign_agent_message_field(self, fieldvalue, signing_key):
+    async def sign_agent_message_field(self, field_value, my_vk):
         timestamp_bytes = struct.pack(">Q", int(time.time()))
-        data_bytes = timestamp_bytes + json.dumps(fieldvalue).encode()
-        result = {
+
+        sig_data_bytes = timestamp_bytes + json.dumps(field_value).encode('ascii')
+        sig_data = base64.urlsafe_b64encode(sig_data_bytes).decode('ascii')
+
+        signature_bytes = await crypto.crypto_sign(
+            self.wallet_handle,
+            my_vk,
+            sig_data_bytes
+        )
+        signature = base64.urlsafe_b64encode(
+            signature_bytes
+        ).decode('ascii')
+
+        return {
             "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/signature/1.0/ed25519Sha512_single",
-            "sig_data": base64.urlsafe_b64encode(data_bytes).decode("utf-8"),
-            "signer": signing_key,
+            "signer": my_vk,
+            "sig_data": sig_data,
+            "signature": signature
         }
-        sig_bytes = await crypto.crypto_sign(self.wallet_handle, signing_key, result["sig_data"])
-        result["signature"] = base64.urlsafe_b64encode(sig_bytes).decode('utf-8')
-        return result
 
     async def unpack_and_verify_signed_agent_message_field(self, signed_field):
-        signature_bytes = base64.urlsafe_b64decode(signed_field['signature'].encode('utf-8'))
-        sig_verified = await crypto.crypto_verify(signed_field['signer'], signed_field['sig_data'], signature_bytes)
+        signature_bytes = base64.urlsafe_b64decode(signed_field['signature'].encode('ascii'))
+        sig_data_bytes = base64.urlsafe_b64decode(signed_field['sig_data'].encode('ascii'))
+        sig_verified = await crypto.crypto_verify(
+            signed_field['signer'],
+            sig_data_bytes,
+            signature_bytes
+        )
         data_bytes = base64.urlsafe_b64decode(signed_field['sig_data'])
         timestamp = struct.unpack(">Q", data_bytes[:8])
         fieldjson = data_bytes[8:]
-        result = json.loads(fieldjson)
-        return result, sig_verified
+        return json.loads(fieldjson), sig_verified
 
 
     async def unpack_agent_message(self, wire_msg_bytes):
@@ -158,8 +172,9 @@ class Agent:
         from_key = None
         if 'sender_verkey' in unpacked:
             from_key = unpacked['sender_verkey']
+            from_did = await utils.did_for_key(self.wallet_handle, unpacked['sender_verkey'])
+
         to_key = unpacked['recipient_verkey']
-        from_did = await utils.did_for_key(self.wallet_handle, unpacked['sender_verkey'])
         to_did = await utils.did_for_key(self.wallet_handle, unpacked['recipient_verkey'])
 
         msg = Serializer.unpack(unpacked['message'])
@@ -173,6 +188,7 @@ class Agent:
         return msg
 
     async def send_message_to_agent(self, to_did, msg:Message):
+        print("Sending:", msg)
         their_did = to_did
 
         pairwise_info = json.loads(await pairwise.get_pairwise(self.wallet_handle, their_did))
