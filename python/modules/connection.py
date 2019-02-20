@@ -293,7 +293,7 @@ class AdminConnection(Module):
 
         response_msg = Message({
             '@type': Connection.RESPONSE,
-            '~thread': { 'thid': pairwise_meta['req_id'] }
+            '~thread': { 'thid': pairwise_meta['req_id'] },
             'connection': {
                 'DID': my_did,
                 'DIDDoc': {
