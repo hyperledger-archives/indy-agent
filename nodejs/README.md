@@ -12,7 +12,7 @@ docker-compose up
 ### Access the agents in a web browser:
 
 To open an agent instance, in a web browser navigate to:
-* `localhost:3000` gor Government
+* `localhost:3000` for Government
 * `localhost:3001` for Alice
 * `localhost:3002` for Bob
 * `localhost:3003` for Faber University
