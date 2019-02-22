@@ -1,5 +1,6 @@
 import re
 import base64
+import uuid
 
 from serializer import JSONSerializer as Serializer
 from message import Message
@@ -22,7 +23,7 @@ class Connection:
             assert matches, 'Improperly formatted invite url!'
 
             invite_msg = Serializer.unpack(
-                base64.urlsafe_b64decode(matches.group(2)).decode('utf-8')
+                base64.urlsafe_b64decode(matches.group(2)).decode('ascii')
             )
 
             validate_message(
@@ -50,7 +51,7 @@ class Connection:
             b64_invite = base64.urlsafe_b64encode(
                 bytes(
                     Serializer.pack(msg),
-                    'utf-8'
+                    'ascii'
                 )
             ).decode('ascii')
 
@@ -69,6 +70,7 @@ class Connection:
         def build(label: str, my_did: str, my_vk: str, endpoint: str) -> Message:
             return Message({
                 '@type': Connection.Message.REQUEST,
+                '@id': str(uuid.uuid4()),
                 'label': label,
                 'connection': {
                     'DID': my_did,
@@ -97,6 +99,7 @@ class Connection:
             validate_message(
                 [
                     ('@type', Connection.Message.REQUEST),
+                    '@id',
                     'label',
                     'connection'
                 ],
@@ -115,9 +118,11 @@ class Connection:
 
     class Response:
         @staticmethod
-        def build(my_did: str, my_vk: str, endpoint: str) -> Message:
+        def build(req_id: str, my_did: str, my_vk: str, endpoint: str) -> Message:
             return Message({
                 '@type': Connection.Message.RESPONSE,
+                '@id': str(uuid.uuid4()),
+                '~thread': {'thid': req_id},
                 'connection': {
                     'DID': my_did,
                     'DIDDoc': {
@@ -145,19 +150,28 @@ class Connection:
             validate_message(
                 [
                     ('@type', Connection.Message.RESPONSE),
+                    '~thread',
                     'connection~sig'
                 ],
                 response
             )
 
         @staticmethod
-        def validate(response: Message):
+        def validate(response: Message, req_id: str):
             validate_message(
                 [
                     ('@type', Connection.Message.RESPONSE),
+                    '~thread',
                     'connection'
                 ],
                 response
+            )
+
+            validate_message(
+                [
+                    ('thid', req_id)
+                ],
+                response['~thread']
             )
 
             validate_message(

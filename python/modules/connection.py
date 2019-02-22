@@ -293,6 +293,7 @@ class AdminConnection(Module):
 
         response_msg = Message({
             '@type': Connection.RESPONSE,
+            '~thread': { 'thid': pairwise_meta['req_id'] },
             'connection': {
                 'DID': my_did,
                 'DIDDoc': {
@@ -409,6 +410,7 @@ class Connection(Module):
             my_did,
             json.dumps({
                 'label': label,
+                'req_id': msg['@id'],
                 'their_endpoint': their_endpoint,
                 'their_vk': their_vk,
                 'my_vk': my_vk,
