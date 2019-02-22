@@ -1,3 +1,5 @@
+var browser = (browser ? browser : chrome);
+
 // Extension Communication {{{
 function caller(message, sender, sendResponse) {
     let ret_val = null;

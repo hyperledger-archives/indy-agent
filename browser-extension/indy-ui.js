@@ -1,3 +1,5 @@
+var browser = (browser ? browser : chrome);
+
 function generateKeys() {
     browser.runtime.sendMessage({
         method: "generateKeys"
