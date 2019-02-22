@@ -51,7 +51,7 @@ async def test_connection_started_by_tested_agent(config, wallet_handle, transpo
 
     response['connection'] = await unpack_and_verify_signed_field(response['connection~sig'])
 
-    Connection.Response.validate(response)
+    Connection.Response.validate(response, request.id)
     print("\nReceived Response (post signature verification):\n", response.pretty_print())
 
 async def get_connection_started_by_suite(config, wallet_handle, transport, label=None):
@@ -80,7 +80,7 @@ async def get_connection_started_by_suite(config, wallet_handle, transport, labe
 
     (my_did, my_vk) = await did.create_and_store_my_did(wallet_handle, '{}')
 
-    response = Connection.Response.build(my_did, my_vk, config.endpoint)
+    response = Connection.Response.build(request.id, my_did, my_vk, config.endpoint)
     print("\nSending Response (pre signature packing):\n", response.pretty_print())
 
     response['connection~sig'] = await sign_field(wallet_handle, connection_key, response['connection'])

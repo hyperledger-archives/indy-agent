@@ -6,6 +6,7 @@ from typing import Optional, Dict, Any
 import toml
 import argparse
 import os
+import sys
 
 class InvalidConfigurationException(Exception):
     """ Exception raise on absent required configuration value
@@ -114,8 +115,12 @@ class Config():
         self._wallet_path_post_process()
 
     def _wallet_path_post_process(self):
-        if self.wallet_path is not None and self.wallet_path.strip()[0] is not '/':
-            self.wallet_path = os.getcwd() + '/' + self.wallet_path
+        if self.wallet_path is not None:
+            if sys.platform == 'win32':
+                if os.path.splitdrive(self.wallet_path) is '':
+                    self.wallet_path = os.getcwd() + '\\' + self.wallet_path
+            elif self.wallet_path.strip()[0] is not '/':
+                self.wallet_path = os.getcwd() + '/' + self.wallet_path
 
 
 if __name__ == '__main__':

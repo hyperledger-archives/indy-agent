@@ -22,7 +22,8 @@ class Message(UserDict):
         UserDict.__init__(self,*args, **kwargs)
         self.context = {}
         # Assign it an ID
-        self.data['@id'] = str(uuid.uuid4())
+        if '@id' not in self.data:
+            self.data['@id'] = str(uuid.uuid4())
 
 
     def to_dict(self):
