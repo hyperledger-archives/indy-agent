@@ -12,17 +12,17 @@ In this section we’ll try to define the canonical uses of the different Agent 
 ### Mobile Edge Agents
 Mobile Edge Agents directly interact with an owner Identity - a person - to manage interactions with other Edge Agents and their Identities. The classic Edge Agent is the mobile agent on a smartphone supporting the smartphone Owner. A Mobile Edge Agent is primarily a Holder/Prover - receiving VerCreds from other entities, and using those VerCreds to prove attributes of its Subject (Owner) Identity. However, there may be reasons for an Edge Agent Identity to want to issue VerCreds - such as to delegate authority to another Identity using VerCreds.
 
-Mobile Edge Agents hold the keys and Link Secret for the Subject Identity, enabling it to establish Edge-to-Edge connections with other Identities. Put another way, Edge Agents hold application level data - the DIDs (and related keys) and Verifiable Credentials for it’s owners end-to-end relationships.  Mobile Edge Agents use Cloud Agents to handle transport between Edge Agents - not for Application level purposes.
+Mobile Edge Agents hold the keys and Link Secret for the Subject Identity, enabling it to establish Edge-to-Edge connections with other Identities. Put another way, Edge Agents hold application level data - the DIDs (and related keys) and Verifiable Credentials for their owners’ end-to-end relationships. Mobile Edge Agents use Cloud Agents to handle transport between Edge Agents - not for Application level purposes.
 
-But for two reasons, a Mobile Edge Agent could be the only Agent needed by an Identity:
+But for two reasons, a Mobile Edge Agent may not be the only Agent needed by an Identity:
 
 * Since smartphones are not always online, a Cloud Agent can supplement the Mobile Edge Agent so that an Identity endpoint is always available.
-* If the endpoint for an Identity is it’s Edge Agent internet address for all relationships, the single endpoint creates a public point of correlation. If the Edge Agent is accessed through an Agency’s Cloud Agent, the endpoint appears to be identical to all of the Agency’s other users.
+* If the endpoint for an Identity is its Edge Agent’s internet address for all relationships, the single endpoint creates a public point of correlation. If the Edge Agent is accessed through an Agency’s Cloud Agent, the endpoint appears to be identical to all of the Agency’s other users.
 
 ### Institution Edge Agent
 An Institution Edge Agent (IEA) is comparable to a Mobile Edge Agent but used to manage the Identity of an Organization in an Institution environment. IEA is not a mobile app, but an app running in an institutional environment - e.g. a private or public cloud, and extends the stereotypical Edge Agent by having a messaging API for configuring the business rules of the IEA.
 
-As with any Edge Agent, it holds the private keys of the Organizational Identity. Where the typical Edge Agent goes to the user to ask how to respond to inputs from other agents, an IEA is configured to have access to a component that injects that “business knowledge” - potentially by connecting with the Edge Agent of user.  There are a number of suggestions for names for that component:
+As with any Edge Agent, it holds the private keys of the Organizational Identity. Where the typical Edge Agent goes to the user to ask how to respond to inputs from other agents, an IEA is configured to have access to a component that injects that “business knowledge” - potentially by connecting with the Edge Agent of a user.  There are a number of suggestions for names for that component:
 * Telegram Sam suggested “Static Agent” on the HL Indy call (June 7, 2018).
 * BC Gov has talked about “Agent Owner” (as in the owner of the Agent) or Adaptor.
 
@@ -46,14 +46,14 @@ As such, there must be enough information implied or in the message passed to th
 #### Cloud Agent Message Handling
 The Cloud Agent must be able to respond to the payload of the message and be able to contact as necessary its associated Edge Agent(s). There are several classes of messages for the Cloud Agent to handle:
 
-* Messages from other Agents to be forwarded to the Edge Agent. Such messages may be have to be queued for the Edge Agent to receive when they are online.
+* Messages from other Agents to be forwarded to the Edge Agent. Such messages may have to be queued for the Edge Agent to receive when they are online.
 * Messages from the Edge Agent to the Agent of other Identities. Such messages need to be forwarded to the endpoint of the of the other Identity. The Cloud Agent may hold the necessary information for that action, or receive that with the message from the Edge Agent.
 * Messages from the Edge Agent for administrative purposes. These are used for things like configuring the Cloud Agent, backups, restores and so on.
 
 #### Cloud Agent Keys and Endpoints
 The Cloud and Edge Agents must have keypairs so that two Agents can auth-crypt (encrypt and sign) messages to one another. Based on our core definition of the Cloud Agent being primarily for message transport, the Cloud Agent does not have keys for accessing the Application Layer content of messages - only the Edge Agents have those keys.
 
-Mobile Edge Agents will by definition have a non-persistent endpoint and the Cloud Agent must have a way to message the Mobile Agent Agent, including queuing messages when the Edge Agent is offline. <<<How does this happen in the mobile world?  The Edge Agent maintains the connection with the Cloud Agent?>>>
+Mobile Edge Agents will by definition have a non-persistent endpoint and the Cloud Agent must have a way to message the Mobile Agent, including queuing messages when the Edge Agent is offline. <<<How does this happen in the mobile world?  The Edge Agent maintains the connection with the Cloud Agent?>>>
 
 #### Other Cloud Agent Functions
 A Cloud Agent may have other functions beyond message transport. 
@@ -64,7 +64,7 @@ A key feature might be providing Wallet backup and restore functionality - holdi
 In an Institution environment, a Cloud Agent is less important since the Edge Agent is likely a persistent end point using on-premise or Cloud hosting. It may still be useful to have a Cloud Agent to prevent correlation. Regardless, an IEA without a Cloud Agent should still look to the rest of the world like any other Agent, so it should have endpoint message handling like that of a Cloud Agent - e.g. expect to be sent [Base64](https://tools.ietf.org/html/rfc4648) encoded anon-encrypted messages via a transport with an id, message type, and appropriate message as the payload.
 
 ### Hubs
-A Hub is much like a Cloud Agent, but rather than focusing only on messaging (transport) as defined above for a Cloud Agent, the Hub also stores and shares data (potentially including Verifiable Credentials), on behalf of its owner. All of the data held by the Hub is en/decrypted by the Edge Agent, so it is the data that moves between the Edge and Hub, and not keys.  The Hub storage can (kind of) be thought of as a remote version of a Wallet without the keys, but is intended to hold more than just the Verifiable Credentials of an Edge Agent wallet. The idea is that the user can push lots of, for example, app-related data to the Hub, and a Service would be granted permission by the Owner to directly access the data without having to go to the Edge Agent. For example, a Hub-centric music service would store the owner’s config information and playlists on the Hub, and the Service would fetch the data from the Hub on use instead of storing it on it’s own servers.
+A Hub is much like a Cloud Agent, but rather than focusing only on messaging (transport) as defined above for a Cloud Agent, the Hub also stores and shares data (potentially including Verifiable Credentials), on behalf of its owner. All of the data held by the Hub is en/decrypted by the Edge Agent, so it is the data that moves between the Edge and Hub, and not keys.  The Hub storage can (kind of) be thought of as a remote version of a Wallet without the keys, but is intended to hold more than just the Verifiable Credentials of an Edge Agent wallet. The idea is that the user can push lots of, for example, app-related data to the Hub, and a Service would be granted permission by the Owner to directly access the data without having to go to the Edge Agent. For example, a Hub-centric music service would store the owner’s config information and playlists on the Hub, and the Service would fetch the data from the Hub on use instead of storing it on its own servers.
 
 ## Messaging Protocol
 ### Transport Payload - Message Packaging/Unpackaging
@@ -123,7 +123,7 @@ The connection offer message is used to disclose the endpoint and the Endpoint D
 * The `id` attribute of the base message is required and is a nonce used to correlate the connection request. The offer nonce is necessarily used when implementing an agency in order to route the connection request to the intended agent/wallet recipient.
 * The `type` attribute of the base message is required and MUST be the value: `urn:indy:sov:agent:message_type:sovrin.org/connection/1.0/connection_offer`
 * The `message` attribute of the base message is required, is not encrypted, and is an object containing the following attributes:
-  * The `did` attribute is required and is the Endpoint DID.  that you can lookup on the ledger which also has an endpoint attribute
+  * The `did` attribute is required and is the Endpoint DID that you can lookup on the ledger which also has an endpoint attribute
   * The `verkey` attribute is optional and is the verification key associated with the Endpoint DID. It is used if the Endpoint DID is not on the ledger or if the Endpoint DID on the ledger does not contain an endpoint attribute or [DID Document](https://w3c-ccg.github.io/did-spec/).
   * The `endpoint` attribute is optional and is the location used through the transport mechanism (i.e. URL if using http/https). It is used if the Endpoint DID is not on the ledger or if the Endpoint DID on the ledger does not contain an endpoint attribute or [DID Document](https://w3c-ccg.github.io/did-spec/).
   * The `offer_nonce` attribute is required and is a nonce used to correlate the connection request. The offer nonce is necessarily used when implementing an agency in order to route the connection request to the intended agent/wallet recipient.

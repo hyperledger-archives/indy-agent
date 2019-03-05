@@ -3,10 +3,14 @@
 import json
 import base64
 import asyncio
+import struct
 import traceback
+import time
+
 import aiohttp
 from indy import wallet, did, error, crypto, pairwise, non_secrets
 
+import indy_sdk_utils as utils
 from serializer import json_serializer as Serializer
 from helpers import bytes_to_str, serialize_bytes_json, str_to_bytes
 from message import Message
@@ -120,67 +124,71 @@ class Agent:
 
             raise WalletConnectionException
 
+    async def sign_agent_message_field(self, field_value, my_vk):
+        timestamp_bytes = struct.pack(">Q", int(time.time()))
+
+        sig_data_bytes = timestamp_bytes + json.dumps(field_value).encode('ascii')
+        sig_data = base64.urlsafe_b64encode(sig_data_bytes).decode('ascii')
+
+        signature_bytes = await crypto.crypto_sign(
+            self.wallet_handle,
+            my_vk,
+            sig_data_bytes
+        )
+        signature = base64.urlsafe_b64encode(
+            signature_bytes
+        ).decode('ascii')
+
+        return {
+            "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/signature/1.0/ed25519Sha512_single",
+            "signer": my_vk,
+            "sig_data": sig_data,
+            "signature": signature
+        }
+
+    async def unpack_and_verify_signed_agent_message_field(self, signed_field):
+        signature_bytes = base64.urlsafe_b64decode(signed_field['signature'].encode('ascii'))
+        sig_data_bytes = base64.urlsafe_b64decode(signed_field['sig_data'].encode('ascii'))
+        sig_verified = await crypto.crypto_verify(
+            signed_field['signer'],
+            sig_data_bytes,
+            signature_bytes
+        )
+        data_bytes = base64.urlsafe_b64decode(signed_field['sig_data'])
+        timestamp = struct.unpack(">Q", data_bytes[:8])
+        fieldjson = data_bytes[8:]
+        return json.loads(fieldjson), sig_verified
+
 
     async def unpack_agent_message(self, wire_msg_bytes):
-        wire_msg = json.loads(wire_msg_bytes)
 
-        # get key from wallet from to: did
-        # TODO: add error reporting if DID not found
+        unpacked = json.loads(
+            await crypto.unpack_message(
+                self.wallet_handle,
+                wire_msg_bytes
+            )
+        )
 
-        #load my key list
-        did_list_str = await did.list_my_dids_with_meta(self.wallet_handle)
-        did_list = json.loads(did_list_str)
-        my_verkey_to_did = {}
-        for d in did_list:
-            my_verkey_to_did[d['verkey']] = d['did']
+        from_key = None
+        if 'sender_verkey' in unpacked:
+            from_key = unpacked['sender_verkey']
+            from_did = await utils.did_for_key(self.wallet_handle, unpacked['sender_verkey'])
 
-        if wire_msg['to'] not in my_verkey_to_did:
-            try:
-                connection_key = json.loads(
-                    await non_secrets.get_wallet_record(
-                        self.wallet_handle,
-                        'connection_key',
-                        wire_msg['to'],
-                        '{}'
-                    )
-                )['value']
-                my_verkey_to_did[wire_msg['to']] = None
-            except Exception as e:
-                raise Exception("Unknown recipient key")
+        to_key = unpacked['recipient_verkey']
+        to_did = await utils.did_for_key(self.wallet_handle, unpacked['recipient_verkey'])
 
-        #load pairwise
-        pairwise_list_str = await pairwise.list_pairwise(self.wallet_handle)
-        pairwise_list = json.loads(pairwise_list_str)
-        their_verkey_to_did = {}
-        for p_str in pairwise_list:
-            p = json.loads(p_str)
-            p_meta = json.loads(p['metadata'])
-            their_verkey_to_did[p_meta['their_vk']] = p['their_did']
-
-        from_did = None
-        if wire_msg['from'] in their_verkey_to_did:
-            from_did = their_verkey_to_did[wire_msg['from']]
-
-        # now process payload
-        message_bytes = base64.b64decode(wire_msg['payload'])
-
-        their_key_str, their_data_bytes = await crypto.auth_decrypt(
-            self.wallet_handle, wire_msg['to'], message_bytes)
-
-        msg_str = bytes_to_str(their_data_bytes)
-        msg_json = json.loads(msg_str)
-
-        msg = Message(msg_json)
+        msg = Serializer.unpack(unpacked['message'])
 
         msg.context = {
-            'from_did': from_did, # will be none if unknown sender verkey
-            'from_key': their_key_str,
-            'to_key': wire_msg['to'],
-            'to_did': my_verkey_to_did[wire_msg['to']]
+            'from_did': from_did, # Could be None
+            'to_did': to_did, # Could be None
+            'from_key': from_key, # Could be None
+            'to_key': to_key
         }
         return msg
 
     async def send_message_to_agent(self, to_did, msg:Message):
+        print("Sending:", msg)
         their_did = to_did
 
         pairwise_info = json.loads(await pairwise.get_pairwise(self.wallet_handle, their_did))
@@ -203,10 +211,21 @@ class Agent:
                                                                     their_ver_key, str_to_bytes(msg.as_json())))
         }
 
+        wire_message = await crypto.pack_message(
+            self.wallet_handle,
+            Serializer.pack(msg),
+            [their_ver_key],
+            my_ver_key
+        )
+
         async with aiohttp.ClientSession() as session:
-            async with session.post(their_endpoint, data=json.dumps(wire_message)) as resp:
-                print(resp.status)
-                print(await resp.text())
+            headers = {
+                'content-type': 'application/ssi-agent-wire'
+            }
+            async with session.post(their_endpoint, data=wire_message, headers=headers) as resp:
+                if resp.status != 202:
+                    print(resp.status)
+                    print(await resp.text())
 
     async def send_admin_message(self, msg: Message):
         await self.outbound_admin_message_queue.put(msg.as_json())

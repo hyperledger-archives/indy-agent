@@ -4,6 +4,8 @@
 import json
 from collections import UserDict
 
+import uuid
+
 
 class Message(UserDict):
     """ Data Model for messages.
@@ -19,6 +21,9 @@ class Message(UserDict):
         """
         UserDict.__init__(self,*args, **kwargs)
         self.context = {}
+        # Assign it an ID
+        if '@id' not in self.data:
+            self.data['@id'] = str(uuid.uuid4())
 
 
     def to_dict(self):
@@ -27,6 +32,10 @@ class Message(UserDict):
     @property
     def type(self):
         return self.data["@type"]
+
+    @property
+    def id(self):
+        return self.data["@id"]
 
     def as_json(self):
         class MessageEncoder(json.JSONEncoder):
