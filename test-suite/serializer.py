@@ -15,7 +15,7 @@ class BaseSerializer(object):
         """ Deserialize to Message.
         """
 
-        raise NotImplementedError("Unpack method in serialzer module \
+        raise NotImplementedError("Unpack method in serializer module \
             is not implemented. Use the methods contained in a submodule of \
             serializer, such as json_serializer.")
 
@@ -23,7 +23,7 @@ class BaseSerializer(object):
         """ Serialize to bytes.
         """
 
-        raise NotImplementedError("Pack method in serialzer module \
+        raise NotImplementedError("Pack method in serializer module \
             is not implemented. Use the methods contained in a submodule of \
             serializer, such as json_serializer.")
 

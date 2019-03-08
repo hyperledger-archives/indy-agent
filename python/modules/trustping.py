@@ -62,13 +62,13 @@ class TrustPing(Module):
     FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
 
     PING = FAMILY + "ping"
-    PING_REPONSE = FAMILY + "ping_response"
+    PING_RESPONSE = FAMILY + "ping_response"
 
     def __init__(self, agent):
         self.agent = agent
         self.router = SimpleRouter()
         self.router.register(TrustPing.PING, self.ping)
-        self.router.register(TrustPing.PING_REPONSE, self.ping_response)
+        self.router.register(TrustPing.PING_RESPONSE, self.ping_response)
 
     async def route(self, msg: Message) -> Message:
         return await self.router.route(msg)
@@ -84,7 +84,7 @@ class TrustPing(Module):
         await self.agent.send_message_to_agent(
             msg.context['from_did'],
             Message({
-                '@type': TrustPing.PING_REPONSE,
+                '@type': TrustPing.PING_RESPONSE,
                 '~thread': {'thid': msg.id}
             })
         )
