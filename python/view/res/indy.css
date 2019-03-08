@@ -112,6 +112,7 @@ code {
     border-radius: 6px;
 }
 #message_history p {
+    word-wrap: anywhere;
     margin-bottom: 0px;
 }
 #message_history .ts {
