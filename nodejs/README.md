@@ -1,3 +1,7 @@
+**_Note:_** This agent implementation is currently unmaintained. The protocols used here are close to but differ from
+the community accepted protocols. For a more update-to-date implementation of the established protocols, see the [Python
+Reference Agent](../python).
+
 # Run the indy-agent node.js reference agent
 
 ## Quick start Instructions
