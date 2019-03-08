@@ -11,7 +11,7 @@ https://github.com/hyperledger/indy-hipe/blob/4696f162/text/0002-agents/README.m
 This repo contains a handful of reference agents. To run them,
 you must have a build of libindy plus a running ledger.  If you
 are just trying them out, we recommend [running a ledger locally
-using docker](https://github.com/hyperledger/indy-sdk/blob/master/docs/ubuntu-build.md).
+using docker](https://github.com/hyperledger/indy-sdk/blob/master/docs/build-guides/ubuntu-build.md).
 See the README in each implementation directory for more
 details.
 
