@@ -32,6 +32,7 @@ would like to list your agent here, please submit a pull request.
 |StreetCred|StreetCred|commercial mobile app + .NET framework for agents of all types|not yet published on the web, but X% passed in Feb 2019|[github.com/ streetcred-id/ agent-framework](https://github.com/streetcred-id/agent-framework)|
 |Verity|Evernym|commercial enterprise agent, focused on credential issuance and proving for login and onboarding|not yet tested|[evernym.com](https://evernym.com)|
 |Connect.Me|Evernym|commercial mobile agent for individuals (free but requires SaaS subscription for supporting cloud agent)|not yet tested|Android or iOS App Store|
+|Pi Agent | Evernym | Simple cli agent for connecting and sending basic messages. Useful in IOT (Raspberry Pi) applications. | not yet tested | [https://github.com/evernym/connectathon-agent](https://github.com/evernym/connectathon-agent) |
 
 ## Related Topics
 
