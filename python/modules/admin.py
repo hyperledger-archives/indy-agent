@@ -3,6 +3,7 @@ import jinja2
 import json
 import socket
 from indy import did, wallet, non_secrets, pairwise
+from indy_sdk_utils import get_wallet_records
 
 from router.simple_router import SimpleRouter
 from agent import Agent
@@ -28,19 +29,8 @@ class Admin(Module):
     async def state_request(self, _) -> Message:
         print("Processing state_request")
 
-        invitations = []
         if self.agent.initialized:
-            search_handle = await non_secrets.open_wallet_search(self.agent.wallet_handle, "invitations",
-                                                                 json.dumps({}),
-                                                                 json.dumps({'retrieveTotalCount': True}))
-            results = await non_secrets.fetch_wallet_search_next_records(self.agent.wallet_handle, search_handle, 100)
-
-            for r in json.loads(results)["records"] or []: # records is None if empty
-                d = json.loads(r['value'])
-                d["_id"] = r["id"] # include record id for further reference.
-                invitations.append(d)
-            #TODO: fetch in loop till all records are processed
-            await non_secrets.close_wallet_search(search_handle)
+            invitations = await get_wallet_records(self.agent.wallet_handle, "invitations")
 
             # load up pairwise connections
             pairwise_records = []

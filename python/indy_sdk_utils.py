@@ -60,3 +60,31 @@ async def did_for_key(wallet_handle, key):
             raise e
 
     return did
+
+
+async def get_wallet_records(wallet_handle: int, search_type: str) -> list:
+    """ Search for records of a given type in a wallet.
+    :param wallet_handle: Handle of the wallet to search.
+    :param search_type: Type of records to search.
+    :return: List of all records found.
+    """
+    list_of_records = []
+    search_handle = await non_secrets.open_wallet_search(wallet_handle,
+                                                         search_type,
+                                                         json.dumps({}),
+                                                         json.dumps({'retrieveTotalCount': True}))
+    while True:
+        results_json = await non_secrets.fetch_wallet_search_next_records(wallet_handle,
+                                                                          search_handle, 10)
+        results = json.loads(results_json)
+
+        if results['totalCount'] == 0 or results['records'] is None:
+            break
+        for record in results['records']:
+            record_value = json.loads(record['value'])
+            record_value['_id'] = record['id']
+            list_of_records.append(record_value)
+
+    await non_secrets.close_wallet_search(search_handle)
+
+    return list_of_records
