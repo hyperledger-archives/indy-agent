@@ -8,7 +8,7 @@ class TrustPing():
     FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
 
     PING = FAMILY + "ping"
-    PING_REPONSE = FAMILY + "ping_response"
+    PING_RESPONSE = FAMILY + "ping_response"
 
     class Ping():
         @staticmethod
@@ -32,7 +32,7 @@ class TrustPing():
         @staticmethod
         def build(ping_id: str):
             return Message({
-                '@type': TrustPing.PING_REPONSE,
+                '@type': TrustPing.PING_RESPONSE,
                 '~thread': {'thid': ping_id }
             })
 
@@ -40,7 +40,7 @@ class TrustPing():
         def validate(message, ping_id):
             validate_message(
                 [
-                    ('@type', TrustPing.PING_REPONSE),
+                    ('@type', TrustPing.PING_RESPONSE),
                     '~thread'
                 ],
                 message

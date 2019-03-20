@@ -13,7 +13,7 @@ def unpack(msg: bytes) -> Message: #pylint: disable=unused-argument
     """ Deserialize to Message.
     """
 
-    raise NotImplementedError("Unpack method in serialzer module \
+    raise NotImplementedError("Unpack method in serializer module \
         is not implemented. Use the methods contained in a submodule of \
         serializer, such as json_serializer.")
 
@@ -21,6 +21,6 @@ def pack(msg: Message) -> bytes: #pylint: disable=unused-argument
     """ Serialize to bytes.
     """
 
-    raise NotImplementedError("Pack method in serialzer module \
+    raise NotImplementedError("Pack method in serializer module \
         is not implemented. Use the methods contained in a submodule of \
         serializer, such as json_serializer.")

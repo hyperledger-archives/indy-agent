@@ -7,9 +7,9 @@ the Sovrin protocol. See [Scope](scope.md) for goal and scope details.
 
 ## Quickstart
 
-There are two ways to run the agent (tested on Ubuntu 16.04 and MacOS Mojave 10.14) :
-1. Using Docker
-2. Using dev mode
+There are two ways to run the agent:
+1. Using Docker (tested on Ubuntu 16.04 and MacOS Mojave 10.14)
+2. Using dev mode (tested on Ubuntu 16.04, MacOS Mojave 10.14 and Windows 10)
 
 Change your current folder to `indy-agent/python`.
 
@@ -37,8 +37,8 @@ reinstalled pip packages into your virtual environment.**
 Procedure :
 * Make sure you have Python virtual environment installed and running.
 * Install requirements: `$ pip install -r requirements.txt`
-* In one instance of your terminal: `$ python indy-agent 8094` and don't close it.
-* In another instance of your terminal: `$ python indy-agent 8095` and don't close it.
+* In one instance of your terminal: `$ python indy-agent.py 8094` and don't close it.
+* In another instance of your terminal: `$ python indy-agent.py 8095` and don't close it.
 * Open up your browser, with two tabs opened: localhost:8094 (agent A) and localhost:8095 (agent B).
 
 ### Using the demo
@@ -57,10 +57,10 @@ the following scenario (in my case `Agent Offer Endpoint : "http://172.17.0.3:80
 Alternatively, the python indy-agent accepts commandline arguments for the wallet 
 name and wallet passphrase (e.g. `Alice` and `1234`). To do this after entering 
 the port number in the command line arguments add in the wallet name and wallet 
-passphrase `python indy-agent 8094 --wallet Alice 1234`.
+passphrase `python indy-agent.py 8094 --wallet Alice 1234`.
 
 During development, it is useful to use an ephemeral wallet that is created new 
 each time. To do so, provide a name and a passphrase on the command line, and 
 add the `--ephemeralwallet` argument. 
-Example: `python indy-agent 8094 --wallet Alice 1234 --ephemeralwallet`. 
+Example: `python indy-agent.py 8094 --wallet Alice 1234 --ephemeralwallet`. 
 Note: ephemeral wallets will not overwrite normal wallets.
