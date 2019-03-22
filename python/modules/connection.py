@@ -168,7 +168,7 @@ class AdminConnection(Module):
 
         await non_secrets.add_wallet_record(
             self.agent.wallet_handle,
-            'invitation',
+            'invitations',
             invite_msg['recipientKeys'][0],
             Serializer.pack(invite_msg),
             '{}'
@@ -199,7 +199,7 @@ class AdminConnection(Module):
             json.loads(
                 await non_secrets.get_wallet_record(
                     self.agent.wallet_handle,
-                    'invitation',
+                    'invitations',
                     msg['key'],
                     '{}'
                 )
@@ -494,6 +494,11 @@ class Connection(Module):
                 'my_vk': my_vk
             })
         )
+
+        # Delete invitation
+        await non_secrets.delete_wallet_record(self.agent.wallet_handle,
+                                               'invitations',
+                                               msg.data['connection~sig']['signer'])
 
         # Pairwise connection between agents is established at this point
         await self.agent.send_admin_message(

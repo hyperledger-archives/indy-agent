@@ -386,10 +386,10 @@
                     console.log('invitations', state.invitations);
                     state.invitations.forEach((i) => {
                         this.connections.push({
-                            id: i.id,
-                            name: i.name,
+                            id: (i._id).substring(0,12),
+                            name: i.label,
                             invitation: {
-                                key: i.connection_key,
+                                key: i.key,
                                 endpoint: i.endpoint
                             },
                             status: "Invite Received",
