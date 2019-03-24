@@ -7,9 +7,10 @@ import json
 import base64
 import uuid
 import re
+import datetime
 
 import aiohttp
-from indy import crypto, did, pairwise, non_secrets
+from indy import crypto, did, pairwise, non_secrets, error
 
 import indy_sdk_utils as utils
 import serializer.json_serializer as Serializer
@@ -157,20 +158,24 @@ class AdminConnection(Module):
             base64.urlsafe_b64decode(matches.group(2)).decode('utf-8')
         )
 
-        record = uuid.uuid4().hex
-
-        await self.agent.send_admin_message(Message({
+        pending_connection = Message({
             '@type': AdminConnection.INVITE_RECEIVED,
             'label': invite_msg['label'],
-            'key': invite_msg['recipientKeys'][0],
-            'endpoint': invite_msg['serviceEndpoint']
-        }))
+            'connection_key': invite_msg['recipientKeys'][0],
+            'endpoint': invite_msg['serviceEndpoint'],
+            'history': [{
+                'date': str(datetime.datetime.now()),
+                'msg': invite_msg.to_dict()
+            }],
+            'status': "Invite Received"
+        })
+        await self.agent.send_admin_message(pending_connection)
 
         await non_secrets.add_wallet_record(
             self.agent.wallet_handle,
             'invitations',
             invite_msg['recipientKeys'][0],
-            Serializer.pack(invite_msg),
+            Serializer.pack(pending_connection),
             '{}'
         )
 
@@ -195,21 +200,21 @@ class AdminConnection(Module):
                   }
                 }
         """
-        invite = Serializer.unpack(
+        pending_connection = Serializer.unpack(
             json.loads(
                 await non_secrets.get_wallet_record(
                     self.agent.wallet_handle,
                     'invitations',
-                    msg['key'],
+                    msg['connection_key'],
                     '{}'
                 )
             )['value']
         )
 
         my_label = self.agent.owner
-        label = invite['label']
-        their_connection_key = invite['recipientKeys'][0]
-        their_endpoint = invite['serviceEndpoint']
+        label = pending_connection['label']
+        their_connection_key = pending_connection['connection_key']
+        their_endpoint = pending_connection['endpoint']
 
         # Create my information for connection
         (my_did, my_vk) = await utils.create_and_store_my_did(self.agent.wallet_handle)
@@ -256,12 +261,17 @@ class AdminConnection(Module):
             request
         )
 
-        await self.agent.send_admin_message(
-            Message({
-                '@type': AdminConnection.REQUEST_SENT,
-                'label': label
-            })
-        )
+        pending_connection['@type'] = AdminConnection.REQUEST_SENT
+        pending_connection['status'] = "Request Sent"
+        pending_connection['history'].append({
+            'date': str(datetime.datetime.now()),
+            'msg': msg.to_dict()})
+        await non_secrets.update_wallet_record_value(self.agent.wallet_handle,
+                                                     'invitations',
+                                                     pending_connection['connection_key'],
+                                                     Serializer.pack(pending_connection))
+
+        await self.agent.send_admin_message(pending_connection)
 
     async def send_response(self, msg: Message) -> Message:
         """ Send response to request.
@@ -320,15 +330,27 @@ class AdminConnection(Module):
         response_msg['connection~sig'] = await self.agent.sign_agent_message_field(response_msg['connection'], pairwise_meta["connection_key"])
         del response_msg['connection']
 
+        pending_connection = Serializer.unpack(
+            json.loads(
+                await non_secrets.get_wallet_record(self.agent.wallet_handle,
+                                                    'invitations',
+                                                    pairwise_meta['connection_key'],
+                                                    '{}')
+            )['value']
+        )
+        pending_connection['status'] = "Response Sent"
+        pending_connection['@type'] = AdminConnection.RESPONSE_SENT
+        pending_connection['history'].append({
+            'date': str(datetime.datetime.now()),
+            'msg': msg.to_dict()})
+
         await self.agent.send_message_to_agent(their_did, response_msg)
 
-        await self.agent.send_admin_message(
-            Message({
-                '@type': AdminConnection.RESPONSE_SENT,
-                'label': label,
-                'did': their_did
-            })
-        )
+        await self.agent.send_admin_message(pending_connection)
+
+        await non_secrets.delete_wallet_record(self.agent.wallet_handle,
+                                               'invitations',
+                                               pairwise_meta['connection_key'])
 
 class Connection(Module):
 
@@ -418,15 +440,33 @@ class Connection(Module):
             })
         )
 
-        await self.agent.send_admin_message(
-            Message({
-                '@type': AdminConnection.REQUEST_RECEIVED,
-                'label': label,
-                'did': their_did,
-                'endpoint': their_endpoint,
-                'history': msg
-            })
-        )
+        pending_connection = Message({
+            '@type': AdminConnection.REQUEST_RECEIVED,
+            'label': label,
+            'did': their_did,
+            'connection_key': connection_key,
+            'endpoint': their_endpoint,
+            'history': [{
+                'date': str(datetime.datetime.now()),
+                'msg': msg.to_dict()}],
+            'status': "Request Received"
+            # routingKeys not specified, but here is where they would be put in the invite.
+        })
+        try:
+            await non_secrets.add_wallet_record(
+                self.agent.wallet_handle,
+                'invitations',
+                connection_key,
+                Serializer.pack(pending_connection),
+                '{}'
+            )
+        except error.IndyError as indy_error:
+            if indy_error.error_code == error.ErrorCode.WalletItemAlreadyExists:
+                pass
+            raise indy_error
+        await self.agent.send_admin_message(pending_connection)
+
+
 
 
     async def response_received(self, msg: Message) -> Message:
@@ -495,17 +535,24 @@ class Connection(Module):
             })
         )
 
+        pending_connection = Serializer.unpack(
+            json.loads(
+                await non_secrets.get_wallet_record(self.agent.wallet_handle,
+                                                    'invitations',
+                                                    msg.data['connection~sig']['signer'],
+                                                    '{}')
+            )['value']
+        )
+        pending_connection['status'] = "Response Received"
+        pending_connection['@type'] = AdminConnection.RESPONSE_RECEIVED
+        pending_connection['history'].append({
+            'date': str(datetime.datetime.now()),
+            'msg': msg.to_dict()})
+
+        # Pairwise connection between agents is established at this point
+        await self.agent.send_admin_message(pending_connection)
+
         # Delete invitation
         await non_secrets.delete_wallet_record(self.agent.wallet_handle,
                                                'invitations',
                                                msg.data['connection~sig']['signer'])
-
-        # Pairwise connection between agents is established at this point
-        await self.agent.send_admin_message(
-            Message({
-                '@type': AdminConnection.RESPONSE_RECEIVED,
-                'label': label,
-                'their_did': their_did,
-                'history': msg
-            })
-        )

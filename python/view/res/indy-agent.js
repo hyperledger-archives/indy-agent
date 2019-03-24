@@ -152,12 +152,10 @@
             invite_received: function (msg) {
                 this.connections.push({
                     label: msg.label,
-                    invitation: {
-                        key: msg.key,
-                        endpoint: msg.endpoint
-                    },
-                    status: "Invite Received",
-                    history: [history_format(msg.history)]
+                    connection_key: msg.connection_key,
+                    endpoint: msg.endpoint,
+                    status: msg.status  ,
+                    history: history_log_format(msg.history)
                 });
             },
 
@@ -172,22 +170,22 @@
             send_request: function (c) {
                 msg = {
                     '@type': ADMIN_CONNECTION.SEND_REQUEST,
-                    key: c.invitation.key
+                    connection_key: c.connection_key
                 };
                 sendMessage(msg);
             },
             request_sent: function (msg) {
-                var c = this.get_connection_by_name(msg.label);
-                c.status = "Request Sent";
+                var c = this.get_connection_by_key(msg.connection_key);
+                c.status = msg.status;
             },
             request_received: function (msg) {
                 this.connections.push({
                     label: msg.label,
                     did: msg.did,
-                    status: "Request Received",
-                    history: [history_format(msg.history)]
+                    status: msg.status,
+                    connection_key: msg.connection_key,
+                    history: history_log_format(msg.history)
                 })
-                sendMessage({'@type': ADMIN.STATE_REQUEST});
             },
             send_response: function (c) {
                 msg = {
@@ -197,32 +195,16 @@
                 sendMessage(msg);
             },
             response_sent: function (msg) {
-                var c = this.get_connection_by_name(msg.label);
-                c.status = "Response sent";
-                c.message_capable = true;
-                c.history.push(history_format(msg.history));
-                // remove from pending connections list
-                this.connections.splice(this.connections.indexOf(c), 1);
-
+                // request a state update to see the new pairwise connection
+                // this.connections will be emptied at the same time
+                sendMessage({'@type': ADMIN.STATE_REQUEST});
             },
             response_received: function (msg) {
-                var c = this.get_connection_by_name(msg.label);
-                c.status = "Response received";
-                c.response_msg = msg;
-                c.their_did = msg.their_did;
-                c.message_capable = true;
-                c.history.push(history_format(msg.history));
-
-                // remove from pending connections list
-                this.connections.splice(this.connections.indexOf(c), 1);
-
-                // now request a state update to see the new pairwise connection
+                // request a state update to see the new pairwise connection
+                // this.connections will be emptied at the same time
                 sendMessage({'@type': ADMIN.STATE_REQUEST});
             },
             message_sent: function (msg) {
-                //var c = this.get_connection_by_name(msg.content.name);
-                //c.status = "Message sent";
-                // msg.with has their_did to help match.
                 if(msg.with == this.connection.their_did){
                     //connection view currently open
                     sendMessage({
@@ -252,8 +234,8 @@
                 console.log(this.history_view);
                 $('#historyModal').modal({});
             },
-            get_connection_by_name: function(label){
-               return this.connections.find(function(x){return x.label === msg.label;});
+            get_connection_by_key: function(connection_key){
+               return this.connections.find(function(x){return x.connection_key === connection_key;});
             },
             show_connection: function(c){
                 Vue.set(c, 'trustping_state', ""); // set here to allow vue to bind.
@@ -384,19 +366,13 @@
                     //load invitations
 
                     console.log('invitations', state.invitations);
+                    // Load pending connections while beautifying history messages
+                    this.connections = []
                     state.invitations.forEach((i) => {
-                        this.connections.push({
-                            id: (i._id).substring(0,12),
-                            name: i.label,
-                            invitation: {
-                                key: i.key,
-                                endpoint: i.endpoint
-                            },
-                            status: "Invite Received",
-                            history: []
-                        });
+                        i.history = history_log_format(i.history)
+                        this.connections.push(i);
                     });
-                    //load connections
+                    // Load pairwise connections
                     this.pairwise_connections = state['pairwise_connections'];
                 }
             }

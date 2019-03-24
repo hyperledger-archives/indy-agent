@@ -152,7 +152,7 @@
                 </thead>
                 <tbody>
                     <tr v-for="c in connections">
-                        <td></td>
+                        <td>{{ c.connection_key }}</td>
                         <td>{{ c.label }}</td>
                         <td>{{ c.status }}</td>
                         <td>
@@ -174,12 +174,14 @@
                 <thead>
                     <tr>
                         <th scope="col">Name</th>
+                        <th scope="col">Their DID</th>
                         <th scope="col">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-for="c in pairwise_connections">
                         <td style="cursor:pointer;" v-on:click="show_connection(c)">{{ c.metadata.label }}</td>
+                        <td>{{ c.their_did }} </td>
                         <td>
 
                         </td>
@@ -199,9 +201,7 @@
                   <div class="modal-body">
                     <div v-for="h in history_view">
                         <h3>{{h.date}}</h3>
-                        <pre class="prettyprint lang-py" id="history_body">
-                          {{h.msg}}
-                        </pre>
+                        <pre class="prettyprint lang-py" id="history_body">{{h.msg}}</pre>
                     </div>
 
                   </div>
