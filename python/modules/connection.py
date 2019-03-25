@@ -194,8 +194,8 @@ class AdminConnection(Module):
                 {
                   "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/request",
                   "label": "Bob",
-                  "DID": "B.did@B:A",
-                  "DIDDoc": {
+                  "did": "B.did@B:A",
+                  "did_doc": {
                       // did Doc here.
                   }
                 }
@@ -233,8 +233,8 @@ class AdminConnection(Module):
             '@type': Connection.REQUEST,
             'label': my_label,
             'connection': {
-                'DID': my_did,
-                'DIDDoc': {
+                'did': my_did,
+                'did_doc': {
                     "@context": "https://w3id.org/did/v1",
                     "id": my_did,
                     "publicKey": [{
@@ -286,8 +286,8 @@ class AdminConnection(Module):
             Response format:
                 {
                   "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/response",
-                  "DID":"A.did@A:B",
-                  "DIDDoc": {
+                  "did":"A.did@A:B",
+                  "did_doc": {
                       //did doc
                   }
                 }
@@ -305,8 +305,8 @@ class AdminConnection(Module):
             '@type': Connection.RESPONSE,
             '~thread': { 'thid': pairwise_meta['req_id'] },
             'connection': {
-                'DID': my_did,
-                'DIDDoc': {
+                'did': my_did,
+                'did_doc': {
                     "@context": "https://w3id.org/did/v1",
                     "id": my_did,
                     "publicKey": [{
@@ -381,8 +381,8 @@ class Connection(Module):
                   "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/request",
                   "label": "Bob",
                   "connection":{
-                      "DID": "B.did@B:A",
-                      "DIDDoc": {
+                      "did": "B.did@B:A",
+                      "did_doc": {
                           "@context": "https://w3id.org/did/v1",
                           "publicKey": [{
                             "id": "did:example:123456789abcdefghi#keys-1",
@@ -403,11 +403,11 @@ class Connection(Module):
         connection_key = msg.context['to_key']
 
         label = msg['label']
-        their_did = msg['connection']['DID']
+        their_did = msg['connection']['did']
         # NOTE: these values are pulled based on the minimal connectathon format. Full processing
         #  will require full DIDDoc storage and evaluation.
-        their_vk = msg['connection']['DIDDoc']['publicKey'][0]['publicKeyBase58']
-        their_endpoint = msg['connection']['DIDDoc']['service'][0]['serviceEndpoint']
+        their_vk = msg['connection']['did_doc']['publicKey'][0]['publicKeyBase58']
+        their_endpoint = msg['connection']['did_doc']['service'][0]['serviceEndpoint']
 
         # Store their information from request
         await utils.store_their_did(self.agent.wallet_handle, their_did, their_vk)
@@ -475,8 +475,8 @@ class Connection(Module):
             Response format:
                 {
                   "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/response",
-                  "DID":"A.did@A:B",
-                  "DIDDoc": {
+                  "did":"A.did@A:B",
+                  "did_doc": {
                       //did doc
                   }
                 }
@@ -489,9 +489,9 @@ class Connection(Module):
         # connection~sig remains for metadata
 
 
-        their_did = msg['connection']['DID']
-        their_vk = msg['connection']['DIDDoc']['publicKey'][0]['publicKeyBase58']
-        their_endpoint = msg['connection']['DIDDoc']['service'][0]['serviceEndpoint']
+        their_did = msg['connection']['did']
+        their_vk = msg['connection']['did_doc']['publicKey'][0]['publicKeyBase58']
+        their_endpoint = msg['connection']['did_doc']['service'][0]['serviceEndpoint']
 
         msg_vk = msg.context['from_key']
         # TODO: verify their_vk (from did doc) matches msg_vk
