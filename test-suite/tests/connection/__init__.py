@@ -61,9 +61,9 @@ class Connection:
         @staticmethod
         def parse(request: Message):
             return (
-                request['connection']['DIDDoc']['publicKey'][0]['controller'],
-                request['connection']['DIDDoc']['publicKey'][0]['publicKeyBase58'],
-                request['connection']['DIDDoc']['service'][0]['serviceEndpoint']
+                request['connection']['did_doc']['publicKey'][0]['controller'],
+                request['connection']['did_doc']['publicKey'][0]['publicKeyBase58'],
+                request['connection']['did_doc']['service'][0]['serviceEndpoint']
             )
 
         @staticmethod
@@ -124,8 +124,8 @@ class Connection:
                 '@id': str(uuid.uuid4()),
                 '~thread': {'thid': req_id},
                 'connection': {
-                    'DID': my_did,
-                    'DIDDoc': {
+                    'did': my_did,
+                    'did_doc': {
                         "@context": "https://w3id.org/did/v1",
                         "id": my_did,
                         "publicKey": [{
