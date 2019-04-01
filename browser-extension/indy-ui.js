@@ -1,26 +1,25 @@
-var browser = (browser ? browser : chrome);
-
 function generateKeys() {
     browser.runtime.sendMessage({
         method: "generateKeys"
+    }).then(function(){
+        displayPublicKey();
     });
-    getPublicKey();
 }
 
 function removeKeys() {
     browser.runtime.sendMessage({
         method: "removeKeys"
+    }).then(function(){
+        displayPublicKey();
     });
-    document.getElementById('public-key').value = "";
 }
 
-function getPublicKey() {
-    let res = browser.runtime.sendMessage({
+function displayPublicKey() {
+    browser.runtime.sendMessage({
         method: "getPublicKey"
+    }).then(function(response) {
+        document.getElementById('public-key').value = response || "-- no key --";
     });
-    res.then(function(response) {
-        document.getElementById('public-key').value = response;
-    })
 }
 
 function copyPublicKey() {
@@ -28,7 +27,7 @@ function copyPublicKey() {
     document.execCommand('copy');
 }
 
-getPublicKey();
+displayPublicKey();
 document.getElementById('generate-keys').addEventListener('click', generateKeys);
 document.getElementById('remove-keys').addEventListener('click', removeKeys);
 document.getElementById('copy-public-key').addEventListener('click', copyPublicKey);
