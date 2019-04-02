@@ -1,0 +1,3 @@
+libsodium must be run in a special sandbox. Details:
+https://stackoverflow.com/questions/53773291/using-libsodium-js-in-a-browser-extension
+https://developer.chrome.com/extensions/sandboxingEval

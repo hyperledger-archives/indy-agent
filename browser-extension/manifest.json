@@ -10,10 +10,13 @@
     "background": {
         "page": "indy-bg.html"
     },
+    "sandbox": {
+        "pages": ["crypto-sandbox.html"]
+    },
     "content_scripts": [
         {
             "matches": ["<all_urls>"],
-            "js": ["indy-content.js"],
+            "js": ["lib/browser-polyfill-0.4.0.js","indy-content.js"],
             "run_at": "document_start"
         }
     ],
