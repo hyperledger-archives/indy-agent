@@ -1,8 +1,14 @@
 function displayObject(obj) {
     return JSON.stringify(obj, null, 4); // beautiful indented obj.
 }
-function history_format(msg_content){
+
+function history_format(msg_content) {
     return {'date':getTodayDate(), 'msg':displayObject(msg.content)};
+}
+
+function history_log_format(history) {
+    history.forEach((item) => { item.msg = displayObject(item.msg) })
+    return history
 }
 
 function getTodayDate() {

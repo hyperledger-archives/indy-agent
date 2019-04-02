@@ -56,7 +56,7 @@ class Agent:
                 try:
                     msg = Serializer.unpack(wire_msg_bytes)
                 except Exception as e:
-                    print("Message encryped, attempting to unpack...")
+                    print("Message encrypted, attempting to unpack...")
 
                 # TODO: More graceful checking here
                 # (This is an artifact of the provisional wire format and connection protocol)
