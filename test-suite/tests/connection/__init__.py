@@ -73,8 +73,8 @@ class Connection:
                 '@id': str(uuid.uuid4()),
                 'label': label,
                 'connection': {
-                    'DID': my_did,
-                    'DIDDoc': {
+                    'did': my_did,
+                    'did_doc': {
                         "@context": "https://w3id.org/did/v1",
                         "id": my_did,
                         "publicKey": [{
@@ -108,13 +108,13 @@ class Connection:
 
             validate_message(
                 [
-                    'DID',
-                    'DIDDoc'
+                    'did',
+                    'did_doc'
                 ],
                 request['connection']
             )
 
-            Connection.DIDDoc.validate(request['connection']['DIDDoc'])
+            Connection.DIDDoc.validate(request['connection']['did_doc'])
 
     class Response:
         @staticmethod
@@ -176,13 +176,13 @@ class Connection:
 
             validate_message(
                 [
-                    'DID',
-                    'DIDDoc'
+                    'did',
+                    'did_doc'
                 ],
                 response['connection']
             )
 
-            Connection.DIDDoc.validate(response['connection']['DIDDoc'])
+            Connection.DIDDoc.validate(response['connection']['did_doc'])
 
     class DIDDoc:
         @staticmethod
