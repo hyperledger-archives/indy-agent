@@ -1,4 +1,3 @@
-{% raw %}
 <!doctype html>
 <html lang="en">
   <head>
@@ -6,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
+    <meta name="agent_admin_key" content="{{agent_admin_key}}">
+
     <link rel="icon" href="favicon.ico">
 
+{% raw %}
     <title>Indy Agent {{agent_name}}</title>
 
     <!-- Bootstrap core CSS -->
@@ -263,6 +265,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/locale/es-us.js"></script>
     <script src="/res/vue-moment.min.js"></script>
 
+    <script src="res/indy-connector.js"></script>
     <script src="/res/indy-agent.js"></script>
     <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
     <script src="/res/utils.js"></script>

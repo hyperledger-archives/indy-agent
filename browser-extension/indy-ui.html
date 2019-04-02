@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+      <script src="lib/browser-polyfill-0.4.0.js"></script>
+    <!-- Bootstrap core CSS -->
+    <link href="lib/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom styles for extension -->
+    <link href="indy.css" rel="stylesheet">
+  </head>
+
+  <body>
+
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+      <a class="navbar-brand" href="#">Indy Thin Agent</a>
+    </nav>
+
+    <main role="main" class="container">
+        <div id="inputs">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Public Key</span>
+                </div>
+                <input type="text" class="form-control" id="public-key">
+                <span class="input-group-btn">
+                    <button class="btn btn-default" type="button" id="copy-public-key">Copy</button>
+                </span>
+            </div>
+        </div>
+        <div id="controls">
+            <button class="indy-controls mx-auto btn btn-primary" type="button" id="generate-keys">Generate Key</button>
+            <button class="indy-controls mx-auto btn btn-secondary" type="button" id="remove-keys">Remove Keys</button>
+        </div>
+    </main><!-- /.container -->
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <script src="lib/bootstrap.min.js"></script>
+    <script src="indy-ui.js"></script>
+  </body>
+</html>

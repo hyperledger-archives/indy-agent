@@ -65,7 +65,6 @@ class Admin(Module):
 
 @aiohttp_jinja2.template('index.html')
 async def root(request):
-    print(request)
     agent = request.app['agent']
     local_ip = socket.gethostbyname(socket.gethostname())
     agent.offer_endpoint = request.url.scheme + '://' + local_ip
@@ -77,4 +76,4 @@ async def root(request):
         agent.endpoint += '/indy'
         agent.offer_endpoint += '/offer'
     print('Agent Offer Endpoint : "{}"'.format(agent.offer_endpoint))
-    return {'ui_token': agent.ui_token}
+    return {'agent_admin_key': agent.agent_admin_key}

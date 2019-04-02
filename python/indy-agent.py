@@ -36,6 +36,7 @@ if __name__ == "__main__":
         help="The name and passphrase of the wallet to connect to."
     )
     parser.add_argument("--ephemeralwallet", action="store_true", help="Use ephemeral wallets")
+    parser.add_argument("--adminkey", type=str, help="Base58 encoded admin interface key")
     args = parser.parse_args()
 
     # Configure webapp
@@ -89,6 +90,14 @@ if __name__ == "__main__":
             print(e)
     else:
         print("Configure wallet connection via UI.")
+
+    if args.adminkey:
+        try:
+            LOOP.run_until_complete(
+                AGENT.setup_admin(args.adminkey)
+            )
+        except Exception as e:
+            print(e)
 
     # Main loop
     try:

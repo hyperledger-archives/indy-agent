@@ -34,6 +34,8 @@ class Agent:
         self.modules = {}
         self.family_router = FamilyRouter()
         self.message_queue = asyncio.Queue()
+        self.admin_key = None
+        self.agent_admin_key = None
         self.outbound_admin_message_queue = asyncio.Queue()
 
     def register_module(self, module):
@@ -64,6 +66,7 @@ class Agent:
                         msg = await self.unpack_agent_message(wire_msg_bytes)
                     except Exception as e:
                         print('Failed to unpack message: {}\n\nError: {}'.format(wire_msg_bytes, e))
+                        traceback.print_exc()
                         continue  # handle next message in loop
 
                 await self.route_message_to_module(msg)
@@ -161,7 +164,8 @@ class Agent:
 
 
     async def unpack_agent_message(self, wire_msg_bytes):
-
+        if isinstance(wire_msg_bytes, str):
+            wire_msg_bytes = bytes(wire_msg_bytes, 'utf-8')
         unpacked = json.loads(
             await crypto.unpack_message(
                 self.wallet_handle,
@@ -204,13 +208,6 @@ class Agent:
 
     # used directly when sending to an endpoint without a known did
     async def send_message_to_endpoint_and_key(self, my_ver_key, their_ver_key, their_endpoint, msg):
-        wire_message = {
-            'to': their_ver_key,
-            'from': my_ver_key,
-            'payload': serialize_bytes_json(await crypto.auth_crypt(self.wallet_handle, my_ver_key,
-                                                                    their_ver_key, str_to_bytes(msg.as_json())))
-        }
-
         wire_message = await crypto.pack_message(
             self.wallet_handle,
             Serializer.pack(msg),
@@ -227,5 +224,21 @@ class Agent:
                     print(resp.status)
                     print(await resp.text())
 
+    async def setup_admin(self, admin_key):
+        self.admin_key = admin_key
+        self.agent_admin_key = await crypto.create_key(self.wallet_handle, '{}')
+        print("Admin key: ", self.agent_admin_key)
+
     async def send_admin_message(self, msg: Message):
-        await self.outbound_admin_message_queue.put(msg.as_json())
+        if self.agent_admin_key and self.admin_key:
+            msg = await crypto.pack_message(
+                self.wallet_handle,
+                Serializer.pack(msg),
+                [self.admin_key],
+                self.agent_admin_key
+            )
+            msg = msg.decode('ascii')
+        else:
+            msg = msg.as_json()
+
+        await self.outbound_admin_message_queue.put(msg)

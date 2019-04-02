@@ -51,6 +51,62 @@
         TRUSTPING_RESPONSE_RECEIVED: MESSAGE_TYPES.ADMIN_TRUSTPING_BASE + "trustping_response_received"
     };
 
+    window.indy_connector.ping();
+    const agent_admin_key = document.head.querySelector("[name=agent_admin_key][content]").content;
+
+    // Create WebSocket connection.
+    const socket = new WebSocket('ws://' + window.location.hostname + ':' + window.location.port + '/ws');
+
+    // Connection opened
+    socket.addEventListener('open', function(event) {
+        ui_agent.connect();
+    });
+
+    // Listen for messages
+    socket.addEventListener('message', function (event) {
+        if (indy_connector.extension_exists) {
+            console.log("attempting to unpack");
+            indy_connector.unpack_message(event.data);
+        } else {
+            console.log('Routing: ' + event.data);
+            msg = JSON.parse(event.data);
+            msg_router.route(msg);
+            thread_router.route(msg);
+        }
+    });
+
+
+    function sendMessage(msg, thread_cb){
+        //decorate message as necessary
+        msg.id = (new Date()).getTime(); // ms since epoch
+
+        // register thread callback
+        if(typeof thread_cb !== "undefined") {
+            thread_router.register(msg.id, thread_cb);
+        }
+
+        // TODO: Encode properly when wire protocol is finished
+        if (indy_connector.extension_exists) {
+            console.log("Packing message: ", msg);
+            indy_connector.pack_message(JSON.stringify(msg), agent_admin_key);
+        } else {
+            console.log("sending message", msg);
+            socket.send(JSON.stringify(msg));
+        }
+    }
+
+    indy_connector.register_pack_cb(function(message) {
+        console.log("sending message", message);
+        socket.send(message);
+    });
+
+    indy_connector.register_unpack_cb(function(result) {
+        console.log('Routing: ', result.message);
+        msg = JSON.parse(result.message);
+        msg_router.route(msg);
+        thread_router.route(msg);
+    });
+
     // Message Router {{{
     var msg_router = {
         routes: [],
@@ -399,32 +455,3 @@
 
     // }}}
 
-    // Create WebSocket connection.
-    const socket = new WebSocket('ws://' + window.location.hostname + ':' + window.location.port + '/ws');
-
-    // Connection opened
-    socket.addEventListener('open', function(event) {
-        ui_agent.connect();
-    });
-
-    // Listen for messages
-    socket.addEventListener('message', function (event) {
-        console.log('Routing: ' + event.data);
-        msg = JSON.parse(event.data);
-        msg_router.route(msg);
-        thread_router.route(msg);
-    });
-
-    function sendMessage(msg, thread_cb){
-        //decorate message as necessary
-        msg.id = (new Date()).getTime(); // ms since epoch
-
-        // register thread callback
-        if(typeof thread_cb !== "undefined") {
-            thread_router.register(msg.id, thread_cb);
-        }
-
-        // TODO: Encode properly when wire protocol is finished
-        console.log("sending message", msg);
-        socket.send(JSON.stringify(msg));
-    }

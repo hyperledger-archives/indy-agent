@@ -1,0 +1,39 @@
+{
+    "browser_action": {
+        "default_title": "Indy",
+        "default_popup": "indy-ui.html",
+        "browser_style": true,
+        "default_icon": {
+            "128": "icons/sovrin.png"
+        }
+    },
+    "background": {
+        "page": "indy-bg.html"
+    },
+    "sandbox": {
+        "pages": ["crypto-sandbox.html"]
+    },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["lib/browser-polyfill-0.4.0.js","indy-content.js"],
+            "run_at": "document_start"
+        }
+    ],
+    "description": "Indy Browser Extension",
+    "manifest_version": 2,
+    "name": "Indy",
+    "permissions": [
+        "clipboardWrite",
+        "activeTab"
+    ],
+    "icons": {
+        "128": "icons/sovrin.png"
+    },
+    "version": "1.0",
+    "applications": {
+        "gecko": {
+            "strict_min_version": "55.0a1"
+        }
+    }
+}
