@@ -531,7 +531,8 @@ class Connection(Module):
                 'label': label,
                 'their_endpoint': their_endpoint,
                 'their_vk': their_vk,
-                'my_vk': my_vk
+                'my_vk': my_vk,
+                'connection_key': msg.data['connection~sig']['signer']
             })
         )
 
