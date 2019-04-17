@@ -5,7 +5,7 @@ const MESSAGE_TYPES = {
     ADMIN_WALLETCONNECTION_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin_walletconnection/1.0/",
     ADMIN_BASICMESSAGE_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin_basicmessage/1.0/",
     ADMIN_TRUSTPING_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin_trustping/1.0/",
-    ADMIN_PROTOCOL_DISCOVERY_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin-protocol-discovery/1.0/"
+    ADMIN_PROTOCOL_DISCOVERY_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin_protocol_discovery/1.0/"
 };
 
 const ADMIN = {

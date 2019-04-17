@@ -5,7 +5,7 @@ from router.simple_router import SimpleRouter
 from . import Module
 
 class AdminProtocolDiscovery(Module):
-    FAMILY_NAME = "admin-protocol-discovery"
+    FAMILY_NAME = "admin_protocol_discovery"
     VERSION = "1.0"
     FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION
 
@@ -40,7 +40,7 @@ class AdminProtocolDiscovery(Module):
 
 
 class ProtocolDiscovery(Module):
-    FAMILY_NAME = "protocol-discovery"
+    FAMILY_NAME = "protocol_discovery"
     VERSION = "1.0"
     FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION
 
