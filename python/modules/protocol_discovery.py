@@ -7,9 +7,13 @@ from . import Module
 class AdminProtocolDiscovery(Module):
     FAMILY_NAME = "admin-protocol-discovery"
     VERSION = "1.0"
-    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION
 
-    SEND_QUERY = FAMILY + "send_query"
+    SEND_QUERY = FAMILY + "/send_query"
+    QUERY_SENT = FAMILY + "/query_sent"
+    QUERY_RECEIVED = FAMILY + "/query_received"
+    DISCLOSE_SENT = FAMILY + "/disclose_sent"
+    DISCLOSE_RECEIVED = FAMILY + "/disclose_received"
 
     def __init__(self, agent):
         self.agent = agent
