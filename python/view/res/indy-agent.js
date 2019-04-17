@@ -53,7 +53,11 @@ const ADMIN_TRUSTPING = {
 };
 
 const ADMIN_PROTOCOL_DISCOVERY = {
-    SEND_QUERY: MESSAGE_TYPES.ADMIN_PROTOCOL_DISCOVERY_BASE + "send_query"
+    SEND_QUERY: MESSAGE_TYPES.ADMIN_PROTOCOL_DISCOVERY_BASE + "send_query",
+    QUERY_SENT: MESSAGE_TYPES.ADMIN_PROTOCOL_DISCOVERY_BASE + "query_sent",
+    QUERY_RECEIVED: MESSAGE_TYPES.ADMIN_PROTOCOL_DISCOVERY_BASE + "query_received",
+    DISCLOSE_SENT: MESSAGE_TYPES.ADMIN_PROTOCOL_DISCOVERY_BASE + "disclose_sent",
+    DISCLOSE_RECEIVED: MESSAGE_TYPES.ADMIN_PROTOCOL_DISCOVERY_BASE + "disclose_received"
 };
 
 window.indy_connector.ping();
@@ -370,6 +374,27 @@ var ui_connection = new Vue({
             };
             sendMessage(msg);
         },
+        query_sent: function (msg) {
+            if (msg.from == this.connection.their_did) {
+                Vue.set(this.connection, 'query_state', 'Sent Query.')
+            }
+        },
+        query_received: function (msg) {
+            if (msg.from == this.connection.their_did) {
+                Vue.set(this.connection, 'query_state', 'Received Query.');
+            }
+        },
+        disclose_sent: function (msg) {
+            if (msg.from == this.connection.their_did) {
+                Vue.set(this.connection, 'query_state', 'Sent Disclose.');
+            }
+        },
+        disclose_received: function(msg) {
+            console.log(msg);
+            if (msg.from == this.connection.their_did) {
+                Vue.set(this.connection, 'query_state', msg.disclose);
+            }
+        }
     }
 });
 
@@ -465,6 +490,10 @@ msg_router.register(ADMIN_BASICMESSAGE.MESSAGES, ui_relationships.messages);
 msg_router.register(ADMIN_TRUSTPING.TRUSTPING_SENT, ui_connection.trustping_sent);
 msg_router.register(ADMIN_TRUSTPING.TRUSTPING_RECEIVED, ui_connection.trustping_received);
 msg_router.register(ADMIN_TRUSTPING.TRUSTPING_RESPONSE_RECEIVED, ui_connection.trustping_response_received);
+msg_router.register(ADMIN_PROTOCOL_DISCOVERY.QUERY_SENT, ui_connection.query_sent);
+msg_router.register(ADMIN_PROTOCOL_DISCOVERY.QUERY_RECEIVED, ui_connection.query_received);
+msg_router.register(ADMIN_PROTOCOL_DISCOVERY.DISCLOSE_SENT, ui_connection.disclose_sent);
+msg_router.register(ADMIN_PROTOCOL_DISCOVERY.DISCLOSE_RECEIVED, ui_connection.disclose_received);
 
 // }}}
 

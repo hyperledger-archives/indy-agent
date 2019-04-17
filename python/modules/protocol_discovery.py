@@ -21,11 +21,9 @@ class AdminProtocolDiscovery(Module):
         self.router.register(AdminProtocolDiscovery.SEND_QUERY, self.send_query)
 
     async def route(self, msg: Message):
-        print("ROUTING ADMIN PROTOCOL DISCOVERY")
         return await self.router.route(msg)
 
     async def send_query(self, msg: Message):
-        print("SENDING QUERY")
         query_msg = Message({
             '@type': ProtocolDiscovery.QUERY,
             'query': msg['query']
@@ -33,14 +31,21 @@ class AdminProtocolDiscovery(Module):
 
         await self.agent.send_message_to_agent(msg['did'], query_msg)
 
+        await self.agent.send_admin_message(
+            Message({
+                '@type': AdminProtocolDiscovery.QUERY_SENT,
+                'from': msg['did']
+            })
+        )
+
 
 class ProtocolDiscovery(Module):
     FAMILY_NAME = "protocol-discovery"
     VERSION = "1.0"
-    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION
 
-    QUERY = FAMILY + "query"
-    DISCLOSE = FAMILY + "disclose"
+    QUERY = FAMILY + "/query"
+    DISCLOSE = FAMILY + "/disclose"
 
 
     def __init__(self, agent):
@@ -54,7 +59,13 @@ class ProtocolDiscovery(Module):
         return await self.router.route(msg)
 
     async def query_received(self, msg: Message):
-        print("RECEIVED QUERY")
+        await self.agent.send_admin_message(
+            Message({
+                '@type': AdminProtocolDiscovery.QUERY_RECEIVED,
+                'from': msg.context['from_did']
+            })
+        )
+
         matching_modules = []
         def map_query(char):
             if char == '*':
@@ -75,7 +86,18 @@ class ProtocolDiscovery(Module):
 
         await self.agent.send_message_to_agent(msg.context['from_did'], disclose_msg)
 
-    async def disclose_received(self, msg: Message):
-        print("RECEIVED DISCLOSE")
-        print(msg.as_json())
+        await self.agent.send_admin_message(
+            Message({
+                '@type': AdminProtocolDiscovery.DISCLOSE_SENT,
+                'from': msg.context['from_did']
+            })
+        )
 
+    async def disclose_received(self, msg: Message):
+        await self.agent.send_admin_message(
+            Message({
+                '@type': AdminProtocolDiscovery.DISCLOSE_RECEIVED,
+                'from': msg.context['from_did'],
+                'disclose': msg.as_json()
+            })
+        )
