@@ -98,6 +98,6 @@ class ProtocolDiscovery(Module):
             Message({
                 '@type': AdminProtocolDiscovery.DISCLOSE_RECEIVED,
                 'from': msg.context['from_did'],
-                'disclose': msg.as_json()
+                'protocols': msg['protocols']
             })
         )

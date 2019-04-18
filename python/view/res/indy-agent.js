@@ -176,6 +176,7 @@ var ui_data = {
     connection: {},
     new_basicmessage: "",
     basicmessage_list: [],
+    new_query: "",
     history_view: []
 };
 
@@ -369,8 +370,8 @@ var ui_connection = new Vue({
         send_query: function() {
             msg = {
                 '@type': ADMIN_PROTOCOL_DISCOVERY.SEND_QUERY,
-                query: 'did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/*',
                 did: this.connection.their_did,
+                query: 'did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/' + this.new_query
             };
             sendMessage(msg);
         },
@@ -390,9 +391,8 @@ var ui_connection = new Vue({
             }
         },
         disclose_received: function(msg) {
-            console.log(msg);
             if (msg.from == this.connection.their_did) {
-                Vue.set(this.connection, 'query_state', msg.disclose);
+                Vue.set(this.connection, 'query_state', JSON.stringify(msg.protocols, null, 2));
             }
         }
     }
