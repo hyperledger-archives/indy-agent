@@ -209,6 +209,11 @@ var ui_relationships = new Vue({
         },
         invite_generated: function (msg) {
             this.generated_invite.invite = msg.invite;
+            var qr = new QRious({
+                element: document.getElementById('qrcode'),
+                value: msg.invite,
+                size: 450,
+            });
             $('#generated_invite_modal').modal('show');
         },
         copy_invite: function() {

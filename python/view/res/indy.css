@@ -129,3 +129,6 @@ code {
     text-align: right;
     background-color: aliceblue;
 }
+#qrcode-card {
+    margin-top: .5em;
+}

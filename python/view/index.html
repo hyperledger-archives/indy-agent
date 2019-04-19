@@ -95,6 +95,12 @@
                                     <button class="btn btn-default" type="button" id="copy-invite" v-on:click="copy_invite">Copy</button>
                                 </span>
                             </div>
+                            <div id="qrcode-card" class="card">
+                                <div class="card-header">Invite QR</div>
+                                <div class="card-block">
+                                    <canvas id="qrcode"></canvas>
+                                </div>
+                            </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -271,12 +277,12 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/locale/es-us.js"></script>
     <script src="/res/vue-moment.min.js"></script>
+    <script src="/res/qrious.min.js"></script>
 
     <script src="res/indy-connector.js"></script>
     <script src="/res/indy-agent.js"></script>
     <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
     <script src="/res/utils.js"></script>
-
 
   </body>
 </html>
