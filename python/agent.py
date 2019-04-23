@@ -112,6 +112,9 @@ class Agent:
             print(e)
 
         try:
+            if self.wallet_handle:
+                await wallet.close_wallet(self.wallet_handle)
+
             self.wallet_handle = await wallet.open_wallet(
                 wallet_config,
                 wallet_credentials
