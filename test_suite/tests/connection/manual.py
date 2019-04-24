@@ -1,9 +1,13 @@
 import asyncio
 import pytest
-from message import Message
-from tests import expect_message, validate_message, pack, unpack, sign_field, unpack_and_verify_signed_field
+from test_suite.message import Message
+from test_suite.tests import expect_message, validate_message, pack, unpack, sign_field, unpack_and_verify_signed_field
 from indy import did
-from . import Connection
+from test_suite.tests.connection import Connection
+
+
+expect_message_timeout = 5
+
 
 @pytest.mark.asyncio
 async def test_connection_started_by_tested_agent(config, wallet_handle, transport):
@@ -38,7 +42,7 @@ async def test_connection_started_by_tested_agent(config, wallet_handle, transpo
 
     # Wait for response
     print("Awaiting response from tested agent...")
-    response_bytes = await expect_message(transport, 60)
+    response_bytes = await expect_message(transport, expect_message_timeout)
 
     response = await unpack(
         wallet_handle,
@@ -54,6 +58,7 @@ async def test_connection_started_by_tested_agent(config, wallet_handle, transpo
     Connection.Response.validate(response, request.id)
     print("\nReceived Response (post signature verification):\n", response.pretty_print())
 
+
 async def get_connection_started_by_suite(config, wallet_handle, transport, label=None):
     if label is None:
         label = 'test-suite'
@@ -65,7 +70,7 @@ async def get_connection_started_by_suite(config, wallet_handle, transport, labe
     print("\n\nInvitation encoded as URL: ", invite_str)
 
     print("Awaiting request from tested agent...")
-    request_bytes = await expect_message(transport, 90) # A little extra time to copy-pasta
+    request_bytes = await expect_message(transport, expect_message_timeout) # A little extra time to copy-pasta
 
     request = await unpack(
         wallet_handle,
@@ -104,6 +109,7 @@ async def get_connection_started_by_suite(config, wallet_handle, transport, labe
         'their_vk': their_vk,
         'their_endpoint': their_endpoint
     }
+
 
 @pytest.mark.asyncio
 async def test_connection_started_by_suite(config, wallet_handle, transport):

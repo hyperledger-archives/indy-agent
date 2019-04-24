@@ -1,8 +1,9 @@
 import datetime
-from message import Message
-from tests import expect_message, validate_message, pack, unpack, sign_field, unpack_and_verify_signed_field
+from test_suite.message import Message
+from test_suite.tests import expect_message, validate_message, pack, unpack, sign_field, unpack_and_verify_signed_field
 
-class BasicMessage():
+
+class BasicMessage:
     FAMILY_NAME = "basicmessage"
     VERSION = "1.0"
     FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"

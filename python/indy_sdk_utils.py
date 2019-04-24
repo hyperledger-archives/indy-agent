@@ -3,6 +3,7 @@
 import json
 from indy import did, crypto, non_secrets, error
 
+
 async def create_and_store_my_did(wallet_handle):
     """ Create and store my DID, adding a map from verkey to DID using the
         non_secrets API.
@@ -17,7 +18,8 @@ async def create_and_store_my_did(wallet_handle):
         '{}'
     )
 
-    return (my_did, my_vk)
+    return my_did, my_vk
+
 
 async def store_their_did(wallet_handle, their_did, their_vk):
     """ Store their did, adding a map from verkey to DID using the non_secrets

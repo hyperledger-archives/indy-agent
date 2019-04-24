@@ -1,8 +1,9 @@
 import uuid
-from tests import validate_message
-from message import Message
+from test_suite.tests import validate_message
+from test_suite.message import Message
 
-class TrustPing():
+
+class TrustPing:
     FAMILY_NAME = "trust_ping"
     VERSION = "1.0"
     FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
@@ -10,7 +11,7 @@ class TrustPing():
     PING = FAMILY + "ping"
     PING_RESPONSE = FAMILY + "ping_response"
 
-    class Ping():
+    class Ping:
         @staticmethod
         def build():
             return Message({
@@ -28,7 +29,7 @@ class TrustPing():
                 message
             )
 
-    class Pong():
+    class Pong:
         @staticmethod
         def build(ping_id: str):
             return Message({

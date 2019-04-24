@@ -3,12 +3,13 @@ import jinja2
 import json
 import socket
 from indy import did, wallet, non_secrets, pairwise
-from indy_sdk_utils import get_wallet_records
+from python.indy_sdk_utils import get_wallet_records
 
-from router.simple_router import SimpleRouter
-from agent import Agent
-from message import Message
+from python.router.simple_router import SimpleRouter
+from python.agent import Agent
+from python.message import Message
 from . import Module
+
 
 class Admin(Module):
     FAMILY_NAME = "admin"

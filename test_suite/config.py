@@ -8,13 +8,14 @@ import argparse
 import os
 import sys
 
+
 class InvalidConfigurationException(Exception):
     """ Exception raise on absent required configuration value
     """
     pass
 
 
-class Config():
+class Config:
     """ Configuration class used to store and update configuration information.
     """
 

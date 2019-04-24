@@ -2,9 +2,11 @@ import re
 import base64
 import uuid
 
-from serializer import JSONSerializer as Serializer
-from message import Message
-from tests import validate_message
+from test_suite.serializer import JSONSerializer as Serializer
+from test_suite.message import Message
+from test_suite.tests import validate_message
+from test_suite.tests.did_doc import DIDDoc
+
 
 class Connection:
     class Message:
@@ -114,7 +116,7 @@ class Connection:
                 request['connection']
             )
 
-            Connection.DIDDoc.validate(request['connection']['did_doc'])
+            DIDDoc.validate(request['connection']['did_doc'])
 
     class Response:
         @staticmethod
@@ -182,37 +184,5 @@ class Connection:
                 response['connection']
             )
 
-            Connection.DIDDoc.validate(response['connection']['did_doc'])
+            DIDDoc.validate(response['connection']['did_doc'])
 
-    class DIDDoc:
-        @staticmethod
-        def validate(diddoc):
-            validate_message(
-                [
-                    '@context',
-                    'publicKey',
-                    'service'
-                ],
-                diddoc
-            )
-
-            for publicKeyBlock in diddoc['publicKey']:
-                validate_message(
-                    [
-                        'id',
-                        'type',
-                        'controller',
-                        'publicKeyBase58'
-                    ],
-                    publicKeyBlock
-                )
-
-            for serviceBlock in diddoc['service']:
-                validate_message(
-                    [
-                        ('type', 'IndyAgent'),
-                        'recipientKeys',
-                        'serviceEndpoint'
-                    ],
-                    serviceBlock
-                )

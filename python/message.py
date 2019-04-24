@@ -25,7 +25,6 @@ class Message(UserDict):
         if '@id' not in self.data:
             self.data['@id'] = str(uuid.uuid4())
 
-
     def to_dict(self):
         return self.data
 

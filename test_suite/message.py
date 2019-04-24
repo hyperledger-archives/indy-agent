@@ -3,6 +3,7 @@
 import json
 from collections import UserDict
 
+
 class Message(UserDict):
     """ Data Model for messages.
     """
@@ -17,7 +18,6 @@ class Message(UserDict):
         """
         UserDict.__init__(self,*args, **kwargs)
         self.context = {}
-
 
     def to_dict(self):
         return self.data

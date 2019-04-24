@@ -3,11 +3,12 @@ import jinja2
 import json
 from indy import did, wallet
 
-from router.simple_router import SimpleRouter
-from agent import Agent, WalletConnectionException
-from modules.admin import Admin
-from message import Message
+from python.router.simple_router import SimpleRouter
+from python.agent import Agent, WalletConnectionException
+from python.modules.admin import Admin
+from python.message import Message
 from . import Module
+
 
 class AdminWalletConnection(Module):
     FAMILY_NAME = "admin_walletconnection"
@@ -17,7 +18,6 @@ class AdminWalletConnection(Module):
     CONNECT = FAMILY + "connect"
     DISCONNECT = FAMILY + "disconnect"
     USER_ERROR = FAMILY + "user_error"
-
 
     def __init__(self, agent):
         self.agent = agent

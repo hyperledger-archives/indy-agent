@@ -1,7 +1,8 @@
 import pytest
 import asyncio
 from indy import crypto
-from tests import sign_field, unpack_and_verify_signed_field
+from test_suite.tests import sign_field, unpack_and_verify_signed_field
+
 
 @pytest.mark.asyncio
 async def test_can_sign_and_verify(config, wallet_handle):

@@ -1,10 +1,11 @@
 import asyncio
 import pytest
 
-from message import Message
-from tests import expect_message, validate_message, pack, unpack
+from test_suite.message import Message
+from test_suite.tests import expect_message, validate_message, pack, unpack
 
-from . import TrustPing
+from test_suite.tests.trustping import TrustPing
+
 
 @pytest.mark.asyncio
 async def test_trustping_started_by_suite(config, wallet_handle, transport, connection):
@@ -32,6 +33,7 @@ async def test_trustping_started_by_suite(config, wallet_handle, transport, conn
 
     print("\nReceived TrustPing response:\n", response.pretty_print())
     TrustPing.Pong.validate(response, ping.id)
+
 
 @pytest.mark.asyncio
 async def test_trustping_started_by_tested_agent(config, wallet_handle, transport, connection):

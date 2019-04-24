@@ -12,16 +12,18 @@ import datetime
 import aiohttp
 from indy import crypto, did, pairwise, non_secrets, error
 
-import indy_sdk_utils as utils
-import serializer.json_serializer as Serializer
-from router.simple_router import SimpleRouter
+import python.indy_sdk_utils as utils
+import python.serializer.json_serializer as Serializer
+from python.router.simple_router import SimpleRouter
 from . import Module
-from message import Message
-from helpers import serialize_bytes_json, bytes_to_str, str_to_bytes
+from python.message import Message
+from python.helpers import serialize_bytes_json, bytes_to_str, str_to_bytes
+
 
 class BadInviteException(Exception):
     def __init__(self, msg):
         super().__init__(msg)
+
 
 class AdminConnection(Module):
     FAMILY_NAME = "admin_connections"
@@ -352,6 +354,7 @@ class AdminConnection(Module):
                                                'invitations',
                                                pairwise_meta['connection_key'])
 
+
 class Connection(Module):
 
     FAMILY_NAME = "connections"
@@ -361,7 +364,6 @@ class Connection(Module):
     INVITE = FAMILY + "invitation"
     REQUEST = FAMILY + "request"
     RESPONSE = FAMILY + "response"
-
 
     def __init__(self, agent):
         self.agent = agent
@@ -465,9 +467,6 @@ class Connection(Module):
                 pass
             raise indy_error
         await self.agent.send_admin_message(pending_connection)
-
-
-
 
     async def response_received(self, msg: Message) -> Message:
         """ Process response

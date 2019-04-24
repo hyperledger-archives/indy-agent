@@ -1,0 +1,5 @@
+{
+  "basicmessage.manual": true,
+  "connection.manual": true,
+  "trustping.manual": true
+}

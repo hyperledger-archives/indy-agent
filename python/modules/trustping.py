@@ -7,12 +7,13 @@ import time
 import uuid
 from indy import did, wallet, pairwise, crypto, non_secrets
 
-from helpers import str_to_bytes, serialize_bytes_json, bytes_to_str
-from router.simple_router import SimpleRouter
-import serializer.json_serializer as Serializer
-from agent import Agent, WalletConnectionException
-from message import Message
+from python.helpers import str_to_bytes, serialize_bytes_json, bytes_to_str
+from python.router.simple_router import SimpleRouter
+import python.serializer.json_serializer as Serializer
+from python.agent import Agent, WalletConnectionException
+from python.message import Message
 from . import Module
+
 
 class AdminTrustPing(Module):
     FAMILY_NAME = "admin_trustping"
