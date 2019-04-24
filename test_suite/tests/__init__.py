@@ -54,13 +54,13 @@ def validate_message(expected_attrs: [Any], msg: Message):
     __tracebackhide__ = True
     for attribute in expected_attrs:
         if isinstance(attribute, tuple):
-            assert attribute[0] in msg, \
-                'Attribute "{}" is missing from message: \n{}'.format(attribute[0], msg)
-            assert msg[attribute[0]] == attribute[1], \
-                'Message.{}: {} != {}'.format(attribute[0], msg[attribute[0]], attribute[1])
+            if attribute[0] not in msg:
+                raise KeyError('Attribute "{}" is missing from message: \n{}'.format(attribute[0], msg))
+            if msg[attribute[0]] != attribute[1]:
+                raise KeyError('Message.{}: {} != {}'.format(attribute[0], msg[attribute[0]], attribute[1]))
         else:
-            assert attribute in msg, \
-                'Attribute "{}" is missing from message: \n{}'.format(attribute, msg)
+            if attribute not in msg:
+                raise KeyError('Attribute "{}" is missing from message: \n{}'.format(attribute, msg))
 
 
 async def pack(wallet_handle: int, my_vk: str, their_vk: str, msg: Message) -> bytes:
@@ -126,3 +126,12 @@ async def sign_field(wallet_handle, my_vk, field_value):
         "sig_data": sig_data,
         "signature": signature
     }
+
+
+def check_problem_report(msg: Message, expected_problem_code):
+    """
+    Check that the given message is an error message by checking that its a "problem-report".
+    Also check the expected problem code. Can be enhanced with a regex for checking the problem reason.
+    """
+    assert msg.type.endswith('problem_report')
+    assert msg.data['problem-code'] == expected_problem_code

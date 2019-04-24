@@ -1,7 +1,7 @@
 import datetime
 import json
 import uuid
-from indy import did, wallet, pairwise, crypto, non_secrets
+from indy import pairwise, non_secrets
 
 from python.router.simple_router import SimpleRouter
 from python.message import Message

@@ -259,10 +259,10 @@ class AdminConnection(Module):
         })
 
         await self.agent.send_message_to_endpoint_and_key(
-            my_vk,
             their_connection_key,
             their_endpoint,
-            request
+            request,
+            my_vk
         )
 
         pending_connection['@type'] = AdminConnection.REQUEST_SENT
@@ -409,9 +409,14 @@ class Connection(Module):
         try:
             ConnectionValidator.Request.validate(msg)
         except Exception as e:
-            print('Encountered error parsing connection request ', e)
-            # err_msg = self.build_problem_report_for_connections(Connection.FAMILY, Connection.REQUEST_NOT_ACCEPTED, e)
-            # await self.agent.send_message_to_endpoint_and_key(my_ver_key, their_ver_key, their_endpoint, err_msg)
+            vk, endpoint = ConnectionValidator.Request.extract_verkey_endpoint(msg)
+            if None in (vk, endpoint):
+                # Cannot extract verkey and endpoint hence won't send any message back.
+                print('Encountered error parsing connection request ', e)
+            else:
+                # Sending an error message back to the sender
+                err_msg = self.build_problem_report_for_connections(Connection.FAMILY, Connection.REQUEST_NOT_ACCEPTED, str(e))
+                await self.agent.send_message_to_endpoint_and_key(vk, endpoint, err_msg)
             return
 
         connection_key = msg.context['to_key']

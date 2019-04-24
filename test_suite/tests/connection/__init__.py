@@ -1,6 +1,7 @@
 import re
 import base64
 import uuid
+from typing import Optional, Tuple
 
 from test_suite.serializer import JSONSerializer as Serializer
 from test_suite.message import Message
@@ -119,6 +120,17 @@ class Connection:
             )
 
             DIDDoc.validate(request[Connection.CONNECTION][DIDDoc.DID_DOC])
+
+        @staticmethod
+        def extract_verkey_endpoint(msg: Message) -> (Optional, Optional):
+            """
+            Extract verkey and endpoint that will be used to send message back to the sender of this message. Might return None.
+            """
+            vks = msg.get(Connection.CONNECTION, {}).get(DIDDoc.DID_DOC, {}).get('publicKey')
+            vk = vks[0].get('publicKeyBase58') if vks and isinstance(vks, list) and len(vks) > 0 else None
+            endpoints = msg.get(Connection.CONNECTION, {}).get(DIDDoc.DID_DOC, {}).get('service')
+            endpoint = endpoints[0].get('serviceEndpoint') if endpoints and isinstance(endpoints, list) and len(endpoints) > 0 else None
+            return vk, endpoint
 
     class Response:
         @staticmethod
