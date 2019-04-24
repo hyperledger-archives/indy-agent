@@ -1,7 +1,5 @@
-import asyncio
 import pytest
-from test_suite.message import Message
-from test_suite.tests import expect_message, validate_message, pack, unpack, sign_field, get_verified_data_from_signed_field, expect_silence
+from test_suite.tests import expect_message, pack, unpack, sign_field, get_verified_data_from_signed_field, expect_silence
 from indy import did
 from test_suite.tests.connection import Connection
 from test_suite.tests.did_doc import DIDDoc
@@ -137,7 +135,7 @@ async def test_bad_connection_request_by_testing_agent(config, wallet_handle, tr
         config.endpoint
     )
 
-    request[Connection.CONNECTION].pop(DIDDoc.DID)
+    request[Connection.CONNECTION].pop(DIDDoc.DID_DOC)
 
     print("\nSending Request:\n", request.pretty_print())
 

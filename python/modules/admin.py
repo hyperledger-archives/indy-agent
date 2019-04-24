@@ -1,12 +1,10 @@
 import aiohttp_jinja2
-import jinja2
 import json
 import socket
-from indy import did, wallet, non_secrets, pairwise
+from indy import pairwise
 from python.indy_sdk_utils import get_wallet_records
 
 from python.router.simple_router import SimpleRouter
-from python.agent import Agent
 from python.message import Message
 from . import Module
 
