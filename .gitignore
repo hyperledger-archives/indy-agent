@@ -5,3 +5,4 @@ sessions
 .vscode/
 _build/
 toc.rst
+.pytest_cache/

@@ -179,8 +179,8 @@ class TomlTestDefinitionFile(pytest.File):
     """ Test collection from Toml file. """
     def collect(self):
         import toml # we need a toml parser
-
-        default_config_path = "config.toml"
+        dirname = os.path.dirname(__file__)
+        default_config_path = os.path.join(dirname, 'config.toml')
         conf = toml.load(default_config_path)
         tests = toml.load(self.fspath.open())
         for test in tests['feature']:

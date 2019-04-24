@@ -18,6 +18,8 @@ from python.router.simple_router import SimpleRouter
 from . import Module
 from python.message import Message
 from python.helpers import serialize_bytes_json, bytes_to_str, str_to_bytes
+# TODO: Move validators outside tests
+from test_suite.tests.connection import Connection as ConnectionValidator
 
 
 class BadInviteException(Exception):
@@ -294,6 +296,7 @@ class AdminConnection(Module):
                   }
                 }
         """
+
         their_did = msg['did']
 
         pairwise_info = json.loads(await pairwise.get_pairwise(self.agent.wallet_handle, their_did))
@@ -364,6 +367,7 @@ class Connection(Module):
     INVITE = FAMILY + "invitation"
     REQUEST = FAMILY + "request"
     RESPONSE = FAMILY + "response"
+    REQUEST_NOT_ACCEPTED = "request_not_accepted"
 
     def __init__(self, agent):
         self.agent = agent
@@ -402,6 +406,14 @@ class Connection(Module):
                   }
                 }
         """
+        try:
+            ConnectionValidator.Request.validate(msg)
+        except Exception as e:
+            print('Encountered error parsing connection request ', e)
+            # err_msg = self.build_problem_report_for_connections(Connection.FAMILY, Connection.REQUEST_NOT_ACCEPTED, e)
+            # await self.agent.send_message_to_endpoint_and_key(my_ver_key, their_ver_key, their_endpoint, err_msg)
+            return
+
         connection_key = msg.context['to_key']
 
         label = msg['label']

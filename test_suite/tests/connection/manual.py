@@ -1,12 +1,13 @@
 import asyncio
 import pytest
 from test_suite.message import Message
-from test_suite.tests import expect_message, validate_message, pack, unpack, sign_field, unpack_and_verify_signed_field
+from test_suite.tests import expect_message, validate_message, pack, unpack, sign_field, get_verified_data_from_signed_field, expect_silence
 from indy import did
 from test_suite.tests.connection import Connection
+from test_suite.tests.did_doc import DIDDoc
 
 
-expect_message_timeout = 5
+expect_message_timeout = 30
 
 
 @pytest.mark.asyncio
@@ -53,7 +54,7 @@ async def test_connection_started_by_tested_agent(config, wallet_handle, transpo
     Connection.Response.validate_pre_sig(response)
     print("\nReceived Response (pre signature verification):\n", response.pretty_print())
 
-    response['connection'] = await unpack_and_verify_signed_field(response['connection~sig'])
+    response['connection'] = await get_verified_data_from_signed_field(response['connection~sig'])
 
     Connection.Response.validate(response, request.id)
     print("\nReceived Response (post signature verification):\n", response.pretty_print())
@@ -114,3 +115,42 @@ async def get_connection_started_by_suite(config, wallet_handle, transport, labe
 @pytest.mark.asyncio
 async def test_connection_started_by_suite(config, wallet_handle, transport):
     await get_connection_started_by_suite(config, wallet_handle, transport, 'test-connection-started-by-suite')
+
+
+@pytest.mark.asyncio
+async def test_bad_connection_request_by_testing_agent(config, wallet_handle, transport):
+    invite_url = input('Input generated connection invite: ')
+    #invite_url = 'http://127.0.1.1:3001/indy?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJsYWJlbCI6ICIxIiwgInJlY2lwaWVudEtleXMiOiBbIjU1bk10cVBoUWFFV0ZicTMycnQ0M2NWcEtLd2ZnZ0pwUkFDc0VlVHZwQWh4Il0sICJzZXJ2aWNlRW5kcG9pbnQiOiAiaHR0cDovLzEyNy4wLjEuMTozMDAxL2luZHkiLCAiQGlkIjogIjNjYTNjOGNiLWJhNjYtNDQ4Ni1hYmE3LTY3M2NiOTg5MzAzOSJ9'
+
+    invite_msg = Connection.Invite.parse(invite_url)
+
+    print("\nReceived Invite:\n", invite_msg.pretty_print())
+
+    # Create my information for connection
+    (my_did, my_vk) = await did.create_and_store_my_did(wallet_handle, '{}')
+
+    # Send a bad Connection Request to inviter by removing the DID from requst
+    request = Connection.Request.build(
+        'test-connection-started-by-tested-agent',
+        my_did,
+        my_vk,
+        config.endpoint
+    )
+
+    request[Connection.CONNECTION].pop(DIDDoc.DID)
+
+    print("\nSending Request:\n", request.pretty_print())
+
+    await transport.send(
+        invite_msg['serviceEndpoint'],
+        await pack(
+            wallet_handle,
+            my_vk,
+            invite_msg['recipientKeys'][0],
+            request
+        )
+    )
+
+    # Wait for response
+    print("Awaiting response from tested agent...")
+    await expect_silence(transport, expect_message_timeout)

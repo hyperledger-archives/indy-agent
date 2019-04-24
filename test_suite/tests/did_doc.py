@@ -2,6 +2,9 @@ from test_suite.tests import validate_message
 
 
 class DIDDoc:
+    DID = 'did'
+    DID_DOC = 'did_doc'
+
     @staticmethod
     def validate(diddoc):
         validate_message(

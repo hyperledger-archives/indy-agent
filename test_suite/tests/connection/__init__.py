@@ -9,6 +9,8 @@ from test_suite.tests.did_doc import DIDDoc
 
 
 class Connection:
+    CONNECTION = 'connection'
+
     class Message:
         FAMILY_NAME = "connections"
         VERSION = "1.0"
@@ -63,9 +65,9 @@ class Connection:
         @staticmethod
         def parse(request: Message):
             return (
-                request['connection']['did_doc']['publicKey'][0]['controller'],
-                request['connection']['did_doc']['publicKey'][0]['publicKeyBase58'],
-                request['connection']['did_doc']['service'][0]['serviceEndpoint']
+                request[Connection.CONNECTION][DIDDoc.DID_DOC]['publicKey'][0]['controller'],
+                request[Connection.CONNECTION][DIDDoc.DID_DOC]['publicKey'][0]['publicKeyBase58'],
+                request[Connection.CONNECTION][DIDDoc.DID_DOC]['service'][0]['serviceEndpoint']
             )
 
         @staticmethod
@@ -103,20 +105,20 @@ class Connection:
                     ('@type', Connection.Message.REQUEST),
                     '@id',
                     'label',
-                    'connection'
+                    Connection.CONNECTION
                 ],
                 request
             )
 
             validate_message(
                 [
-                    'did',
-                    'did_doc'
+                    DIDDoc.DID,
+                    DIDDoc.DID_DOC
                 ],
-                request['connection']
+                request[Connection.CONNECTION]
             )
 
-            DIDDoc.validate(request['connection']['did_doc'])
+            DIDDoc.validate(request[Connection.CONNECTION][DIDDoc.DID_DOC])
 
     class Response:
         @staticmethod
@@ -178,11 +180,11 @@ class Connection:
 
             validate_message(
                 [
-                    'did',
-                    'did_doc'
+                    DIDDoc.DID,
+                    DIDDoc.DID_DOC
                 ],
-                response['connection']
+                response[Connection.CONNECTION]
             )
 
-            DIDDoc.validate(response['connection']['did_doc'])
+            DIDDoc.validate(response[Connection.CONNECTION][DIDDoc.DID_DOC])
 

@@ -22,7 +22,6 @@ from python.modules.trustping import AdminTrustPing, TrustPing
 from python.post_message_handler import PostMessageHandler
 from python.websocket_message_handler import WebSocketMessageHandler
 from python.agent import Agent
-from python.message import Message
 
 
 if __name__ == "__main__":
