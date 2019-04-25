@@ -5,21 +5,20 @@
 
 import json
 import base64
-import uuid
 import re
 import datetime
 
-import aiohttp
-from indy import crypto, did, pairwise, non_secrets, error
+from indy import did, pairwise, non_secrets, error
 
 import python.indy_sdk_utils as utils
 import python.serializer.json_serializer as Serializer
 from python.router.simple_router import SimpleRouter
 from . import Module
 from python.message import Message
-from python.helpers import serialize_bytes_json, bytes_to_str, str_to_bytes
 # TODO: Move validators outside tests
 from test_suite.tests.connection import Connection as ConnectionValidator
+
+# TODO: Move all string literal in a place which can be accessed by the test suite as well
 
 
 class BadInviteException(Exception):
