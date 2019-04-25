@@ -1,23 +1,24 @@
 """ Module defining Agent class and related methods
 """
-import json
-import base64
 import asyncio
+import base64
+import json
 import struct
-import traceback
 import time
+import traceback
 
 import aiohttp
-from indy import wallet, did, error, crypto, pairwise, non_secrets
+from indy import wallet, did, error, crypto, pairwise
 
 import indy_sdk_utils as utils
-from serializer import json_serializer as Serializer
-from helpers import bytes_to_str, serialize_bytes_json, str_to_bytes
 from message import Message
 from router.family_router import FamilyRouter
+from serializer import json_serializer as Serializer
+
 
 class WalletConnectionException(Exception):
     pass
+
 
 class Agent:
     """ Agent class storing all needed elements for agent operation.
@@ -53,6 +54,7 @@ class Agent:
                 wire_msg_bytes = await self.message_queue.get()
 
                 # Try to unpack message assuming it's not encrypted
+                msg = ""
                 try:
                     msg = Serializer.unpack(wire_msg_bytes)
                 except Exception as e:
@@ -71,8 +73,8 @@ class Agent:
 
                 await self.route_message_to_module(msg)
             except Exception as e:
-                    print("\n\n--- Message Processing failed --- \n\n")
-                    traceback.print_exc()
+                print("\n\n--- Message Processing failed --- \n\n")
+                traceback.print_exc()
 
     async def connect_wallet(self, agent_name, passphrase, ephemeral=False):
         """ Create if not already exists and open wallet.
@@ -105,7 +107,7 @@ class Agent:
             await wallet.create_wallet(wallet_config, wallet_credentials)
         except error.IndyError as e:
             if e.error_code is error.ErrorCode.WalletAlreadyExistsError:
-                pass # This is ok, and expected.
+                pass  # This is ok, and expected.
             else:
                 print("Unexpected Indy Error: {}".format(e))
         except Exception as e:
@@ -162,7 +164,6 @@ class Agent:
         fieldjson = data_bytes[8:]
         return json.loads(fieldjson), sig_verified
 
-
     async def unpack_agent_message(self, wire_msg_bytes):
         if isinstance(wire_msg_bytes, str):
             wire_msg_bytes = bytes(wire_msg_bytes, 'utf-8')
@@ -174,6 +175,7 @@ class Agent:
         )
 
         from_key = None
+        from_did = None
         if 'sender_verkey' in unpacked:
             from_key = unpacked['sender_verkey']
             from_did = await utils.did_for_key(self.wallet_handle, unpacked['sender_verkey'])
@@ -184,14 +186,14 @@ class Agent:
         msg = Serializer.unpack(unpacked['message'])
 
         msg.context = {
-            'from_did': from_did, # Could be None
-            'to_did': to_did, # Could be None
-            'from_key': from_key, # Could be None
+            'from_did': from_did,  # Could be None
+            'to_did': to_did,  # Could be None
+            'from_key': from_key,  # Could be None
             'to_key': to_key
         }
         return msg
 
-    async def send_message_to_agent(self, to_did, msg:Message):
+    async def send_message_to_agent(self, to_did, msg: Message):
         print("Sending:", msg)
         their_did = to_did
 
