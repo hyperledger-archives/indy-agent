@@ -369,6 +369,7 @@ class Connection(Module):
     REQUEST = FAMILY + "request"
     RESPONSE = FAMILY + "response"
     REQUEST_NOT_ACCEPTED = "request_not_accepted"
+    RESPONSE_FOR_UNKNOWN_REQUEST = "response_for_unknown_request"
 
     class Invite:
         @staticmethod
@@ -469,17 +470,6 @@ class Connection(Module):
             )
 
             DIDDoc.validate(request[Connection.CONNECTION][DIDDoc.DID_DOC])
-
-        @staticmethod
-        def extract_verkey_endpoint(msg: Message) -> (Optional, Optional):
-            """
-            Extract verkey and endpoint that will be used to send message back to the sender of this message. Might return None.
-            """
-            vks = msg.get(Connection.CONNECTION, {}).get(DIDDoc.DID_DOC, {}).get('publicKey')
-            vk = vks[0].get('publicKeyBase58') if vks and isinstance(vks, list) and len(vks) > 0 else None
-            endpoints = msg.get(Connection.CONNECTION, {}).get(DIDDoc.DID_DOC, {}).get('service')
-            endpoint = endpoints[0].get('serviceEndpoint') if endpoints and isinstance(endpoints, list) and len(endpoints) > 0 else None
-            return vk, endpoint
 
     class Response:
         @staticmethod
@@ -589,7 +579,7 @@ class Connection(Module):
         try:
             Connection.Request.validate(msg)
         except Exception as e:
-            vk, endpoint = Connection.Request.extract_verkey_endpoint(msg)
+            vk, endpoint = Connection.extract_verkey_endpoint(msg)
             if None in (vk, endpoint):
                 # Cannot extract verkey and endpoint hence won't send any message back.
                 print('Encountered error parsing connection request ', e)
@@ -602,11 +592,8 @@ class Connection(Module):
         connection_key = msg.context['to_key']
 
         label = msg['label']
-        their_did = msg['connection']['did']
-        # NOTE: these values are pulled based on the minimal connectathon format. Full processing
-        #  will require full DIDDoc storage and evaluation.
-        their_vk = msg['connection']['did_doc']['publicKey'][0]['publicKeyBase58']
-        their_endpoint = msg['connection']['did_doc']['service'][0]['serviceEndpoint']
+
+        their_did, their_vk, their_endpoint = self._extract_their_info(msg)
 
         # Store their information from request
         await utils.store_their_did(self.agent.wallet_handle, their_did, their_vk)
@@ -678,16 +665,31 @@ class Connection(Module):
                 }
         """
         my_did = msg.context['to_did']
+        if my_did is None:
+            msg[Connection.CONNECTION], sig_verified = await self.agent.unpack_and_verify_signed_agent_message_field(
+                msg['connection~sig'])
+            if not sig_verified:
+                print('Encountered error parsing connection response. Connection request not found.')
+            else:
+                vk, endpoint = Connection.extract_verkey_endpoint(msg)
+                if None in (vk, endpoint):
+                    # Cannot extract verkey and endpoint hence won't send any message back.
+                    print('Encountered error parsing connection response. Connection request not found.')
+                else:
+                    # Sending an error message back to the sender
+                    err_msg = self.build_problem_report_for_connections(Connection.FAMILY,
+                                                                        Connection.RESPONSE_FOR_UNKNOWN_REQUEST,
+                                                                        "No corresponding connection request found")
+                    await self.agent.send_message_to_endpoint_and_key(vk, endpoint, err_msg)
+            return
+        # Following should return an error if key not found for given DID
         my_vk = await did.key_for_local_did(self.agent.wallet_handle, my_did)
 
         #process signed field
-        msg['connection'], sig_verified = await self.agent.unpack_and_verify_signed_agent_message_field(msg['connection~sig'])
+        msg[Connection.CONNECTION], sig_verified = await self.agent.unpack_and_verify_signed_agent_message_field(msg['connection~sig'])
         # connection~sig remains for metadata
 
-
-        their_did = msg['connection']['did']
-        their_vk = msg['connection']['did_doc']['publicKey'][0]['publicKeyBase58']
-        their_endpoint = msg['connection']['did_doc']['service'][0]['serviceEndpoint']
+        their_did, their_vk, their_endpoint = self._extract_their_info(msg)
 
         msg_vk = msg.context['from_key']
         # TODO: verify their_vk (from did doc) matches msg_vk
@@ -753,3 +755,29 @@ class Connection(Module):
         await non_secrets.delete_wallet_record(self.agent.wallet_handle,
                                                'invitations',
                                                msg.data['connection~sig']['signer'])
+
+    @staticmethod
+    def extract_verkey_endpoint(msg: Message) -> (Optional, Optional):
+        """
+        Extract verkey and endpoint that will be used to send message back to the sender of this message. Might return None.
+        """
+        vks = msg.get(Connection.CONNECTION, {}).get(DIDDoc.DID_DOC, {}).get('publicKey')
+        vk = vks[0].get('publicKeyBase58') if vks and isinstance(vks, list) and len(vks) > 0 else None
+        endpoints = msg.get(Connection.CONNECTION, {}).get(DIDDoc.DID_DOC, {}).get('service')
+        endpoint = endpoints[0].get('serviceEndpoint') if endpoints and isinstance(endpoints, list) and len(
+            endpoints) > 0 else None
+        return vk, endpoint
+
+    @staticmethod
+    def _extract_their_info(msg: Message):
+        """
+        Extract the other participant's DID, verkey and endpoint
+        :param msg:
+        :return: Return a 3-tuple of (DID, verkey, endpoint
+        """
+        their_did = msg[Connection.CONNECTION][DIDDoc.DID]
+        # NOTE: these values are pulled based on the minimal connectathon format. Full processing
+        #  will require full DIDDoc storage and evaluation.
+        their_vk = msg[Connection.CONNECTION][DIDDoc.DID_DOC]['publicKey'][0]['publicKeyBase58']
+        their_endpoint = msg[Connection.CONNECTION][DIDDoc.DID_DOC]['service'][0]['serviceEndpoint']
+        return their_did, their_vk, their_endpoint
