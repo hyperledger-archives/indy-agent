@@ -2,7 +2,7 @@
 """
 
 from typing import Callable
-from python.message import Message
+from message import Message
 from . import BaseRouter, RouteAlreadyRegisteredException
 
 

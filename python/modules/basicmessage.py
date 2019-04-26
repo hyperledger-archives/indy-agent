@@ -3,8 +3,8 @@ import json
 import uuid
 from indy import pairwise, non_secrets
 
-from python.router.simple_router import SimpleRouter
-from python.message import Message
+from router.simple_router import SimpleRouter
+from message import Message
 from . import Module
 
 

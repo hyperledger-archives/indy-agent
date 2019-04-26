@@ -3,7 +3,7 @@
 """
 
 from typing import Callable
-from ..message import Message
+from message import Message
 
 
 class BaseRouter:

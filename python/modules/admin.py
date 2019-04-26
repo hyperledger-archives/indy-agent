@@ -2,10 +2,10 @@ import aiohttp_jinja2
 import json
 import socket
 from indy import pairwise
-from python.indy_sdk_utils import get_wallet_records
+from indy_sdk_utils import get_wallet_records
 
-from python.router.simple_router import SimpleRouter
-from python.message import Message
+from router.simple_router import SimpleRouter
+from message import Message
 from . import Module
 
 

@@ -2,8 +2,8 @@ import pytest
 from test_suite.tests import expect_message, pack, unpack, sign_field, get_verified_data_from_signed_field, \
     expect_silence, check_problem_report
 from indy import did
-from python.modules.connection import Connection
-from python.modules.did_doc import DIDDoc
+from modules.connection import Connection
+from modules.did_doc import DIDDoc
 
 
 expect_message_timeout = 30
@@ -174,8 +174,7 @@ async def test_malformed_connection_request_by_testing_agent(config, wallet_hand
 async def test_recv_connection_resp_without_sending_req(config, wallet_handle, transport):
     # Tested agent starts the connection. Testing agent receives the invite,
     # does not send connection request but sends a response
-    #invite_url = input('Input generated connection invite: ')
-    invite_url = 'http://127.0.1.1:3001/indy?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJsYWJlbCI6ICIxIiwgInJlY2lwaWVudEtleXMiOiBbIjVDamtTMzN4cnY3VjVSRDFMZ3p0RndiN3drbWRqZDFjYXhHVzZScVd4eUR4Il0sICJzZXJ2aWNlRW5kcG9pbnQiOiAiaHR0cDovLzEyNy4wLjEuMTozMDAxL2luZHkiLCAiQGlkIjogIjA5Mjk5NmQ4LTNkMDQtNDQ2Mi1hYTZlLWNjZmIxM2NiOWNjNyJ9'
+    invite_url = input('Input generated connection invite: ')
 
     invite_msg = Connection.Invite.parse(invite_url)
 

@@ -1,4 +1,4 @@
-from python.modules import Module
+from modules import Module
 
 
 class DIDDoc(Module):

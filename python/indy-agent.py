@@ -14,14 +14,14 @@ import jinja2
 import aiohttp_jinja2
 from aiohttp import web
 
-from python.modules.connection import Connection, AdminConnection
-from python.modules.admin import Admin, root
-from python.modules.admin_walletconnection import AdminWalletConnection
-from python.modules.basicmessage import AdminBasicMessage, BasicMessage
-from python.modules.trustping import AdminTrustPing, TrustPing
-from python.post_message_handler import PostMessageHandler
-from python.websocket_message_handler import WebSocketMessageHandler
-from python.agent import Agent
+from modules.connection import Connection, AdminConnection
+from modules.admin import Admin, root
+from modules.admin_walletconnection import AdminWalletConnection
+from modules.basicmessage import AdminBasicMessage, BasicMessage
+from modules.trustping import AdminTrustPing, TrustPing
+from post_message_handler import PostMessageHandler
+from websocket_message_handler import WebSocketMessageHandler
+from agent import Agent
 
 
 if __name__ == "__main__":

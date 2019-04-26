@@ -7,7 +7,7 @@
     of serialization to another.
 """
 
-from python.message import Message
+from message import Message
 
 
 def unpack(msg: bytes) -> Message: #pylint: disable=unused-argument

@@ -8,7 +8,7 @@
 """
 
 import json
-from python.message import Message
+from message import Message
 
 
 class BaseSerializer:

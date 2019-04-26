@@ -2,8 +2,8 @@
 """
 
 import re
-from python.modules import Module
-from python.message import Message
+from modules import Module
+from message import Message
 from . import BaseRouter, RouteAlreadyRegisteredException, UnparsableMessageFamilyException
 
 

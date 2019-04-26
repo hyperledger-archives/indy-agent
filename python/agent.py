@@ -10,10 +10,10 @@ import traceback
 import aiohttp
 from indy import wallet, did, error, crypto, pairwise
 
-import python.indy_sdk_utils as utils
-from python.serializer import json_serializer as Serializer
-from python.message import Message
-from python.router.family_router import FamilyRouter
+import indy_sdk_utils as utils
+from serializer import json_serializer as Serializer
+from message import Message
+from router.family_router import FamilyRouter
 
 
 class WalletConnectionException(Exception):

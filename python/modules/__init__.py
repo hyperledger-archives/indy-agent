@@ -1,6 +1,6 @@
 from typing import Iterable
 
-from python.message import Message
+from message import Message
 
 
 class Module:

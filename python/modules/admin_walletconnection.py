@@ -3,10 +3,10 @@ import jinja2
 import json
 from indy import did, wallet
 
-from python.router.simple_router import SimpleRouter
-from python.agent import Agent, WalletConnectionException
-from python.modules.admin import Admin
-from python.message import Message
+from router.simple_router import SimpleRouter
+from agent import Agent, WalletConnectionException
+from modules.admin import Admin
+from message import Message
 from . import Module
 
 

@@ -12,12 +12,12 @@ from typing import Optional
 
 from indy import did, pairwise, non_secrets, error
 
-import python.indy_sdk_utils as utils
-import python.serializer.json_serializer as Serializer
-from python.modules.did_doc import DIDDoc
-from python.router.simple_router import SimpleRouter
+import indy_sdk_utils as utils
+import serializer.json_serializer as Serializer
+from modules.did_doc import DIDDoc
+from router.simple_router import SimpleRouter
 from . import Module
-from python.message import Message
+from message import Message
 
 # TODO: Move all string literal in a place which can be accessed by the test suite as well
 
