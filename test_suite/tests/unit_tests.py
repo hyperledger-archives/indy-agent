@@ -1,5 +1,4 @@
 import pytest
-import asyncio
 from indy import crypto
 from test_suite.tests import sign_field, get_verified_data_from_signed_field
 

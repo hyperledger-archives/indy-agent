@@ -1,3 +1,5 @@
+import uuid
+
 from python.router.simple_router import SimpleRouter
 from python.message import Message
 from . import Module
@@ -52,6 +54,49 @@ class TrustPing(Module):
 
     PING = FAMILY + "ping"
     PING_RESPONSE = FAMILY + "ping_response"
+
+    class Ping:
+        @staticmethod
+        def build():
+            return Message({
+                '@type': TrustPing.PING,
+                '@id': str(uuid.uuid4())
+            })
+
+        @staticmethod
+        def validate(message):
+            Module.validate_message(
+                [
+                    ('@type', TrustPing.PING),
+                    '@id'
+                ],
+                message
+            )
+
+    class Pong:
+        @staticmethod
+        def build(ping_id: str):
+            return Message({
+                '@type': TrustPing.PING_RESPONSE,
+                '~thread': {'thid': ping_id }
+            })
+
+        @staticmethod
+        def validate(message, ping_id):
+            Module.validate_message(
+                [
+                    ('@type', TrustPing.PING_RESPONSE),
+                    '~thread'
+                ],
+                message
+            )
+
+            Module.validate_message(
+                [
+                    ('thid', ping_id)
+                ],
+                message['~thread']
+            )
 
     def __init__(self, agent):
         self.agent = agent

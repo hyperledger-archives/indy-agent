@@ -1,13 +1,13 @@
-from test_suite.tests import validate_message
+from python.modules import Module
 
 
-class DIDDoc:
+class DIDDoc(Module):
     DID = 'did'
     DID_DOC = 'did_doc'
 
     @staticmethod
     def validate(diddoc):
-        validate_message(
+        Module.validate_message(
             [
                 '@context',
                 'publicKey',
@@ -17,7 +17,7 @@ class DIDDoc:
         )
 
         for publicKeyBlock in diddoc['publicKey']:
-            validate_message(
+            Module.validate_message(
                 [
                     'id',
                     'type',
@@ -28,7 +28,7 @@ class DIDDoc:
             )
 
         for serviceBlock in diddoc['service']:
-            validate_message(
+            Module.validate_message(
                 [
                     ('type', 'IndyAgent'),
                     'recipientKeys',

@@ -2,11 +2,11 @@ import pytest
 from test_suite.tests import expect_message, pack, unpack, sign_field, get_verified_data_from_signed_field, \
     expect_silence, check_problem_report
 from indy import did
-from test_suite.tests.connection import Connection
-from test_suite.tests.did_doc import DIDDoc
+from python.modules.connection import Connection
+from python.modules.did_doc import DIDDoc
 
 
-expect_message_timeout = 5
+expect_message_timeout = 30
 
 
 @pytest.mark.asyncio

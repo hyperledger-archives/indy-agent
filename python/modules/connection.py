@@ -7,16 +7,17 @@ import json
 import base64
 import re
 import datetime
+import uuid
+from typing import Optional
 
 from indy import did, pairwise, non_secrets, error
 
 import python.indy_sdk_utils as utils
 import python.serializer.json_serializer as Serializer
+from python.modules.did_doc import DIDDoc
 from python.router.simple_router import SimpleRouter
 from . import Module
 from python.message import Message
-# TODO: Move validators outside tests
-from test_suite.tests.connection import Connection as ConnectionValidator
 
 # TODO: Move all string literal in a place which can be accessed by the test suite as well
 
@@ -363,10 +364,190 @@ class Connection(Module):
     VERSION = "1.0"
     FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
 
+    CONNECTION = 'connection'
     INVITE = FAMILY + "invitation"
     REQUEST = FAMILY + "request"
     RESPONSE = FAMILY + "response"
     REQUEST_NOT_ACCEPTED = "request_not_accepted"
+
+    class Invite:
+        @staticmethod
+        def parse(invite_url: str) -> Message:
+            matches = re.match('(.+)?c_i=(.+)', invite_url)
+            assert matches, 'Improperly formatted invite url!'
+
+            invite_msg = Serializer.unpack(
+                base64.urlsafe_b64decode(matches.group(2)).decode('ascii')
+            )
+
+            Module.validate_message(
+                [
+                    ('@type', Connection.INVITE),
+                    'label',
+                    'recipientKeys',
+                    'serviceEndpoint'
+                ],
+                invite_msg
+            )
+
+            return invite_msg
+
+        @staticmethod
+        def build(label: str, connection_key: str, endpoint: str) -> str:
+            msg = Message({
+                '@type': Connection.INVITE,
+                'label': label,
+                'recipientKeys': [connection_key],
+                'serviceEndpoint': endpoint,
+                # routing_keys not specified, but here is where they would be put in the invite.
+            })
+
+            b64_invite = base64.urlsafe_b64encode(
+                bytes(
+                    Serializer.pack(msg),
+                    'ascii'
+                )
+            ).decode('ascii')
+
+            return '{}?c_i={}'.format(endpoint, b64_invite)
+
+    class Request:
+        @staticmethod
+        def parse(request: Message):
+            return (
+                request[Connection.CONNECTION][DIDDoc.DID_DOC]['publicKey'][0]['controller'],
+                request[Connection.CONNECTION][DIDDoc.DID_DOC]['publicKey'][0]['publicKeyBase58'],
+                request[Connection.CONNECTION][DIDDoc.DID_DOC]['service'][0]['serviceEndpoint']
+            )
+
+        @staticmethod
+        def build(label: str, my_did: str, my_vk: str, endpoint: str) -> Message:
+            return Message({
+                '@type': Connection.REQUEST,
+                '@id': str(uuid.uuid4()),
+                'label': label,
+                'connection': {
+                    'did': my_did,
+                    'did_doc': {
+                        "@context": "https://w3id.org/did/v1",
+                        "id": my_did,
+                        "publicKey": [{
+                            "id": my_did + "#keys-1",
+                            "type": "Ed25519VerificationKey2018",
+                            "controller": my_did,
+                            "publicKeyBase58": my_vk
+                        }],
+                        "service": [{
+                            "id": my_did + ";indy",
+                            "type": "IndyAgent",
+                            "recipientKeys": [my_vk],
+                            #"routingKeys": ["<example-agency-verkey>"],
+                            "serviceEndpoint": endpoint,
+                        }],
+                    }
+                }
+            })
+
+        @staticmethod
+        def validate(request):
+            Module.validate_message(
+                [
+                    ('@type', Connection.REQUEST),
+                    '@id',
+                    'label',
+                    Connection.CONNECTION
+                ],
+                request
+            )
+
+            Module.validate_message(
+                [
+                    DIDDoc.DID,
+                    DIDDoc.DID_DOC
+                ],
+                request[Connection.CONNECTION]
+            )
+
+            DIDDoc.validate(request[Connection.CONNECTION][DIDDoc.DID_DOC])
+
+        @staticmethod
+        def extract_verkey_endpoint(msg: Message) -> (Optional, Optional):
+            """
+            Extract verkey and endpoint that will be used to send message back to the sender of this message. Might return None.
+            """
+            vks = msg.get(Connection.CONNECTION, {}).get(DIDDoc.DID_DOC, {}).get('publicKey')
+            vk = vks[0].get('publicKeyBase58') if vks and isinstance(vks, list) and len(vks) > 0 else None
+            endpoints = msg.get(Connection.CONNECTION, {}).get(DIDDoc.DID_DOC, {}).get('service')
+            endpoint = endpoints[0].get('serviceEndpoint') if endpoints and isinstance(endpoints, list) and len(endpoints) > 0 else None
+            return vk, endpoint
+
+    class Response:
+        @staticmethod
+        def build(req_id: str, my_did: str, my_vk: str, endpoint: str) -> Message:
+            return Message({
+                '@type': Connection.RESPONSE,
+                '@id': str(uuid.uuid4()),
+                '~thread': {'thid': req_id},
+                'connection': {
+                    'did': my_did,
+                    'did_doc': {
+                        "@context": "https://w3id.org/did/v1",
+                        "id": my_did,
+                        "publicKey": [{
+                            "id": my_did + "#keys-1",
+                            "type": "Ed25519VerificationKey2018",
+                            "controller": my_did,
+                            "publicKeyBase58": my_vk
+                        }],
+                        "service": [{
+                            "id": my_did + ";indy",
+                            "type": "IndyAgent",
+                            "recipientKeys": [my_vk],
+                            #"routingKeys": ["<example-agency-verkey>"],
+                            "serviceEndpoint": endpoint,
+                        }],
+                    }
+                }
+            })
+
+        @staticmethod
+        def validate_pre_sig(response: Message):
+            Module.validate_message(
+                [
+                    ('@type', Connection.RESPONSE),
+                    '~thread',
+                    'connection~sig'
+                ],
+                response
+            )
+
+        @staticmethod
+        def validate(response: Message, req_id: str):
+            Module.validate_message(
+                [
+                    ('@type', Connection.RESPONSE),
+                    '~thread',
+                    'connection'
+                ],
+                response
+            )
+
+            Module.validate_message(
+                [
+                    ('thid', req_id)
+                ],
+                response['~thread']
+            )
+
+            Module.validate_message(
+                [
+                    DIDDoc.DID,
+                    DIDDoc.DID_DOC
+                ],
+                response[Connection.CONNECTION]
+            )
+
+            DIDDoc.validate(response[Connection.CONNECTION][DIDDoc.DID_DOC])
 
     def __init__(self, agent):
         self.agent = agent
@@ -406,9 +587,9 @@ class Connection(Module):
                 }
         """
         try:
-            ConnectionValidator.Request.validate(msg)
+            Connection.Request.validate(msg)
         except Exception as e:
-            vk, endpoint = ConnectionValidator.Request.extract_verkey_endpoint(msg)
+            vk, endpoint = Connection.Request.extract_verkey_endpoint(msg)
             if None in (vk, endpoint):
                 # Cannot extract verkey and endpoint hence won't send any message back.
                 print('Encountered error parsing connection request ', e)

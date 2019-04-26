@@ -118,10 +118,39 @@ class BasicMessage(Module):
         self.router = SimpleRouter()
         self.router.register(BasicMessage.MESSAGE, self.receive_message)
 
+    @staticmethod
+    def build(content: str) -> Message:
+        sent_time = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat(' ')
+        return Message({
+            '@type': BasicMessage.MESSAGE,
+            '~l10n': {'locale': 'en'},
+            'sent_time': sent_time,
+            'content': content
+        })
+
+    @staticmethod
+    def validate(msg: Message):
+        Module.validate_message(
+            [
+                ('@type', BasicMessage.MESSAGE),
+                '~l10n',
+                'sent_time',
+                'content',
+            ],
+            msg
+        )
+
+        Module.validate_message(
+            [
+                ('locale', 'en')
+            ],
+            msg['~l10n']
+        )
+
     async def route(self, msg: Message) -> Message:
         return await self.router.route(msg)
 
-    async def receive_message(self, msg: Message) -> Message:
+    async def receive_message(self, msg: Message):
 
         # store message in the wallet
         await non_secrets.add_wallet_record(

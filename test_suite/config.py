@@ -1,8 +1,7 @@
 """ Module for storing and updating configuration.
 """
 
-import typing
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 import toml
 import argparse
 import os

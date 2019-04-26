@@ -6,9 +6,7 @@ import json
 import time
 import struct
 import asyncio
-import pytest
 from pytest import fail
-from typing import Callable, Any
 from indy import crypto
 
 from python.message import Message
@@ -48,19 +46,6 @@ async def expect_silence(transport: BaseTransport, timeout: int):
     resp = await get_resp(transport, timeout)
     if resp:
         fail("Received a message when not expecting any")
-
-
-def validate_message(expected_attrs: [Any], msg: Message):
-    __tracebackhide__ = True
-    for attribute in expected_attrs:
-        if isinstance(attribute, tuple):
-            if attribute[0] not in msg:
-                raise KeyError('Attribute "{}" is missing from message: \n{}'.format(attribute[0], msg))
-            if msg[attribute[0]] != attribute[1]:
-                raise KeyError('Message.{}: {} != {}'.format(attribute[0], msg[attribute[0]], attribute[1]))
-        else:
-            if attribute not in msg:
-                raise KeyError('Attribute "{}" is missing from message: \n{}'.format(attribute, msg))
 
 
 async def pack(wallet_handle: int, my_vk: str, their_vk: str, msg: Message) -> bytes:

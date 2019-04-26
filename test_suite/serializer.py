@@ -8,7 +8,7 @@
 """
 
 import json
-from test_suite.message import Message
+from python.message import Message
 
 
 class BaseSerializer:

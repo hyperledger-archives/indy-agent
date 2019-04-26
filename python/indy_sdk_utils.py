@@ -1,7 +1,7 @@
 """ Wrappers around Indy-SDK functions to overcome shortcomings in the SDK.
 """
 import json
-from indy import did, crypto, non_secrets, error
+from indy import did, non_secrets, error
 
 
 async def create_and_store_my_did(wallet_handle):

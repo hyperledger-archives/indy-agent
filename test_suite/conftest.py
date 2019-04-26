@@ -12,7 +12,7 @@ import os
 import logging
 
 import pytest
-from indy import crypto, wallet
+from indy import wallet
 from test_suite.config import Config
 from test_suite.transport.http_transport import HTTPTransport
 

@@ -1,10 +1,8 @@
-import asyncio
 import pytest
 
-from test_suite.message import Message
-from test_suite.tests import expect_message, validate_message, pack, unpack
+from test_suite.tests import expect_message, pack, unpack
 
-from test_suite.tests.trustping import TrustPing
+from python.modules.trustping import TrustPing
 
 
 expect_message_timeout = 30
