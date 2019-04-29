@@ -9,7 +9,7 @@ import asyncio
 from pytest import fail
 from indy import crypto
 
-from message import Message
+from python_agent_utils.messages.message import Message
 from test_suite.serializer import JSONSerializer as Serializer
 from test_suite.transport import BaseTransport
 

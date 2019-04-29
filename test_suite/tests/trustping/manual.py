@@ -1,8 +1,8 @@
 import pytest
 
-from test_suite.tests import expect_message, pack, unpack
+from python_agent_utils.messages.trustping import TrustPing
 
-from modules.trustping import TrustPing
+from test_suite.tests import expect_message, pack, unpack
 
 
 expect_message_timeout = 30

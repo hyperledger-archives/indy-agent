@@ -1,7 +1,7 @@
 """ Simple router for handling Sovrin Messages.
 """
 from typing import Callable, Dict, Any
-from message import Message
+from python_agent_utils.messages import Message
 
 
 class RouteAlreadyRegisteredException(Exception):

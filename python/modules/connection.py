@@ -7,17 +7,17 @@ import json
 import base64
 import re
 import datetime
-import uuid
 from typing import Optional
 
 from indy import did, pairwise, non_secrets, error
 
 import indy_sdk_utils as utils
 import serializer.json_serializer as Serializer
-from modules.did_doc import DIDDoc
+from python_agent_utils.messages.did_doc import DIDDoc
+from python_agent_utils.messages.connection import Connection as ConnectionMessage
 from router.simple_router import SimpleRouter
 from . import Module
-from message import Message
+from python_agent_utils.messages.message import Message
 
 # TODO: Move all string literal in a place which can be accessed by the test suite as well
 
@@ -364,180 +364,9 @@ class Connection(Module):
     VERSION = "1.0"
     FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
 
-    CONNECTION = 'connection'
     INVITE = FAMILY + "invitation"
     REQUEST = FAMILY + "request"
     RESPONSE = FAMILY + "response"
-    REQUEST_NOT_ACCEPTED = "request_not_accepted"
-    RESPONSE_FOR_UNKNOWN_REQUEST = "response_for_unknown_request"
-
-    class Invite:
-        @staticmethod
-        def parse(invite_url: str) -> Message:
-            matches = re.match('(.+)?c_i=(.+)', invite_url)
-            assert matches, 'Improperly formatted invite url!'
-
-            invite_msg = Serializer.unpack(
-                base64.urlsafe_b64decode(matches.group(2)).decode('ascii')
-            )
-
-            Module.validate_message(
-                [
-                    ('@type', Connection.INVITE),
-                    'label',
-                    'recipientKeys',
-                    'serviceEndpoint'
-                ],
-                invite_msg
-            )
-
-            return invite_msg
-
-        @staticmethod
-        def build(label: str, connection_key: str, endpoint: str) -> str:
-            msg = Message({
-                '@type': Connection.INVITE,
-                'label': label,
-                'recipientKeys': [connection_key],
-                'serviceEndpoint': endpoint,
-                # routing_keys not specified, but here is where they would be put in the invite.
-            })
-
-            b64_invite = base64.urlsafe_b64encode(
-                bytes(
-                    Serializer.pack(msg),
-                    'ascii'
-                )
-            ).decode('ascii')
-
-            return '{}?c_i={}'.format(endpoint, b64_invite)
-
-    class Request:
-        @staticmethod
-        def parse(request: Message):
-            return (
-                request[Connection.CONNECTION][DIDDoc.DID_DOC]['publicKey'][0]['controller'],
-                request[Connection.CONNECTION][DIDDoc.DID_DOC]['publicKey'][0]['publicKeyBase58'],
-                request[Connection.CONNECTION][DIDDoc.DID_DOC]['service'][0]['serviceEndpoint']
-            )
-
-        @staticmethod
-        def build(label: str, my_did: str, my_vk: str, endpoint: str) -> Message:
-            return Message({
-                '@type': Connection.REQUEST,
-                '@id': str(uuid.uuid4()),
-                'label': label,
-                'connection': {
-                    'did': my_did,
-                    'did_doc': {
-                        "@context": "https://w3id.org/did/v1",
-                        "id": my_did,
-                        "publicKey": [{
-                            "id": my_did + "#keys-1",
-                            "type": "Ed25519VerificationKey2018",
-                            "controller": my_did,
-                            "publicKeyBase58": my_vk
-                        }],
-                        "service": [{
-                            "id": my_did + ";indy",
-                            "type": "IndyAgent",
-                            "recipientKeys": [my_vk],
-                            #"routingKeys": ["<example-agency-verkey>"],
-                            "serviceEndpoint": endpoint,
-                        }],
-                    }
-                }
-            })
-
-        @staticmethod
-        def validate(request):
-            Module.validate_message(
-                [
-                    ('@type', Connection.REQUEST),
-                    '@id',
-                    'label',
-                    Connection.CONNECTION
-                ],
-                request
-            )
-
-            Module.validate_message(
-                [
-                    DIDDoc.DID,
-                    DIDDoc.DID_DOC
-                ],
-                request[Connection.CONNECTION]
-            )
-
-            DIDDoc.validate(request[Connection.CONNECTION][DIDDoc.DID_DOC])
-
-    class Response:
-        @staticmethod
-        def build(req_id: str, my_did: str, my_vk: str, endpoint: str) -> Message:
-            return Message({
-                '@type': Connection.RESPONSE,
-                '@id': str(uuid.uuid4()),
-                '~thread': {'thid': req_id},
-                'connection': {
-                    'did': my_did,
-                    'did_doc': {
-                        "@context": "https://w3id.org/did/v1",
-                        "id": my_did,
-                        "publicKey": [{
-                            "id": my_did + "#keys-1",
-                            "type": "Ed25519VerificationKey2018",
-                            "controller": my_did,
-                            "publicKeyBase58": my_vk
-                        }],
-                        "service": [{
-                            "id": my_did + ";indy",
-                            "type": "IndyAgent",
-                            "recipientKeys": [my_vk],
-                            #"routingKeys": ["<example-agency-verkey>"],
-                            "serviceEndpoint": endpoint,
-                        }],
-                    }
-                }
-            })
-
-        @staticmethod
-        def validate_pre_sig(response: Message):
-            Module.validate_message(
-                [
-                    ('@type', Connection.RESPONSE),
-                    '~thread',
-                    'connection~sig'
-                ],
-                response
-            )
-
-        @staticmethod
-        def validate(response: Message, req_id: str):
-            Module.validate_message(
-                [
-                    ('@type', Connection.RESPONSE),
-                    '~thread',
-                    'connection'
-                ],
-                response
-            )
-
-            Module.validate_message(
-                [
-                    ('thid', req_id)
-                ],
-                response['~thread']
-            )
-
-            Module.validate_message(
-                [
-                    DIDDoc.DID,
-                    DIDDoc.DID_DOC
-                ],
-                response[Connection.CONNECTION]
-            )
-
-            DIDDoc.validate(response[Connection.CONNECTION][DIDDoc.DID_DOC])
 
     def __init__(self, agent):
         self.agent = agent
@@ -577,15 +406,15 @@ class Connection(Module):
                 }
         """
         try:
-            Connection.Request.validate(msg)
+            ConnectionMessage.Request.validate(msg)
         except Exception as e:
-            vk, endpoint = Connection.extract_verkey_endpoint(msg)
+            vk, endpoint = ConnectionMessage.extract_verkey_endpoint(msg)
             if None in (vk, endpoint):
                 # Cannot extract verkey and endpoint hence won't send any message back.
                 print('Encountered error parsing connection request ', e)
             else:
                 # Sending an error message back to the sender
-                err_msg = self.build_problem_report_for_connections(Connection.FAMILY, Connection.REQUEST_NOT_ACCEPTED, str(e))
+                err_msg = self.build_problem_report_for_connections(Connection.FAMILY, ConnectionMessage.REQUEST_NOT_ACCEPTED, str(e))
                 await self.agent.send_message_to_endpoint_and_key(vk, endpoint, err_msg)
             return
 
@@ -593,7 +422,7 @@ class Connection(Module):
 
         label = msg['label']
 
-        their_did, their_vk, their_endpoint = self._extract_their_info(msg)
+        their_did, their_vk, their_endpoint = ConnectionMessage.extract_their_info(msg)
 
         # Store their information from request
         await utils.store_their_did(self.agent.wallet_handle, their_did, their_vk)
@@ -666,19 +495,19 @@ class Connection(Module):
         """
         my_did = msg.context['to_did']
         if my_did is None:
-            msg[Connection.CONNECTION], sig_verified = await self.agent.unpack_and_verify_signed_agent_message_field(
+            msg[ConnectionMessage.CONNECTION], sig_verified = await self.agent.unpack_and_verify_signed_agent_message_field(
                 msg['connection~sig'])
             if not sig_verified:
                 print('Encountered error parsing connection response. Connection request not found.')
             else:
-                vk, endpoint = Connection.extract_verkey_endpoint(msg)
+                vk, endpoint = ConnectionMessage.extract_verkey_endpoint(msg)
                 if None in (vk, endpoint):
                     # Cannot extract verkey and endpoint hence won't send any message back.
                     print('Encountered error parsing connection response. Connection request not found.')
                 else:
                     # Sending an error message back to the sender
                     err_msg = self.build_problem_report_for_connections(Connection.FAMILY,
-                                                                        Connection.RESPONSE_FOR_UNKNOWN_REQUEST,
+                                                                        ConnectionMessage.RESPONSE_FOR_UNKNOWN_REQUEST,
                                                                         "No corresponding connection request found")
                     await self.agent.send_message_to_endpoint_and_key(vk, endpoint, err_msg)
             return
@@ -686,10 +515,10 @@ class Connection(Module):
         my_vk = await did.key_for_local_did(self.agent.wallet_handle, my_did)
 
         #process signed field
-        msg[Connection.CONNECTION], sig_verified = await self.agent.unpack_and_verify_signed_agent_message_field(msg['connection~sig'])
+        msg[ConnectionMessage.CONNECTION], sig_verified = await self.agent.unpack_and_verify_signed_agent_message_field(msg['connection~sig'])
         # connection~sig remains for metadata
 
-        their_did, their_vk, their_endpoint = self._extract_their_info(msg)
+        their_did, their_vk, their_endpoint = ConnectionMessage.extract_their_info(msg)
 
         msg_vk = msg.context['from_key']
         # TODO: verify their_vk (from did doc) matches msg_vk
@@ -756,28 +585,3 @@ class Connection(Module):
                                                'invitations',
                                                msg.data['connection~sig']['signer'])
 
-    @staticmethod
-    def extract_verkey_endpoint(msg: Message) -> (Optional, Optional):
-        """
-        Extract verkey and endpoint that will be used to send message back to the sender of this message. Might return None.
-        """
-        vks = msg.get(Connection.CONNECTION, {}).get(DIDDoc.DID_DOC, {}).get('publicKey')
-        vk = vks[0].get('publicKeyBase58') if vks and isinstance(vks, list) and len(vks) > 0 else None
-        endpoints = msg.get(Connection.CONNECTION, {}).get(DIDDoc.DID_DOC, {}).get('service')
-        endpoint = endpoints[0].get('serviceEndpoint') if endpoints and isinstance(endpoints, list) and len(
-            endpoints) > 0 else None
-        return vk, endpoint
-
-    @staticmethod
-    def _extract_their_info(msg: Message):
-        """
-        Extract the other participant's DID, verkey and endpoint
-        :param msg:
-        :return: Return a 3-tuple of (DID, verkey, endpoint
-        """
-        their_did = msg[Connection.CONNECTION][DIDDoc.DID]
-        # NOTE: these values are pulled based on the minimal connectathon format. Full processing
-        #  will require full DIDDoc storage and evaluation.
-        their_vk = msg[Connection.CONNECTION][DIDDoc.DID_DOC]['publicKey'][0]['publicKeyBase58']
-        their_endpoint = msg[Connection.CONNECTION][DIDDoc.DID_DOC]['service'][0]['serviceEndpoint']
-        return their_did, their_vk, their_endpoint

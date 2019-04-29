@@ -5,4 +5,5 @@ sessions
 .vscode/
 _build/
 toc.rst
-.pytest_cache/
+.pytest_cache
+.testing-wallets

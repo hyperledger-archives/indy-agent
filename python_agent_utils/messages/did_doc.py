@@ -1,23 +1,22 @@
-from modules import Module
+from .message import Message
 
 
-class DIDDoc(Module):
+class DIDDoc(Message):
     DID = 'did'
     DID_DOC = 'did_doc'
 
     @staticmethod
-    def validate(diddoc):
-        Module.validate_message(
+    def validate(did_doc: Message):
+        did_doc.validate(
             [
                 '@context',
                 'publicKey',
                 'service'
-            ],
-            diddoc
+            ]
         )
 
-        for publicKeyBlock in diddoc['publicKey']:
-            Module.validate_message(
+        for publicKeyBlock in did_doc['publicKey']:
+            Message.validate_message(
                 [
                     'id',
                     'type',
@@ -27,8 +26,8 @@ class DIDDoc(Module):
                 publicKeyBlock
             )
 
-        for serviceBlock in diddoc['service']:
-            Module.validate_message(
+        for serviceBlock in did_doc['service']:
+            Message.validate_message(
                 [
                     ('type', 'IndyAgent'),
                     'recipientKeys',

@@ -12,7 +12,7 @@ from indy import wallet, did, error, crypto, pairwise
 
 import indy_sdk_utils as utils
 from serializer import json_serializer as Serializer
-from message import Message
+from python_agent_utils.messages.message import Message
 from router.family_router import FamilyRouter
 
 

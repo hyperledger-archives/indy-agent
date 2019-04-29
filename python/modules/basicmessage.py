@@ -4,7 +4,7 @@ import uuid
 from indy import pairwise, non_secrets
 
 from router.simple_router import SimpleRouter
-from message import Message
+from python_agent_utils.messages.message import Message
 from . import Module
 
 
@@ -117,35 +117,6 @@ class BasicMessage(Module):
         self.agent = agent
         self.router = SimpleRouter()
         self.router.register(BasicMessage.MESSAGE, self.receive_message)
-
-    @staticmethod
-    def build(content: str) -> Message:
-        sent_time = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat(' ')
-        return Message({
-            '@type': BasicMessage.MESSAGE,
-            '~l10n': {'locale': 'en'},
-            'sent_time': sent_time,
-            'content': content
-        })
-
-    @staticmethod
-    def validate(msg: Message):
-        Module.validate_message(
-            [
-                ('@type', BasicMessage.MESSAGE),
-                '~l10n',
-                'sent_time',
-                'content',
-            ],
-            msg
-        )
-
-        Module.validate_message(
-            [
-                ('locale', 'en')
-            ],
-            msg['~l10n']
-        )
 
     async def route(self, msg: Message) -> Message:
         return await self.router.route(msg)

@@ -5,7 +5,7 @@ from indy import pairwise
 from indy_sdk_utils import get_wallet_records
 
 from router.simple_router import SimpleRouter
-from message import Message
+from python_agent_utils.messages.message import Message
 from . import Module
 
 

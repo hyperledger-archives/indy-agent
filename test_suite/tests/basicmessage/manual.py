@@ -2,7 +2,7 @@ import pytest
 import random
 from test_suite.tests import expect_message, pack, unpack
 
-from modules.basicmessage import BasicMessage
+from python_agent_utils.messages.basicmessage import BasicMessage
 
 expect_message_timeout = 30
 

@@ -1,12 +1,7 @@
-import aiohttp_jinja2
-import jinja2
-import json
-from indy import did, wallet
-
 from router.simple_router import SimpleRouter
-from agent import Agent, WalletConnectionException
+from agent import WalletConnectionException
 from modules.admin import Admin
-from message import Message
+from python_agent_utils.messages.message import Message
 from . import Module
 
 
