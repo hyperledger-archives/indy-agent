@@ -5,3 +5,5 @@ sessions
 .vscode/
 _build/
 toc.rst
+.venv
+.testing-wallets
