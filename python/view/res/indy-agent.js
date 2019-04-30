@@ -371,7 +371,7 @@ var ui_connection = new Vue({
             msg = {
                 '@type': ADMIN_PROTOCOL_DISCOVERY.SEND_QUERY,
                 did: this.connection.their_did,
-                query: 'did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/' + this.new_query
+                query: this.new_query
             };
             sendMessage(msg);
         },

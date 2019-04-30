@@ -55,7 +55,6 @@ class ProtocolDiscovery(Module):
         self.router.register(ProtocolDiscovery.DISCLOSE, self.disclose_received)
 
     async def route(self, msg: Message):
-        print("ROUTING PROTOCOL DISCOVERY")
         return await self.router.route(msg)
 
     async def query_received(self, msg: Message):
