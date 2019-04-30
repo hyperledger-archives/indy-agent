@@ -1,14 +1,13 @@
 import aiohttp_jinja2
-import jinja2
 import json
 import socket
-from indy import did, wallet, non_secrets, pairwise
+from indy import pairwise
 from indy_sdk_utils import get_wallet_records
 
 from router.simple_router import SimpleRouter
-from agent import Agent
-from message import Message
+from python_agent_utils.messages.message import Message
 from . import Module
+
 
 class Admin(Module):
     FAMILY_NAME = "admin"

@@ -4,8 +4,9 @@ import asyncio
 import logging
 from aiohttp import web, ClientSession
 
-from config import Config
-from . import BaseTransport
+from test_suite.config import Config
+from test_suite.transport import BaseTransport
+
 
 class HTTPTransport(BaseTransport):
     """ HTTP Transport

@@ -8,6 +8,9 @@
 # established in indy projects.
 # pylint: disable=invalid-name
 
+import sys
+sys.path.append('..')
+
 import argparse
 import asyncio
 import jinja2
@@ -22,7 +25,7 @@ from modules.trustping import AdminTrustPing, TrustPing
 from post_message_handler import PostMessageHandler
 from websocket_message_handler import WebSocketMessageHandler
 from agent import Agent
-from message import Message
+
 
 if __name__ == "__main__":
 

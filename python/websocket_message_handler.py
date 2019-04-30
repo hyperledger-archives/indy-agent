@@ -2,7 +2,8 @@ import asyncio
 import aiohttp
 from aiohttp import web
 
-class WebSocketMessageHandler(object):
+
+class WebSocketMessageHandler:
     def __init__(self, inbound_queue, outbound_queue):
         self.recv_q = inbound_queue
         self.send_q = outbound_queue

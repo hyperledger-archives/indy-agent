@@ -1,20 +1,25 @@
 import re
 import base64
 import uuid
+from typing import Optional
 
-from serializer import JSONSerializer as Serializer
-from message import Message
-from tests import validate_message
+from .message import Message
+from .did_doc import DIDDoc
+from test_suite.serializer import JSONSerializer as Serializer
 
-class Connection:
-    class Message:
-        FAMILY_NAME = "connections"
-        VERSION = "1.0"
-        FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
 
-        INVITE = FAMILY + "invitation"
-        REQUEST = FAMILY + "request"
-        RESPONSE = FAMILY + "response"
+class Connection(Message):
+
+    FAMILY_NAME = "connections"
+    VERSION = "1.0"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
+
+    CONNECTION = 'connection'
+    INVITE = FAMILY + "invitation"
+    REQUEST = FAMILY + "request"
+    RESPONSE = FAMILY + "response"
+    REQUEST_NOT_ACCEPTED = "request_not_accepted"
+    RESPONSE_FOR_UNKNOWN_REQUEST = "response_for_unknown_request"
 
     class Invite:
         @staticmethod
@@ -26,14 +31,13 @@ class Connection:
                 base64.urlsafe_b64decode(matches.group(2)).decode('ascii')
             )
 
-            validate_message(
+            invite_msg.validate(
                 [
-                    ('@type', Connection.Message.INVITE),
+                    ('@type', Connection.INVITE),
                     'label',
                     'recipientKeys',
                     'serviceEndpoint'
-                ],
-                invite_msg
+                ]
             )
 
             return invite_msg
@@ -41,7 +45,7 @@ class Connection:
         @staticmethod
         def build(label: str, connection_key: str, endpoint: str) -> str:
             msg = Message({
-                '@type': Connection.Message.INVITE,
+                '@type': Connection.INVITE,
                 'label': label,
                 'recipientKeys': [connection_key],
                 'serviceEndpoint': endpoint,
@@ -61,15 +65,15 @@ class Connection:
         @staticmethod
         def parse(request: Message):
             return (
-                request['connection']['did_doc']['publicKey'][0]['controller'],
-                request['connection']['did_doc']['publicKey'][0]['publicKeyBase58'],
-                request['connection']['did_doc']['service'][0]['serviceEndpoint']
+                request[Connection.CONNECTION][DIDDoc.DID_DOC]['publicKey'][0]['controller'],
+                request[Connection.CONNECTION][DIDDoc.DID_DOC]['publicKey'][0]['publicKeyBase58'],
+                request[Connection.CONNECTION][DIDDoc.DID_DOC]['service'][0]['serviceEndpoint']
             )
 
         @staticmethod
         def build(label: str, my_did: str, my_vk: str, endpoint: str) -> Message:
             return Message({
-                '@type': Connection.Message.REQUEST,
+                '@type': Connection.REQUEST,
                 '@id': str(uuid.uuid4()),
                 'label': label,
                 'connection': {
@@ -96,31 +100,30 @@ class Connection:
 
         @staticmethod
         def validate(request):
-            validate_message(
+            request.validate(
                 [
-                    ('@type', Connection.Message.REQUEST),
+                    ('@type', Connection.REQUEST),
                     '@id',
                     'label',
-                    'connection'
-                ],
-                request
+                    Connection.CONNECTION
+                ]
             )
 
-            validate_message(
+            Message.validate_message(
                 [
-                    'did',
-                    'did_doc'
+                    DIDDoc.DID,
+                    DIDDoc.DID_DOC
                 ],
-                request['connection']
+                request[Connection.CONNECTION]
             )
 
-            Connection.DIDDoc.validate(request['connection']['did_doc'])
+            DIDDoc.validate(request[Connection.CONNECTION][DIDDoc.DID_DOC])
 
     class Response:
         @staticmethod
         def build(req_id: str, my_did: str, my_vk: str, endpoint: str) -> Message:
             return Message({
-                '@type': Connection.Message.RESPONSE,
+                '@type': Connection.RESPONSE,
                 '@id': str(uuid.uuid4()),
                 '~thread': {'thid': req_id},
                 'connection': {
@@ -147,72 +150,63 @@ class Connection:
 
         @staticmethod
         def validate_pre_sig(response: Message):
-            validate_message(
+            response.validate(
                 [
-                    ('@type', Connection.Message.RESPONSE),
+                    ('@type', Connection.RESPONSE),
                     '~thread',
                     'connection~sig'
-                ],
-                response
+                ]
             )
 
         @staticmethod
         def validate(response: Message, req_id: str):
-            validate_message(
+            response.validate(
                 [
-                    ('@type', Connection.Message.RESPONSE),
+                    ('@type', Connection.RESPONSE),
                     '~thread',
                     'connection'
-                ],
-                response
+                ]
             )
 
-            validate_message(
+            Message.validate_message(
                 [
                     ('thid', req_id)
                 ],
                 response['~thread']
             )
 
-            validate_message(
+            Message.validate_message(
                 [
-                    'did',
-                    'did_doc'
+                    DIDDoc.DID,
+                    DIDDoc.DID_DOC
                 ],
-                response['connection']
+                response[Connection.CONNECTION]
             )
 
-            Connection.DIDDoc.validate(response['connection']['did_doc'])
+            DIDDoc.validate(response[Connection.CONNECTION][DIDDoc.DID_DOC])
 
-    class DIDDoc:
-        @staticmethod
-        def validate(diddoc):
-            validate_message(
-                [
-                    '@context',
-                    'publicKey',
-                    'service'
-                ],
-                diddoc
-            )
+    @staticmethod
+    def extract_verkey_endpoint(msg: Message) -> (Optional, Optional):
+        """
+        Extract verkey and endpoint that will be used to send message back to the sender of this message. Might return None.
+        """
+        vks = msg.get(Connection.CONNECTION, {}).get(DIDDoc.DID_DOC, {}).get('publicKey')
+        vk = vks[0].get('publicKeyBase58') if vks and isinstance(vks, list) and len(vks) > 0 else None
+        endpoints = msg.get(Connection.CONNECTION, {}).get(DIDDoc.DID_DOC, {}).get('service')
+        endpoint = endpoints[0].get('serviceEndpoint') if endpoints and isinstance(endpoints, list) and len(
+            endpoints) > 0 else None
+        return vk, endpoint
 
-            for publicKeyBlock in diddoc['publicKey']:
-                validate_message(
-                    [
-                        'id',
-                        'type',
-                        'controller',
-                        'publicKeyBase58'
-                    ],
-                    publicKeyBlock
-                )
-
-            for serviceBlock in diddoc['service']:
-                validate_message(
-                    [
-                        ('type', 'IndyAgent'),
-                        'recipientKeys',
-                        'serviceEndpoint'
-                    ],
-                    serviceBlock
-                )
+    @staticmethod
+    def extract_their_info(msg: Message):
+        """
+        Extract the other participant's DID, verkey and endpoint
+        :param msg:
+        :return: Return a 3-tuple of (DID, verkey, endpoint
+        """
+        their_did = msg[Connection.CONNECTION][DIDDoc.DID]
+        # NOTE: these values are pulled based on the minimal connectathon format. Full processing
+        #  will require full DIDDoc storage and evaluation.
+        their_vk = msg[Connection.CONNECTION][DIDDoc.DID_DOC]['publicKey'][0]['publicKeyBase58']
+        their_endpoint = msg[Connection.CONNECTION][DIDDoc.DID_DOC]['service'][0]['serviceEndpoint']
+        return their_did, their_vk, their_endpoint

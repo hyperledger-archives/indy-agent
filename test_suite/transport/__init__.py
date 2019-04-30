@@ -1,9 +1,10 @@
 import asyncio
 import logging
 from indy import crypto
-from config import Config
+from test_suite.config import Config
 
-class BaseTransport(object):
+
+class BaseTransport:
     def __init__(self, config: Config, logger: logging.Logger, message_queue: asyncio.Queue):
         self.config: Config = config
         self.logger = logger

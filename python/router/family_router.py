@@ -2,10 +2,10 @@
 """
 
 import re
-from typing import Callable
 from modules import Module
-from message import Message
-from . import BaseRouter, RouteAlreadyRegisteredException
+from python_agent_utils.messages.message import Message
+from . import BaseRouter, RouteAlreadyRegisteredException, UnparsableMessageFamilyException
+
 
 class FamilyRouter(BaseRouter):
     """ Simple router for handling Indy Messages.
@@ -35,7 +35,7 @@ class FamilyRouter(BaseRouter):
 
     @staticmethod
     def family_from_type(msg_type: str) -> str:
-        matches = re.match("(.+/.+/\d.\d/).+", msg_type)
+        matches = re.match("(.+/.+/\d+.\d+/).+", msg_type)
         if not matches:
             raise UnparsableMessageFamilyException()
 

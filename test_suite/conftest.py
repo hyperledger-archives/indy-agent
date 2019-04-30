@@ -12,9 +12,10 @@ import os
 import logging
 
 import pytest
-from indy import crypto, wallet
-from config import Config
-from transport.http_transport import HTTPTransport
+from indy import wallet
+from test_suite.config import Config
+from test_suite.transport.http_transport import HTTPTransport
+
 
 @pytest.fixture(scope='session')
 def event_loop():
@@ -25,23 +26,27 @@ def event_loop():
     """
     return asyncio.get_event_loop()
 
+
 @pytest.fixture(scope='session')
 async def config():
     """ Gather configuration and initialize the wallet.
     """
-    DEFAULT_CONFIG_PATH = 'config.toml'
+    dirname = os.path.dirname(__file__)
+    DEFAULT_CONFIG_PATH = os.path.join(dirname, 'config.toml')
     print('\n\nLoading test configuration from file: {}'.format(DEFAULT_CONFIG_PATH))
 
     config = Config.from_file(DEFAULT_CONFIG_PATH)
     parser = Config.get_arg_parser()
 
-    args = parser.parse_args()
+    #args = parser.parse_args()
+    (args, _) = parser.parse_known_args()
     if args:
         config.update(vars(args))
 
     yield config
 
     # TODO: Cleanup?
+
 
 @pytest.fixture(scope='session')
 def logger(config):
@@ -52,28 +57,9 @@ def logger(config):
     return logging.getLogger()
 
 
-
 @pytest.fixture(scope='session')
 async def wallet_handle(config, logger):
-    # Initialization steps
-    # -- Create wallet
-    logger.debug('Creating wallet: {}'.format(config.wallet_name))
-    try:
-        await wallet.create_wallet(
-            json.dumps({
-                'id': config.wallet_name,
-                'storage_config': {
-                    'path': config.wallet_path
-                }
-            }),
-            json.dumps({'key': 'test-agent'})
-        )
-    except:
-        pass
-
-    # -- Open a wallet
-    logger.debug('Opening wallet: {}'.format(config.wallet_name))
-    wallet_handle = await wallet.open_wallet(
+    wallet_config = (
         json.dumps({
             'id': config.wallet_name,
             'storage_config': {
@@ -82,6 +68,17 @@ async def wallet_handle(config, logger):
         }),
         json.dumps({'key': 'test-agent'})
     )
+    # Initialization steps
+    # -- Create wallet
+    logger.debug('Creating wallet: {}'.format(config.wallet_name))
+    try:
+        await wallet.create_wallet(*wallet_config)
+    except:
+        pass
+
+    # -- Open a wallet
+    logger.debug('Opening wallet: {}'.format(config.wallet_name))
+    wallet_handle = await wallet.open_wallet(*wallet_config)
 
     yield wallet_handle
 
@@ -90,15 +87,7 @@ async def wallet_handle(config, logger):
         logger.debug("Closing wallet")
         await wallet.close_wallet(wallet_handle)
         logger.debug("deleting wallet")
-        await wallet.delete_wallet(
-            json.dumps({
-                'id': config.wallet_name,
-                'storage_config': {
-                    'path': config.wallet_path
-                }
-            }),
-            json.dumps({'key': 'test-agent'})
-        )
+        await wallet.delete_wallet(*wallet_config)
 
         logger.debug("removing wallet directory")
         os.rmdir(config.wallet_path)
@@ -114,25 +103,29 @@ async def transport(config, event_loop, logger):
     if config.transport == "http":
         transport = HTTPTransport(config, logger, MSG_Q)
     else:
-        transport = None
+        #transport = None
+        raise RuntimeError("{} not supported. Support only HTTP transport for now", config.transport)
 
     logger.debug("Starting transport")
     event_loop.create_task(transport.start_server())
     return transport
 
+
 @pytest.fixture(scope='session')
 async def connection(config, wallet_handle, transport):
-    from tests.connection.manual import get_connection_started_by_suite
+    from test_suite.tests.connection.manual import get_connection_started_by_suite
 
     yield await get_connection_started_by_suite(config, wallet_handle, transport)
 
 ### Test configuration loading ###
+
 
 def pytest_ignore_collect(path, config):
     """ Only load tests from feature definition file. """
     if path.ext != ".toml":
         return True
     return False
+
 
 def pytest_runtest_makereport(item, call):
     """ Customize report printing. """
@@ -175,17 +168,19 @@ def pytest_runtest_makereport(item, call):
         user_properties=item.user_properties,
         )
 
+
 def pytest_collect_file(path, parent):
     """ Customize test collection. """
     if path.ext == ".toml" and path.basename.startswith("features"):
         return TomlTestDefinitionFile(path, parent)
 
+
 class TomlTestDefinitionFile(pytest.File):
     """ Test collection from Toml file. """
     def collect(self):
         import toml # we need a toml parser
-
-        default_config_path = "config.toml"
+        dirname = os.path.dirname(__file__)
+        default_config_path = os.path.join(dirname, 'config.toml')
         conf = toml.load(default_config_path)
         tests = toml.load(self.fspath.open())
         for test in tests['feature']:
@@ -257,6 +252,7 @@ class FeaturePart(pytest.Module):
     @test_failed.setter
     def test_failed(self, val):
         self.parent.test_failed = val
+
 
 class FeatureTestFunction(pytest.Function):
     """ A wrapper around Pytest Functions returned from Module collector.

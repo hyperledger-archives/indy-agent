@@ -1,19 +1,12 @@
-import aiohttp
-import aiohttp_jinja2
 import datetime
-import jinja2
-import base64
 import json
-import time
 import uuid
-from indy import did, wallet, pairwise, crypto, non_secrets
+from indy import pairwise, non_secrets
 
-from helpers import str_to_bytes, serialize_bytes_json, bytes_to_str
 from router.simple_router import SimpleRouter
-import serializer.json_serializer as Serializer
-from agent import Agent, WalletConnectionException
-from message import Message
+from python_agent_utils.messages.message import Message
 from . import Module
+
 
 class AdminBasicMessage(Module):
     FAMILY_NAME = "admin_basicmessage"
@@ -128,7 +121,7 @@ class BasicMessage(Module):
     async def route(self, msg: Message) -> Message:
         return await self.router.route(msg)
 
-    async def receive_message(self, msg: Message) -> Message:
+    async def receive_message(self, msg: Message):
 
         # store message in the wallet
         await non_secrets.add_wallet_record(

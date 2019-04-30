@@ -1,18 +1,7 @@
-import aiohttp
-import aiohttp_jinja2
-import jinja2
-import base64
-import json
-import time
-import uuid
-from indy import did, wallet, pairwise, crypto, non_secrets
-
-from helpers import str_to_bytes, serialize_bytes_json, bytes_to_str
 from router.simple_router import SimpleRouter
-import serializer.json_serializer as Serializer
-from agent import Agent, WalletConnectionException
-from message import Message
+from python_agent_utils.messages.message import Message
 from . import Module
+
 
 class AdminTrustPing(Module):
     FAMILY_NAME = "admin_trustping"

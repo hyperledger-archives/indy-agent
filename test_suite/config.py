@@ -1,12 +1,12 @@
 """ Module for storing and updating configuration.
 """
 
-import typing
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 import toml
 import argparse
 import os
 import sys
+
 
 class InvalidConfigurationException(Exception):
     """ Exception raise on absent required configuration value
@@ -14,7 +14,7 @@ class InvalidConfigurationException(Exception):
     pass
 
 
-class Config():
+class Config:
     """ Configuration class used to store and update configuration information.
     """
 

@@ -2,9 +2,9 @@
 
 # pylint: disable=import-error
 from aiohttp import web
-import asyncio
 
-class PostMessageHandler():
+
+class PostMessageHandler:
     """ Simple message queue interface for receiving messages.
     """
     def __init__(self, queue):

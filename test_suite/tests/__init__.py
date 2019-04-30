@@ -1,20 +1,20 @@
 """ Module containing Agent Test Suite Tests.
 """
+from typing import Optional
 import base64
 import json
 import time
 import struct
 import asyncio
-import pytest
 from pytest import fail
-from typing import Callable, Any
 from indy import crypto
 
-from message import Message
-from serializer import JSONSerializer as Serializer
-from transport import BaseTransport
+from python_agent_utils.messages.message import Message
+from test_suite.serializer import JSONSerializer as Serializer
+from test_suite.transport import BaseTransport
 
-async def expect_message(transport: BaseTransport, timeout: int):
+
+async def get_resp(transport: BaseTransport, timeout: int) -> Optional:
     get_message_task = asyncio.ensure_future(transport.recv())
     sleep_task = asyncio.ensure_future(asyncio.sleep(timeout))
     finished, unfinished = await asyncio.wait(
@@ -30,19 +30,23 @@ async def expect_message(transport: BaseTransport, timeout: int):
     for task in unfinished:
         task.cancel()
 
-    fail("No message received before timing out; tested agent failed to respond")
 
-def validate_message(expected_attrs: [Any], msg: Message):
-    __tracebackhide__ = True
-    for attribute in expected_attrs:
-        if isinstance(attribute, tuple):
-            assert attribute[0] in msg, \
-                'Attribute "{}" is missing from message: \n{}'.format(attribute[0], msg)
-            assert msg[attribute[0]] == attribute[1], \
-                'Message.{}: {} != {}'.format(attribute[0], msg[attribute[0]], attribute[1])
-        else:
-            assert attribute in msg, \
-                'Attribute "{}" is missing from message: \n{}'.format(attribute, msg)
+async def expect_message(transport: BaseTransport, timeout: int):
+    resp = await get_resp(transport, timeout)
+    if resp:
+        return resp
+    else:
+        fail("No message received before timing out; tested agent failed to respond")
+
+
+async def expect_silence(transport: BaseTransport, timeout: int):
+    """
+    Ensure that no message is received.
+    """
+    resp = await get_resp(transport, timeout)
+    if resp:
+        fail("Received a message when not expecting any")
+
 
 async def pack(wallet_handle: int, my_vk: str, their_vk: str, msg: Message) -> bytes:
     return await crypto.pack_message(
@@ -51,6 +55,7 @@ async def pack(wallet_handle: int, my_vk: str, their_vk: str, msg: Message) -> b
         [their_vk],
         my_vk
     )
+
 
 async def unpack(wallet_handle: int, wire_msg_bytes: bytes, **kwargs) -> Message:
     __tracebackhide__ = True
@@ -72,18 +77,18 @@ async def unpack(wallet_handle: int, wire_msg_bytes: bytes, **kwargs) -> Message
 
     return Serializer.unpack(wire_msg['message'])
 
-async def unpack_and_verify_signed_field(signed_field):
+
+async def get_verified_data_from_signed_field(signed_field):
+    data_bytes = base64.urlsafe_b64decode(signed_field['sig_data'])
     signature_bytes = base64.urlsafe_b64decode(signed_field['signature'].encode('ascii'))
-    sig_data_bytes = base64.urlsafe_b64decode(signed_field['sig_data'].encode('ascii'))
     assert await crypto.crypto_verify(
         signed_field['signer'],
-        sig_data_bytes,
+        data_bytes,
         signature_bytes
     ), "Signature verification failed on field {}!".format(signed_field)
-    data_bytes = base64.urlsafe_b64decode(signed_field['sig_data'])
-    timestamp = struct.unpack(">Q", data_bytes[:8])
     fieldjson = data_bytes[8:]
     return json.loads(fieldjson)
+
 
 async def sign_field(wallet_handle, my_vk, field_value):
     timestamp_bytes = struct.pack(">Q", int(time.time()))
@@ -106,3 +111,12 @@ async def sign_field(wallet_handle, my_vk, field_value):
         "sig_data": sig_data,
         "signature": signature
     }
+
+
+def check_problem_report(msg: Message, expected_problem_code):
+    """
+    Check that the given message is an error message by checking that its a "problem-report".
+    Also check the expected problem code. Can be enhanced with a regex for checking the problem reason.
+    """
+    assert msg.type.endswith('problem_report')
+    assert msg.data['problem-code'] == expected_problem_code

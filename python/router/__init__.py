@@ -3,9 +3,10 @@
 """
 
 from typing import Callable
-from message import Message
+from python_agent_utils.messages.message import Message
 
-class BaseRouter(object):
+
+class BaseRouter:
     """ Router Base Class. Provide basic interface for additional routers.
     """
 
@@ -26,6 +27,7 @@ class RouteAlreadyRegisteredException(Exception):
         Raised by router.register
     """
     pass
+
 
 class UnparsableMessageFamilyException(Exception):
     pass

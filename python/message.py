@@ -25,7 +25,6 @@ class Message(UserDict):
         if '@id' not in self.data:
             self.data['@id'] = str(uuid.uuid4())
 
-
     def to_dict(self):
         return self.data
 
@@ -37,11 +36,14 @@ class Message(UserDict):
     def id(self):
         return self.data["@id"]
 
-    def as_json(self):
-        class MessageEncoder(json.JSONEncoder):
-            def default(self, obj):
-                if isinstance(obj, Message):
-                    return obj.to_dict()
-                return json.JSONEncoder.default(self, obj)
+    class MessageEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, Message):
+                return obj.to_dict()
+            return json.JSONEncoder.default(self, obj)
 
-        return json.dumps(self, cls=MessageEncoder)
+    def as_json(self):
+        return json.dumps(self, cls=Message.MessageEncoder)
+
+    def pretty_print(self):
+        return json.dumps(self, sort_keys=True, indent=2, cls=Message.MessageEncoder)

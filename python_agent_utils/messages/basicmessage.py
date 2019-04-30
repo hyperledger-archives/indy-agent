@@ -1,8 +1,8 @@
 import datetime
-from message import Message
-from tests import expect_message, validate_message, pack, unpack, sign_field, unpack_and_verify_signed_field
+from .message import Message
 
-class BasicMessage():
+
+class BasicMessage:
     FAMILY_NAME = "basicmessage"
     VERSION = "1.0"
     FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
@@ -19,18 +19,18 @@ class BasicMessage():
             'content': content
         })
 
+    @staticmethod
     def validate(msg: Message):
-        validate_message(
+        msg.validate(
             [
                 ('@type', BasicMessage.MESSAGE),
                 '~l10n',
                 'sent_time',
                 'content',
-            ],
-            msg
+            ]
         )
 
-        validate_message(
+        Message.validate_message(
             [
                 ('locale', 'en')
             ],

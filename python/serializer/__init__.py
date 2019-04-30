@@ -7,7 +7,8 @@
     of serialization to another.
 """
 
-from message import Message
+from python_agent_utils.messages.message import Message
+
 
 def unpack(msg: bytes) -> Message: #pylint: disable=unused-argument
     """ Deserialize to Message.
@@ -16,6 +17,7 @@ def unpack(msg: bytes) -> Message: #pylint: disable=unused-argument
     raise NotImplementedError("Unpack method in serializer module \
         is not implemented. Use the methods contained in a submodule of \
         serializer, such as json_serializer.")
+
 
 def pack(msg: Message) -> bytes: #pylint: disable=unused-argument
     """ Serialize to bytes.

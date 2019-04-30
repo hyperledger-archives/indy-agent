@@ -1,11 +1,11 @@
-import asyncio
 import pytest
-import datetime
 import random
-from message import Message
-from tests import expect_message, validate_message, pack, unpack, sign_field, unpack_and_verify_signed_field
+from test_suite.tests import expect_message, pack, unpack
 
-from . import BasicMessage
+from python_agent_utils.messages.basicmessage import BasicMessage
+
+expect_message_timeout = 30
+
 
 @pytest.mark.asyncio
 async def test_basic_message(config, wallet_handle, transport, connection):
@@ -25,7 +25,7 @@ async def test_basic_message(config, wallet_handle, transport, connection):
     )
 
     print("Awaiting BasicMessage response from tested agent...")
-    response_bytes = await expect_message(transport, 60)
+    response_bytes = await expect_message(transport, expect_message_timeout)
 
     response = await unpack(
         wallet_handle,

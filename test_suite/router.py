@@ -1,7 +1,8 @@
 """ Simple router for handling Sovrin Messages.
 """
 from typing import Callable, Dict, Any
-from message import Message
+from python_agent_utils.messages import Message
+
 
 class RouteAlreadyRegisteredException(Exception):
     """ Route Already Registered Exception.
@@ -10,7 +11,8 @@ class RouteAlreadyRegisteredException(Exception):
     """
     pass
 
-class Router():
+
+class Router:
     """ Simple router for handling Sovrin Messages.
 
         Uses python dictionary to correlate a message type to a callback.

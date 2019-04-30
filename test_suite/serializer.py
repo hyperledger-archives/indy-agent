@@ -8,9 +8,11 @@
 """
 
 import json
-from message import Message
+from python_agent_utils.messages.message import Message
 
-class BaseSerializer(object):
+
+class BaseSerializer:
+    @staticmethod
     def unpack(dump: bytes) -> Message: #pylint: disable=unused-argument
         """ Deserialize to Message.
         """
@@ -19,6 +21,7 @@ class BaseSerializer(object):
             is not implemented. Use the methods contained in a submodule of \
             serializer, such as json_serializer.")
 
+    @staticmethod
     def pack(msg: Message) -> bytes: #pylint: disable=unused-argument
         """ Serialize to bytes.
         """
@@ -27,9 +30,11 @@ class BaseSerializer(object):
             is not implemented. Use the methods contained in a submodule of \
             serializer, such as json_serializer.")
 
+
 class JSONSerializer(BaseSerializer):
     """ Serializer using json as i/o format.
     """
+    @staticmethod
     def unpack(dump: bytes):
         """ Deserialize from json string to Message, if it looks like a Message.
             Returns a dictionary otherwise.
@@ -39,7 +44,10 @@ class JSONSerializer(BaseSerializer):
 
         return json.loads(dump, object_hook=as_message)
 
+    @staticmethod
     def pack(msg: Message) -> bytes:
         """ Serialize from Message to json string or from dictionary to json string.
         """
+        # TODO: Should return bytes and not string
+        # return msg.as_json().encode()
         return msg.as_json()
