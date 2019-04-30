@@ -6,5 +6,6 @@ sessions
 _build/
 toc.rst
 .pytest_cache
-.testing-wallets
 __pycache__
+.venv
+.testing-wallets

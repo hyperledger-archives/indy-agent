@@ -1,18 +1,19 @@
 from .message import Message
 
 
-class DIDDoc(Message):
+class DIDDoc:
     DID = 'did'
     DID_DOC = 'did_doc'
 
     @staticmethod
-    def validate(did_doc: Message):
-        did_doc.validate(
+    def validate(did_doc):
+        Message.validate_message(
             [
                 '@context',
                 'publicKey',
                 'service'
-            ]
+            ],
+            did_doc
         )
 
         for publicKeyBlock in did_doc['publicKey']:
