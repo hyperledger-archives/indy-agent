@@ -8,6 +8,9 @@
 # established in indy projects.
 # pylint: disable=invalid-name
 
+import sys
+sys.path.append('..')
+
 import argparse
 import asyncio
 import jinja2
