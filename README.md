@@ -29,7 +29,10 @@ would like to list your agent here, please submit a pull request.
 |node.js ref agent|community / BYU (see github contributors)|cloud (web-based)|not yet tested|see [nodejs/README.md](nodejs/README.md) in this repo|
 |Sovrin Connector|Sovrin Foundation|mobile app (assumes cloud support)|not yet tested|[github.com/ sovrin-foundation/ connector-app](https://github.com/sovrin-foundation/connector-app)|
 |IndyCat|Government of British Columbia|Cloud for institutions (besides agent, includes drive to enable injection of business rules in messaging protocols)|100% passed in Feb 2019|[https://github.com/bcgov/indy-catalyst/](https://github.com/bcgov/indy-catalyst/tree/master/agent)|
-|StreetCred|StreetCred|commercial mobile app + .NET framework for agents of all types|not yet published on the web, but X% passed in Feb 2019|[github.com/ streetcred-id/ agent-framework](https://github.com/streetcred-id/agent-framework)|
+|AgentFramework|AgentFramework|.NET framework for building agents of all types|Samples in the repository 100% passed in Feb 2019|[agent-framework](https://github.com/streetcred-id/agent-framework)|
+|Streetcred|Streetcred|Commercial mobile and web app built using AgentFramework|Samples in AgentFramework 100% passed in Feb 2019|[streetcred.id](https://streetcred.id)|
+|Mattr|Mattr|Commercial mobile and web app built using AgentFramework|Samples in AgentFramework 100% passed in Feb 2019|[mattr.global](https://mattr.global)|
+|Project Osma|Mattr|Open source mobile app built using AgentFramework|not yet tested|[project](https://github.com/mattrglobal/osma)|
 |Verity|Evernym|commercial enterprise agent, focused on credential issuance and proving for login and onboarding|not yet tested|[evernym.com](https://evernym.com)|
 |Connect.Me|Evernym|commercial mobile agent for individuals (free but requires SaaS subscription for supporting cloud agent)|not yet tested|Android or iOS App Store|
 |Pi Agent | Evernym | Simple cli agent for connecting and sending basic messages. Useful in IOT (Raspberry Pi) applications. | 100% passed in April 2019 | [https://github.com/evernym/connectathon-agent](https://github.com/evernym/connectathon-agent) |
