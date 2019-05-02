@@ -12,6 +12,7 @@ def unpack_dict(dictionary: dict) -> Message:
     return deserialized_msg
 
 
+# TODO: Should be called `deserialize`
 def unpack(dump) -> Message:
     """
     Deserialize from bytes or str to Message
@@ -21,6 +22,7 @@ def unpack(dump) -> Message:
     return deserialized_msg
 
 
+# TODO: Should be called `serialize`
 def pack(msg: Message) -> str:
     """
     Serialize from Message to json string or from dictionary to json string.

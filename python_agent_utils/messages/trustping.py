@@ -21,7 +21,7 @@ class TrustPing(Message):
 
         @staticmethod
         def validate(message):
-            message.validate(
+            message.check_for_attrs(
                 [
                     ('@type', TrustPing.PING),
                     '@id'
@@ -38,14 +38,14 @@ class TrustPing(Message):
 
         @staticmethod
         def validate(message, ping_id):
-            message.validate(
+            message.check_for_attrs(
                 [
                     ('@type', TrustPing.PING_RESPONSE),
                     '~thread'
                 ]
             )
 
-            Message.validate_message(
+            Message.check_for_attrs_in_message(
                 [
                     ('thid', ping_id)
                 ],

@@ -7,7 +7,7 @@
 * Problem reports use localization correctly enough that machine translation could be applied.
 
 ### Decorators
-* The ~thread decorator is handled correctly (including thid and received_order)
+* The ~thread decorator is handled correctly (including thid and received_orders)
 * The ~timing decorator is handled correctly.
 * The ~please_ack decorator is handled correctly.
 

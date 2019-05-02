@@ -250,7 +250,7 @@
             function validateProof(div, proof) {
                 div.innerHTML = '<i class="fa fa-spinner fa-spin" style="font-size:100px;"></i>'
                 let xhttp = new XMLHttpRequest();
-                xhttp.open('POST', '/api/proofs/validate', true);
+                xhttp.open('POST', '/api/proofs/check_for_attrs', true);
                 xhttp.setRequestHeader('Content-Type', 'application/json');
                 console.log(proof);
                 xhttp.send(JSON.stringify(proof));

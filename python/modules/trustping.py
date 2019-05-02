@@ -63,6 +63,10 @@ class TrustPing(Module):
         return await self.router.route(msg)
 
     async def ping(self, msg: Message) -> Message:
+        r = self.validate_common_message_blocks(msg, TrustPing.FAMILY)
+        if not r:
+            return r
+
         await self.agent.send_admin_message(
             Message({
                 '@type': AdminTrustPing.TRUSTPING_RECEIVED,

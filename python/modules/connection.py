@@ -405,6 +405,10 @@ class Connection(Module):
                   }
                 }
         """
+        r = self.validate_common_message_blocks(msg, Connection.FAMILY)
+        if not r:
+            return r
+
         try:
             ConnectionMessage.Request.validate(msg)
         except Exception as e:
@@ -493,6 +497,10 @@ class Connection(Module):
                   }
                 }
         """
+        r = self.validate_common_message_blocks(msg, Connection.FAMILY)
+        if not r:
+            return r
+
         my_did = msg.context['to_did']
         if my_did is None:
             msg[ConnectionMessage.CONNECTION], sig_verified = await self.agent.unpack_and_verify_signed_agent_message_field(
