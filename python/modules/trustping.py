@@ -78,7 +78,7 @@ class TrustPing(Module):
             msg.context['from_did'],
             Message({
                 '@type': TrustPing.PING_RESPONSE,
-                '~thread': {'thid': msg.id}
+                '~thread': {Message.THREAD_ID: msg.id, Message.SENDER_ORDER: 0}
             })
         )
 

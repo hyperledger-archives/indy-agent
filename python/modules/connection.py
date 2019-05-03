@@ -308,7 +308,7 @@ class AdminConnection(Module):
 
         response_msg = Message({
             '@type': Connection.RESPONSE,
-            '~thread': { 'thid': pairwise_meta['req_id'] },
+            '~thread': { Message.THREAD_ID: pairwise_meta['req_id'], Message.SENDER_ORDER: 0 },
             'connection': {
                 'did': my_did,
                 'did_doc': {

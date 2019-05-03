@@ -33,7 +33,7 @@ class TrustPing(Message):
         def build(ping_id: str):
             return Message({
                 '@type': TrustPing.PING_RESPONSE,
-                '~thread': {'thid': ping_id }
+                '~thread': {Message.THREAD_ID: ping_id, Message.SENDER_ORDER: 0 }
             })
 
         @staticmethod

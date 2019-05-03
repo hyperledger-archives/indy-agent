@@ -125,7 +125,7 @@ class Connection(Message):
             return Message({
                 '@type': Connection.RESPONSE,
                 '@id': str(uuid.uuid4()),
-                '~thread': {'thid': req_id},
+                '~thread': {Message.THREAD_ID: req_id, Message.SENDER_ORDER: 0},
                 'connection': {
                     'did': my_did,
                     'did_doc': {
@@ -170,7 +170,7 @@ class Connection(Message):
 
             Message.check_for_attrs_in_message(
                 [
-                    ('thid', req_id)
+                    (Message.THREAD_ID, req_id)
                 ],
                 response['~thread']
             )
@@ -185,6 +185,8 @@ class Connection(Message):
 
             DIDDoc.validate(response[Connection.CONNECTION][DIDDoc.DID_DOC])
 
+    # TODO: Following 2 methods should be available on base Message.
+    #  Or the context should have verkey and endpoint info so that an error message can be returned.
     @staticmethod
     def extract_verkey_endpoint(msg: Message) -> (Optional, Optional):
         """
