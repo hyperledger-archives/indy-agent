@@ -405,7 +405,7 @@ class Connection(Module):
                   }
                 }
         """
-        r = self.validate_common_message_blocks(msg, Connection.FAMILY)
+        r = await self.validate_common_message_blocks(msg, Connection.FAMILY)
         if not r:
             return r
 
@@ -497,7 +497,7 @@ class Connection(Module):
                   }
                 }
         """
-        r = self.validate_common_message_blocks(msg, Connection.FAMILY)
+        r = await self.validate_common_message_blocks(msg, Connection.FAMILY)
         if not r:
             return r
 

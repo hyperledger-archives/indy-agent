@@ -13,7 +13,7 @@ class Module:
             "explain": problem_str
         })
 
-    def validate_common_message_blocks(self, msg, family):
+    async def validate_common_message_blocks(self, msg, family):
         """
         Validate threading, timing blocks in messages and return error message to sender when invalid
         """

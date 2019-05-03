@@ -123,7 +123,7 @@ class BasicMessage(Module):
         return await self.router.route(msg)
 
     async def receive_message(self, msg: Message):
-        r = self.validate_common_message_blocks(msg, BasicMessage.FAMILY)
+        r = await self.validate_common_message_blocks(msg, BasicMessage.FAMILY)
         if not r:
             return r
 
