@@ -7,8 +7,8 @@ from test_suite.tests import expect_message, pack, unpack
 
 expect_message_timeout = 30
 
-
 @pytest.mark.asyncio
+@pytest.mark.features('trustping.manual', 'core.manual')
 async def test_trustping_started_by_suite(config, wallet_handle, transport, connection):
     ping = TrustPing.Ping.build()
 
@@ -37,6 +37,7 @@ async def test_trustping_started_by_suite(config, wallet_handle, transport, conn
 
 
 @pytest.mark.asyncio
+@pytest.mark.features('trustping.manual', 'core.manual')
 async def test_trustping_started_by_tested_agent(config, wallet_handle, transport, connection):
     print("Send a trustping to the test-suite connection using the tested agent.")
 

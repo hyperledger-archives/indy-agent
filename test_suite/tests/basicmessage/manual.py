@@ -13,6 +13,7 @@ expect_message_timeout = 60
 
 
 @pytest.mark.asyncio
+@pytest.mark.features('basicmessage.manual', 'core.manual')
 async def test_basic_message(config, wallet_handle, transport, connection):
     possible_random_messages = ['donut', 'cake', 'milk', 'cookies', 'cupcake', 'pie']
     random_message = possible_random_messages[random.randint(0,5)]

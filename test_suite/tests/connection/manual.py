@@ -10,6 +10,7 @@ expect_message_timeout = 30
 
 
 @pytest.mark.asyncio
+@pytest.mark.features('connection.manual', 'core.manual')
 async def test_connection_started_by_tested_agent(config, wallet_handle, transport):
     invite_url = input('Input generated connection invite: ')
 
@@ -112,11 +113,13 @@ async def get_connection_started_by_suite(config, wallet_handle, transport, labe
 
 
 @pytest.mark.asyncio
+@pytest.mark.features('connection.manual', 'core.manual')
 async def test_connection_started_by_suite(config, wallet_handle, transport):
     await get_connection_started_by_suite(config, wallet_handle, transport, 'test-connection-started-by-suite')
 
 
 @pytest.mark.asyncio
+@pytest.mark.features('connection.manual', 'core.manual')
 async def test_malformed_connection_request_by_testing_agent(config, wallet_handle, transport):
     # Send malformed connection requests
 
@@ -171,6 +174,7 @@ async def test_malformed_connection_request_by_testing_agent(config, wallet_hand
 
 
 @pytest.mark.asyncio
+@pytest.mark.features('connection.manual', 'core.manual')
 async def test_recv_connection_resp_without_sending_req(config, wallet_handle, transport):
     # Tested agent starts the connection. Testing agent receives the invite,
     # does not send connection request but sends a response

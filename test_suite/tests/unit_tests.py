@@ -4,6 +4,7 @@ from test_suite.tests import sign_field, get_verified_data_from_signed_field
 
 
 @pytest.mark.asyncio
+@pytest.mark.features('unit_tests')
 async def test_can_sign_and_verify(config, wallet_handle):
     msg = {"test": "test"}
     my_key = await crypto.create_key(wallet_handle, '{}')
