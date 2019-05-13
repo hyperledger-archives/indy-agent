@@ -2,8 +2,22 @@
 """
 
 import os
+import sys
+import time
 import pytest
+from _pytest.terminal import TerminalReporter
 from config import Config
+
+class AgentTerminalReporter(TerminalReporter):
+    @pytest.hookimpl(trylast=True)
+    def pytest_sessionstart(self, session):
+        self._session = session
+        self._sessionstarttime = time.time()
+
+    def pytest_runtest_logstart(self, nodeid, location):
+        line = self._locationline(nodeid, *location)
+        self.write_sep('=', line, bold=True)
+        self.write('\n')
 
 def pytest_addoption(parser):
     """ Load in config path. """
@@ -24,6 +38,7 @@ def pytest_addoption(parser):
         help='Run tests matching SELECT_REGEX. Overrides tests selected in configuration.'
     )
 
+@pytest.hookimpl(trylast=True)
 def pytest_configure(config):
     """ Load Test Suite Configuration. """
     dirname = os.path.dirname(__file__)
@@ -47,10 +62,13 @@ def pytest_configure(config):
         "markers", "priority(int): Define test priority for ordering tests. Higher numbers occur first."
     )
 
-def pytest_runtest_setup(item):
-    pass
+    reporter = config.pluginmanager.get_plugin('terminalreporter')
+    agent_reporter = AgentTerminalReporter(config, sys.stdout)
+    config.pluginmanager.unregister(reporter)
+    config.pluginmanager.register(agent_reporter, 'terminalreporter')
 
-def pytest_collection_modifyitems(session, config, items):
+def pytest_collection_modifyitems(items):
+    """ Select tests based on config or args. """
     def feature_filter(item):
         feature_names = [mark.args for mark in item.iter_markers(name="features")]
         feature_names = [item for sublist in feature_names for item in sublist]
@@ -76,3 +94,12 @@ def pytest_collection_modifyitems(session, config, items):
     filtered_items = filter(feature_filter, items)
     priority_mapped_items = map(feature_priority_map, filtered_items)
     items[:] = sorted(priority_mapped_items, key=priority_sort, reverse=True)
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    report = outcome.get_result()
+    tr = item.config.pluginmanager.get_plugin('terminalreporter')
+    if report.when == 'call' and report.failed:
+        tr.write_sep('=', 'Failure! Feature: {}, Test: {}'.format(item.selected_feature, item.name), red=True, bold=True)
+        report.toterminal(tr.writer)
