@@ -132,6 +132,15 @@ class Agent:
 
             raise WalletConnectionException
 
+    async def disconnect_wallet(self):
+        """ Close the wallet and set back state to non initialised.
+        """
+        if self.wallet_handle:
+            await wallet.close_wallet(self.wallet_handle)
+        self.initialized = False
+        self.owner = ''
+        self.wallet_handle = None
+
     async def sign_agent_message_field(self, field_value, my_vk):
         timestamp_bytes = struct.pack(">Q", int(time.time()))
 
@@ -212,7 +221,8 @@ class Agent:
         await self.send_message_to_endpoint_and_key(their_vk, their_endpoint, msg, my_vk)
 
     # used directly when sending to an endpoint without a known did
-    async def send_message_to_endpoint_and_key(self, their_ver_key, their_endpoint, msg, my_ver_key=None):
+    async def send_message_to_endpoint_and_key(self, their_ver_key, their_endpoint,
+                                               msg, my_ver_key=None):
         # If my_ver_key is omitted, anoncrypt is used inside pack.
         wire_message = await crypto.pack_message(
             self.wallet_handle,

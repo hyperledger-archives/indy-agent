@@ -60,6 +60,7 @@
     // Connection opened
     socket.addEventListener('open', function(event) {
         ui_agent.connect();
+        ui_agent.disconnect();
     });
 
     // Listen for messages
@@ -154,6 +155,7 @@
         wallet_connect_error: '',
         agent_name: '',
         passphrase: '',
+        initialized: false,
         current_tab: 'login',
         generated_invite: {
             invite: ""
@@ -375,7 +377,17 @@
             set_tab: function(t){
                 this.current_tab = t;
 
-            }
+            },
+            walletdisconnect: function(){
+                sendMessage(
+                    {
+                        '@type': ADMIN_WALLETCONNECTION.DISCONNECT,
+                        name: this.agent_name
+                    }
+                );
+                this.agent_name = '';
+                this.passphrase = '';
+            },
         }
     });
 
@@ -414,6 +426,7 @@
             },
             update: function (msg) {
                 state = msg.content;
+                this.initialized = state.initialized;
                 if (state.initialized === false) {
                     this.current_tab = 'login';
                 } else {
