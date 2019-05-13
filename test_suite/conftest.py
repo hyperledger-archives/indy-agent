@@ -39,9 +39,12 @@ def pytest_configure(config):
     #if args:
         #config.suite_config.update(vars(args))
 
-    # register an additional marker
+    # register additional markers
     config.addinivalue_line(
         "markers", "features(name[, name, ...]): Define what features the test belongs to."
+    )
+    config.addinivalue_line(
+        "markers", "priority(int): Define test priority for ordering tests. Higher numbers occur first."
     )
 
 def pytest_runtest_setup(item):
@@ -59,4 +62,17 @@ def pytest_collection_modifyitems(session, config, items):
 
         return False
 
-    items[:] = list(filter(feature_filter, items))
+    def feature_priority_map(item):
+        priorities = [mark.args[0] for mark in item.iter_markers(name="priority")]
+        if priorities:
+            item.priority = sorted(priorities, reverse=True)[0]
+        else:
+            item.priority = 0
+        return item
+
+    def priority_sort(item):
+        return item.priority
+
+    filtered_items = filter(feature_filter, items)
+    priority_mapped_items = map(feature_priority_map, filtered_items)
+    items[:] = sorted(priority_mapped_items, key=priority_sort, reverse=True)

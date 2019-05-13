@@ -4,11 +4,13 @@ from python_agent_utils.messages.trustping import TrustPing
 
 from test_suite.tests import expect_message, pack, unpack
 
+pytestmark = [
+    pytest.mark.features('trustping.manual', 'core.manual')
+]
 
-expect_message_timeout = 30
+EXPECT_MESSAGE_TIMEOUT = 30
 
 @pytest.mark.asyncio
-@pytest.mark.features('trustping.manual', 'core.manual')
 async def test_trustping_started_by_suite(config, wallet_handle, transport, connection):
     ping = TrustPing.Ping.build()
 
@@ -24,7 +26,7 @@ async def test_trustping_started_by_suite(config, wallet_handle, transport, conn
     )
 
     print("Awaiting TrustPing response from tested agent...")
-    response_bytes = await expect_message(transport, expect_message_timeout)
+    response_bytes = await expect_message(transport, EXPECT_MESSAGE_TIMEOUT)
 
     response = await unpack(
         wallet_handle,
@@ -37,12 +39,11 @@ async def test_trustping_started_by_suite(config, wallet_handle, transport, conn
 
 
 @pytest.mark.asyncio
-@pytest.mark.features('trustping.manual', 'core.manual')
 async def test_trustping_started_by_tested_agent(config, wallet_handle, transport, connection):
     print("Send a trustping to the test-suite connection using the tested agent.")
 
     print("Awaiting trustping from tested agent...")
-    ping_bytes = await expect_message(transport, expect_message_timeout)
+    ping_bytes = await expect_message(transport, EXPECT_MESSAGE_TIMEOUT)
 
     ping = await unpack(
         wallet_handle,

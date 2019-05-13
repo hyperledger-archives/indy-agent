@@ -9,14 +9,16 @@ from test_suite.tests import expect_message, pack, unpack, check_problem_report
 from python_agent_utils.messages.basicmessage import BasicMessage
 from python_agent_utils.messages.message import Message
 
-expect_message_timeout = 60
+pytestmark = [
+    pytest.mark.features('basicmessage.manual', 'core.manual')
+]
 
+EXPECT_MESSAGE_TIMEOUT = 60
 
 @pytest.mark.asyncio
-@pytest.mark.features('basicmessage.manual', 'core.manual')
 async def test_basic_message(config, wallet_handle, transport, connection):
     possible_random_messages = ['donut', 'cake', 'milk', 'cookies', 'cupcake', 'pie']
-    random_message = possible_random_messages[random.randint(0,5)]
+    random_message = possible_random_messages[random.randint(0, 5)]
     msg = BasicMessage.build("Reply with: {}".format(random_message))
 
     print("\nSending Message:\n", msg.pretty_print())
@@ -31,7 +33,7 @@ async def test_basic_message(config, wallet_handle, transport, connection):
     )
 
     print("Awaiting BasicMessage response from tested agent...")
-    response_bytes = await expect_message(transport, expect_message_timeout)
+    response_bytes = await expect_message(transport, EXPECT_MESSAGE_TIMEOUT)
 
     response = await unpack(
         wallet_handle,
@@ -60,7 +62,7 @@ async def send_bad_msg_and_check_for_error(wallet_handle, transport, connection,
     )
 
     print("Awaiting BasicMessage response from tested agent...")
-    response_bytes = await expect_message(transport, expect_message_timeout)
+    response_bytes = await expect_message(transport, EXPECT_MESSAGE_TIMEOUT)
 
     response = await unpack(
         wallet_handle,
@@ -71,7 +73,6 @@ async def send_bad_msg_and_check_for_error(wallet_handle, transport, connection,
 
 
 @pytest.mark.asyncio
-@pytest.mark.features('basicmessage.manual', 'core.manual')
 async def test_message_with_bad_threading_data(config, wallet_handle, transport, connection):
     msg = BasicMessage.build("Reply with: {}".format('1'))
 
@@ -181,7 +182,6 @@ async def test_message_with_bad_threading_data(config, wallet_handle, transport,
 
 
 @pytest.mark.asyncio
-@pytest.mark.features('basicmessage.manual', 'core.manual')
 async def test_message_with_bad_timing_data(config, wallet_handle, transport, connection):
     msg = BasicMessage.build("Reply with: {}".format('1'))
 
