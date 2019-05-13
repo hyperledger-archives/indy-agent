@@ -151,7 +151,7 @@ class Message(UserDict):
                     raise ValueError(err)
 
             # In time cannot be greater than out time
-            if Message.IN_TIME in timing and Message.OUT_TIME in msg:
+            if Message.IN_TIME in timing and Message.OUT_TIME in timing:
                 t_in = iso_data.parse_func(timing[Message.IN_TIME])
                 t_out = iso_data.parse_func(timing[Message.OUT_TIME])
 
@@ -159,7 +159,7 @@ class Message(UserDict):
                     raise ValueError('{} cannot be greater than {}'.format(Message.IN_TIME, Message.OUT_TIME))
 
             # Stale time cannot be greater than expires time
-            if Message.STALE_TIME in timing and Message.EXPIRES_TIME in msg:
+            if Message.STALE_TIME in timing and Message.EXPIRES_TIME in timing:
                 t_stale = iso_data.parse_func(timing[Message.STALE_TIME])
                 t_exp = iso_data.parse_func(timing[Message.EXPIRES_TIME])
 
