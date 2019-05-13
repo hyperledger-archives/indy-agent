@@ -7,7 +7,7 @@ class DIDDoc:
 
     @staticmethod
     def validate(did_doc):
-        Message.validate_message(
+        Message.check_for_attrs_in_message(
             [
                 '@context',
                 'publicKey',
@@ -17,7 +17,7 @@ class DIDDoc:
         )
 
         for publicKeyBlock in did_doc['publicKey']:
-            Message.validate_message(
+            Message.check_for_attrs_in_message(
                 [
                     'id',
                     'type',
@@ -28,7 +28,7 @@ class DIDDoc:
             )
 
         for serviceBlock in did_doc['service']:
-            Message.validate_message(
+            Message.check_for_attrs_in_message(
                 [
                     ('type', 'IndyAgent'),
                     'recipientKeys',

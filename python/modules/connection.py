@@ -308,7 +308,7 @@ class AdminConnection(Module):
 
         response_msg = Message({
             '@type': Connection.RESPONSE,
-            '~thread': { 'thid': pairwise_meta['req_id'] },
+            '~thread': { Message.THREAD_ID: pairwise_meta['req_id'], Message.SENDER_ORDER: 0 },
             'connection': {
                 'did': my_did,
                 'did_doc': {
@@ -405,6 +405,10 @@ class Connection(Module):
                   }
                 }
         """
+        r = await self.validate_common_message_blocks(msg, Connection.FAMILY)
+        if not r:
+            return r
+
         try:
             ConnectionMessage.Request.validate(msg)
         except Exception as e:
@@ -493,6 +497,10 @@ class Connection(Module):
                   }
                 }
         """
+        r = await self.validate_common_message_blocks(msg, Connection.FAMILY)
+        if not r:
+            return r
+
         my_did = msg.context['to_did']
         if my_did is None:
             msg[ConnectionMessage.CONNECTION], sig_verified = await self.agent.unpack_and_verify_signed_agent_message_field(

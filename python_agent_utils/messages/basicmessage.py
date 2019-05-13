@@ -21,7 +21,7 @@ class BasicMessage:
 
     @staticmethod
     def validate(msg: Message):
-        msg.validate(
+        msg.check_for_attrs(
             [
                 ('@type', BasicMessage.MESSAGE),
                 '~l10n',
@@ -30,7 +30,7 @@ class BasicMessage:
             ]
         )
 
-        Message.validate_message(
+        Message.check_for_attrs_in_message(
             [
                 ('locale', 'en')
             ],

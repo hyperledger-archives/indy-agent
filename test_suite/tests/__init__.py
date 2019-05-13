@@ -113,10 +113,12 @@ async def sign_field(wallet_handle, my_vk, field_value):
     }
 
 
-def check_problem_report(msg: Message, expected_problem_code):
+def check_problem_report(msg: Message, expected_problem_code, error_msg_regex=None):
     """
     Check that the given message is an error message by checking that its a "problem-report".
     Also check the expected problem code. Can be enhanced with a regex for checking the problem reason.
     """
     assert msg.type.endswith('problem_report')
     assert msg.data['problem-code'] == expected_problem_code
+    if error_msg_regex:
+        assert error_msg_regex.match(msg.data['explain'])

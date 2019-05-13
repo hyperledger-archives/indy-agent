@@ -183,7 +183,7 @@ Several helper functions are defined in `tests/__init__.py` and are available to
 These methods can be imported into tests using the following, assuming the test module is within the `tests` directory:
 
 ```python
-from tests import expect_message, validate_message, pack, unpack
+from tests import expect_message, check_for_attrs_in_message, pack, unpack
 ```
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -201,19 +201,19 @@ received, the message bytes are returned to the caller.
 
 ------------------------------------------------------------------------------------------------------------------------
 
-#### `validate_message`
+#### `check_for_attrs_in_message`
 
 **Method Signature:**
 ```python
-def validate_message(expected_attrs: [str], msg: Message)
+def check_for_attrs_in_message(expected_attrs: [str], msg: Message)
 ```
 
-**Description:** `validate_message` checks a `Message` object (essentially a python dictionary) for a given set of keys,
+**Description:** `check_for_attrs_in_message` checks a `Message` object (essentially a python dictionary) for a given set of keys,
 failing if an expected key is missing.
 
 **Example:**
 ```python
-    validate_message(
+    check_for_attrs_in_message(
         [
             '@type',
             'label',

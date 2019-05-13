@@ -3,6 +3,7 @@ import json
 import uuid
 from indy import pairwise, non_secrets
 
+from python_agent_utils.messages.errors import ValidationException
 from router.simple_router import SimpleRouter
 from python_agent_utils.messages.message import Message
 from . import Module
@@ -122,6 +123,9 @@ class BasicMessage(Module):
         return await self.router.route(msg)
 
     async def receive_message(self, msg: Message):
+        r = await self.validate_common_message_blocks(msg, BasicMessage.FAMILY)
+        if not r:
+            return r
 
         # store message in the wallet
         await non_secrets.add_wallet_record(

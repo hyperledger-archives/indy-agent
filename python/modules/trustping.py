@@ -63,6 +63,10 @@ class TrustPing(Module):
         return await self.router.route(msg)
 
     async def ping(self, msg: Message) -> Message:
+        r = await self.validate_common_message_blocks(msg, TrustPing.FAMILY)
+        if not r:
+            return r
+
         await self.agent.send_admin_message(
             Message({
                 '@type': AdminTrustPing.TRUSTPING_RECEIVED,
@@ -74,7 +78,7 @@ class TrustPing(Module):
             msg.context['from_did'],
             Message({
                 '@type': TrustPing.PING_RESPONSE,
-                '~thread': {'thid': msg.id}
+                '~thread': {Message.THREAD_ID: msg.id, Message.SENDER_ORDER: 0}
             })
         )
 
