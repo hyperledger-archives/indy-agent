@@ -71,6 +71,7 @@ async def send_bad_msg_and_check_for_error(wallet_handle, transport, connection,
 
 
 @pytest.mark.asyncio
+@pytest.mark.features('basicmessage.manual', 'core.manual')
 async def test_message_with_bad_threading_data(config, wallet_handle, transport, connection):
     msg = BasicMessage.build("Reply with: {}".format('1'))
 
@@ -180,6 +181,7 @@ async def test_message_with_bad_threading_data(config, wallet_handle, transport,
 
 
 @pytest.mark.asyncio
+@pytest.mark.features('basicmessage.manual', 'core.manual')
 async def test_message_with_bad_timing_data(config, wallet_handle, transport, connection):
     msg = BasicMessage.build("Reply with: {}".format('1'))
 
