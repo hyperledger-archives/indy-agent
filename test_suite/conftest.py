@@ -4,6 +4,7 @@
 import os
 import sys
 import time
+import re
 import pytest
 from _pytest.terminal import TerminalReporter
 from config import Config
@@ -31,8 +32,8 @@ def pytest_addoption(parser):
         help="Load suite configuration from SUITE_CONFIG",
     )
     group.addoption(
-        "-S",
-        "--select",
+        "-F",
+        "--feature-select",
         dest='select',
         action='store',
         metavar='SELECT_REGEX',
@@ -50,6 +51,7 @@ def pytest_configure(config):
 
     config.suite_config = Config.from_file(config_path)
 
+    #TODO reconcile Config.get_arg_parser and pytest_addoption
     #parser = Config.get_arg_parser()
     #(args, _) = parser.parse_known_args()
     #if args:
@@ -63,10 +65,16 @@ def pytest_configure(config):
         "markers", "priority(int): Define test priority for ordering tests. Higher numbers occur first."
     )
 
+    # Override default terminal reporter for better test output
     reporter = config.pluginmanager.get_plugin('terminalreporter')
     agent_reporter = AgentTerminalReporter(config, sys.stdout)
     config.pluginmanager.unregister(reporter)
     config.pluginmanager.register(agent_reporter, 'terminalreporter')
+
+    #Compile SELECT_REGEX if given
+    select_regex = config.getoption('select')
+    config.select_regex = re.compile(select_regex) if select_regex else None
+
 
 def pytest_collection_modifyitems(items):
     """ Select tests based on config or args. """
@@ -81,6 +89,17 @@ def pytest_collection_modifyitems(items):
 
         return False
 
+    def regex_feature_filter(item):
+        feature_names = [mark.args for mark in item.iter_markers(name="features")]
+        feature_names = [item for sublist in feature_names for item in sublist]
+        for feature in feature_names:
+            if item.config.select_regex.match(feature):
+                item.selected_feature = feature
+                return True
+
+        return False
+
+
     def feature_priority_map(item):
         priorities = [mark.args[0] for mark in item.iter_markers(name="priority")]
         if priorities:
@@ -92,7 +111,11 @@ def pytest_collection_modifyitems(items):
     def priority_sort(item):
         return item.priority
 
-    filtered_items = filter(feature_filter, items)
+    if items[0].config.select_regex:
+        filtered_items = filter(regex_feature_filter, items)
+    else:
+        filtered_items = filter(feature_filter, items)
+
     priority_mapped_items = map(feature_priority_map, filtered_items)
     items[:] = sorted(priority_mapped_items, key=priority_sort, reverse=True)
 
