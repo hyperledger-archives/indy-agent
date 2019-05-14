@@ -12,10 +12,10 @@ from . import Module
 class Admin(Module):
     FAMILY_NAME = "admin"
     VERSION = "1.0"
-    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION
 
-    STATE = FAMILY + "state"
-    STATE_REQUEST = FAMILY + "state_request"
+    STATE = FAMILY + "/state"
+    STATE_REQUEST = FAMILY + "/state_request"
 
     def __init__(self, agent):
         self.agent = agent

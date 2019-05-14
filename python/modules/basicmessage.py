@@ -12,13 +12,13 @@ from . import Module
 class AdminBasicMessage(Module):
     FAMILY_NAME = "admin_basicmessage"
     VERSION = "1.0"
-    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION
 
-    MESSAGE_RECEIVED = FAMILY + "message_received"
-    SEND_MESSAGE = FAMILY + "send_message"
-    MESSAGE_SENT = FAMILY + "message_sent"
-    GET_MESSAGES = FAMILY + "get_messages"
-    MESSAGES = FAMILY + "messages"
+    MESSAGE_RECEIVED = FAMILY + "/message_received"
+    SEND_MESSAGE = FAMILY + "/send_message"
+    MESSAGE_SENT = FAMILY + "/message_sent"
+    GET_MESSAGES = FAMILY + "/get_messages"
+    MESSAGES = FAMILY + "/messages"
 
     def __init__(self, agent):
         self.agent = agent
@@ -110,9 +110,9 @@ class AdminBasicMessage(Module):
 class BasicMessage(Module):
     FAMILY_NAME = "basicmessage"
     VERSION = "1.0"
-    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION
 
-    MESSAGE = FAMILY + "message"
+    MESSAGE = FAMILY + "/message"
 
     def __init__(self, agent):
         self.agent = agent

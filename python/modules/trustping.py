@@ -6,12 +6,12 @@ from . import Module
 class AdminTrustPing(Module):
     FAMILY_NAME = "admin_trustping"
     VERSION = "1.0"
-    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION
 
-    SEND_TRUSTPING = FAMILY + "send_trustping"
-    TRUSTPING_SENT = FAMILY + "trustping_sent"
-    TRUSTPING_RECEIVED = FAMILY + "trustping_received"
-    TRUSTPING_RESPONSE_RECEIVED = FAMILY + "trustping_response_received"
+    SEND_TRUSTPING = FAMILY + "/send_trustping"
+    TRUSTPING_SENT = FAMILY + "/trustping_sent"
+    TRUSTPING_RECEIVED = FAMILY + "/trustping_received"
+    TRUSTPING_RESPONSE_RECEIVED = FAMILY + "/trustping_response_received"
 
     def __init__(self, agent):
         self.agent = agent
@@ -48,10 +48,10 @@ class AdminTrustPing(Module):
 class TrustPing(Module):
     FAMILY_NAME = "trust_ping"
     VERSION = "1.0"
-    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION
 
-    PING = FAMILY + "ping"
-    PING_RESPONSE = FAMILY + "ping_response"
+    PING = FAMILY + "/ping"
+    PING_RESPONSE = FAMILY + "/ping_response"
 
     def __init__(self, agent):
         self.agent = agent

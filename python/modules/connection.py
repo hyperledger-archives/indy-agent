@@ -30,24 +30,24 @@ class BadInviteException(Exception):
 class AdminConnection(Module):
     FAMILY_NAME = "admin_connections"
     VERSION = "1.0"
-    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION
 
     # Message Types in this family
-    CONNECTION_LIST = FAMILY + "connection_list"
-    CONNECTION_LIST_REQUEST = FAMILY + "connection_list_request"
+    CONNECTION_LIST = FAMILY + "/connection_list"
+    CONNECTION_LIST_REQUEST = FAMILY + "/connection_list_request"
 
-    GENERATE_INVITE = FAMILY + "generate_invite"
-    INVITE_GENERATED = FAMILY + "invite_generated"
-    INVITE_RECEIVED = FAMILY + "invite_received"
-    RECEIVE_INVITE = FAMILY + "receive_invite"
+    GENERATE_INVITE = FAMILY + "/generate_invite"
+    INVITE_GENERATED = FAMILY + "/invite_generated"
+    INVITE_RECEIVED = FAMILY + "/invite_received"
+    RECEIVE_INVITE = FAMILY + "/receive_invite"
 
-    SEND_REQUEST = FAMILY + "send_request"
-    REQUEST_SENT = FAMILY + "request_sent"
-    REQUEST_RECEIVED = FAMILY + "request_received"
+    SEND_REQUEST = FAMILY + "/send_request"
+    REQUEST_SENT = FAMILY + "/request_sent"
+    REQUEST_RECEIVED = FAMILY + "/request_received"
 
-    SEND_RESPONSE = FAMILY + "send_response"
-    RESPONSE_SENT = FAMILY + "response_sent"
-    RESPONSE_RECEIVED = FAMILY + "response_received"
+    SEND_RESPONSE = FAMILY + "/send_response"
+    RESPONSE_SENT = FAMILY + "/response_sent"
+    RESPONSE_RECEIVED = FAMILY + "/response_received"
 
     def __init__(self, agent):
         self.agent = agent
@@ -362,11 +362,11 @@ class Connection(Module):
 
     FAMILY_NAME = "connections"
     VERSION = "1.0"
-    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION
 
-    INVITE = FAMILY + "invitation"
-    REQUEST = FAMILY + "request"
-    RESPONSE = FAMILY + "response"
+    INVITE = FAMILY + "/invitation"
+    REQUEST = FAMILY + "/request"
+    RESPONSE = FAMILY + "/response"
 
     def __init__(self, agent):
         self.agent = agent
