@@ -21,7 +21,8 @@ class AgentTerminalReporter(TerminalReporter):
 
 def pytest_addoption(parser):
     """ Load in config path. """
-    parser.addoption(
+    group = parser.getgroup("Agent Test Suite Configuration", "agent", after="general")
+    group.addoption(
         "--sc",
         "--suite-config",
         dest='suite_config',
@@ -29,7 +30,7 @@ def pytest_addoption(parser):
         metavar="SUITE_CONFIG",
         help="Load suite configuration from SUITE_CONFIG",
     )
-    parser.addoption(
+    group.addoption(
         "-S",
         "--select",
         dest='select',
