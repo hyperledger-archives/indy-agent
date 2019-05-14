@@ -60,7 +60,6 @@
     // Connection opened
     socket.addEventListener('open', function(event) {
         ui_agent.connect();
-        ui_agent.disconnect();
     });
 
     // Listen for messages
