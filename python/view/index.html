@@ -183,7 +183,7 @@
                 <tbody>
                     <tr v-for="c in pairwise_connections">
                         <td style="cursor:pointer;" v-on:click="show_connection(c)">{{ c.metadata.label }}</td>
-                        <td>{{ c.their_did }} </td>
+                        <td>did:peer:{{ c.their_did }} </td>
                         <td>
 
                         </td>
@@ -219,8 +219,8 @@
         <!-- relationships page -->
         <div id="connection" class="tab" v-if="tab_active">
             <h3>Connection: {{connection.metadata.label}}</h3>
-            <p>My DID: {{connection.my_did}}</p>
-            <p>Their DID: {{connection.their_did}}</p>
+            <p>My DID: did:peer:{{connection.my_did}}</p>
+            <p>Their DID: did:peer:{{connection.their_did}}</p>
 
             <div id="chatlist">
                 <div id="new_message_box">
