@@ -52,7 +52,7 @@ Testing agent wallet | `testing-agent`
 Wallet Path | `.testing-wallets`
 Clear wallets (delete wallet after testing complete) | `true`
 Log level | Warning (`30`)
-Tests | `connection.manual`
+Tests | `core.manual`
 
 > **Note:** Some of these defaults don't make as much sense when considering other transport methods like bluetooth or
 > NFC or others. When the need (and implementation) arises for these other transport options, the structure of these
@@ -67,10 +67,29 @@ Follow the instructions for starting the agent you are attempting to test.
 ### Step 4: Run the test suite
 
 ```sh
-pytest
+./agtest
 ```
 
 This will execute the tests selected in `config.toml`.
+
+Command Line Options
+--------------------
+
+`agtest` is a wrapper around `pytest`. All `pytest` commandline arguments are valid for `agtest`. The Agent Test Suite
+also defines additional arguments.
+
+- `--sc=CONFIG_PATH`, `--suite-config=CONFIG_PATH` - Specify a config file, overriding the default location
+	(`./config.toml`).
+
+- `-F REGEX`, `--feature-select=REGEX` - Feature selection based on a regular expression. This overrides the features
+	selected in the configuration file.
+
+
+For a full list of supported arguments, run
+
+```sh
+./agtest --help
+```
 
 Writing Tests
 -------------
@@ -88,6 +107,88 @@ Several tools are made available through the test suite to simplify some common 
 
 ------------------------------------------------------------------------------------------------------------------------
 
+### Marking Features
+
+Assigning tests to features is done through `pytest` marks. A single test can be marked with an annotation:
+
+```python
+@pytest.mark.asyncio
+@pytest.mark.features('my_feature')
+async def test_method():
+	await some_indy_sdk_call()
+```
+
+Multiple features can be assigned with a single mark:
+
+```python
+@pytest.mark.asyncio
+@pytest.mark.features('my_feature', 'my_other_feature')
+async def test_method():
+	await some_indy_sdk_call()
+```
+
+A python class can also be marked in the same manner, allowing all tests belonging to that class to be marked with a
+single annotation:
+
+```python
+
+@pytest.mark.features('my_feature')
+class MyTestClass:
+
+	@pytest.mark.asyncio
+	async def test_method_marked_with_my_feature(self):
+		await some_indy_sdk_call()
+
+	@pytest.mark.asyncio
+	async def test_another_method_also_marked_with_my_feature(self):
+		await some_indy_sdk_call()
+```
+
+Python modules can be marked by setting the `pytestmark` variable at the root of the module:
+
+```python
+
+pytestmark = [
+	pytest.mark.features('my_feature')
+]
+
+
+@pytest.mark.asyncio
+async def test_method_marked_with_my_feature():
+	await some_indy_sdk_call()
+
+@pytest.mark.asyncio
+async def test_another_method_also_marked_with_my_feature():
+	await some_indy_sdk_call()
+```
+
+------------------------------------------------------------------------------------------------------------------------
+
+### Test Ordering
+
+In some cases it is useful to explicitly order test execution. This ordering does not represent dependencies in the
+tests themselves but rather just an ordering that logically follows; for example, tests for the connection protocol are
+configured to execute first as an agent that fails to connect is unlikely to pass later tests.
+
+Tests are ordered based on priority where higher priorities occur first. Priority is set using a `pytest` mark. Setting
+priority follows the same rules for tests, classes, and modules as noted above in [Marking Fixtures](#Marking-Fixtures).
+
+Example:
+
+```python
+@pytest.mark.asyncio
+@pytest.mark.features('my_feature')
+@pytest.mark.priority(10)
+async def test_method():
+	await some_indy_sdk_call()
+```
+
+The above test will be executed strictly after all tests with priority greater than 10, in an undefined order (most
+likely alphabetical based on test name) for other tests with priority equal to 10, and strictly before tests with
+priority less than 10.
+
+------------------------------------------------------------------------------------------------------------------------
+
 ### Fixtures
 
 Several `pytest` fixtures are defined in `conftest.py`. You may view that file for details on each of these fixtures. A
@@ -99,7 +200,7 @@ Pytest will automatically inject fixtures into test functions when given as para
 
 ```python
 async def test_method(config, wallet_handle, transport):
-	await some_indy_sdk_call(wallet_handle)
+await some_indy_sdk_call(wallet_handle)
 ```
 
 The above `test_method` will receive the fixture matching the names `config`, `wallet_handle`, and `transport`.
@@ -213,15 +314,15 @@ failing if an expected key is missing.
 
 **Example:**
 ```python
-    check_for_attrs_in_message(
-        [
-            '@type',
-            'label',
-            'key',
-            'endpoint'
-        ],
-        invite_msg
-    )
+check_for_attrs_in_message(
+	[
+		'@type',
+		'label',
+		'key',
+		'endpoint'
+	],
+	invite_msg
+)
 ```
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -250,41 +351,5 @@ The method will fail if the expected keys are not found.
 
 **Example:**
 ```python
-    response = await unpack(wallet_handle, response_bytes, expected_to_vk=my_vk, expected_from_vk=their_vk)
+response = await unpack(wallet_handle, response_bytes, expected_to_vk=my_vk, expected_from_vk=their_vk)
 ```
-------------------------------------------------------------------------------------------------------------------------
-
-Defining Features
------------------
-
-Logical grouping of functionality or "features" help to concisely state the capabilities of an agent. Tests in the Test
-Suite are grouped as "features" in python modules (`my_feature.py` is a python module). Metadata about these features as
-well as information crucial to test discovery and selection are stored in `features.toml`. Below is an example of what the
-`features.toml` file might look like:
-
-```toml
-[[feature]]
-name="connection.manual"
-paths=["tests/connection/manual.py"]
-description="""
-
-This feature tests the connection protocol using a user input driven method.
-
-See this document for more details:
-https://github.com/hyperledger/indy-hipe/blob/a580d00be443990dfcbcf12be5ac85808340de1f/text/connection-protocol/README.md
-
-"""
-
-[[feature]]
-name="my.feature"
-paths=["tests/my/feature.py"]
-description="""
-
-This is a description of my feature.
-
-"""
-```
-
-Each feature has three basic components; the `name`, list of `paths` to the python modules containing tests matching
-this feature, and a `description` which gives some human readable information about the feature with, potentially, links
-to resources to see more details.
