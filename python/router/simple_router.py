@@ -1,7 +1,7 @@
 """ Simple router for handling Sovrin Messages.
 """
 
-from typing import Callable
+from typing import Callable, Coroutine
 from python_agent_utils.messages.message import Message
 from . import BaseRouter, RouteAlreadyRegisteredException
 
@@ -14,7 +14,7 @@ class SimpleRouter(BaseRouter):
     def __init__(self):
         self.routes = {}
 
-    def register(self, msg_type: str, handler: Callable[[Message], None]):
+    def register(self, msg_type: str, handler: Callable[[Message], Coroutine[any, any, Message]]):
         """ Register a callback for messages with a given type.
         """
         if msg_type in self.routes.keys():

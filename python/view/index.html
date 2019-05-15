@@ -42,12 +42,17 @@
           </ul>
         </div>
 
-        <ul class="nav navbar-nav navbar-right">
-            <li>
-                <a class="nav-link active" href="#">{{agent_name}}</a>
-            </li>
-        </ul>
-
+        <div v-if="initialized" class="nav navbar-nav navbar-right">
+          <ul class="navbar-nav mr-auto">
+             <li class="nav-item active">
+                    <a class="nav-link" href="#">{{agent_name}}</a>
+             </li>
+             <li class="nav-item active">
+                    <button type="button" class="btn btn-outline-primary btn-small navbar-btn"
+                            v-on:click="walletdisconnect">Disconnect</button>
+             </li>
+          </ul>
+        </div>
       </nav>
     </header>
 
