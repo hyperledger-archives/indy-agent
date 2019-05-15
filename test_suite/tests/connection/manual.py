@@ -1,13 +1,22 @@
+""" Connection protocol tests.
+
+    Tests are operated manually.
+"""
 import pytest
-from test_suite.tests import expect_message, pack, unpack, sign_field, get_verified_data_from_signed_field, \
-    expect_silence, check_problem_report
+from test_suite.tests import expect_message, pack, unpack, sign_field, \
+    get_verified_data_from_signed_field, expect_silence, check_problem_report
 from indy import did
 from python_agent_utils.messages.connection import Connection
 from python_agent_utils.messages.did_doc import DIDDoc
 
 
-expect_message_timeout = 30
+# Mark the module
+pytestmark = [
+    pytest.mark.features('connection.manual', 'core.manual'),
+    pytest.mark.priority(10)
+]
 
+EXPECT_MESSAGE_TIMEOUT = 30
 
 @pytest.mark.asyncio
 async def test_connection_started_by_tested_agent(config, wallet_handle, transport):
@@ -42,7 +51,7 @@ async def test_connection_started_by_tested_agent(config, wallet_handle, transpo
 
     # Wait for response
     print("Awaiting response from tested agent...")
-    response_bytes = await expect_message(transport, expect_message_timeout)
+    response_bytes = await expect_message(transport, EXPECT_MESSAGE_TIMEOUT)
 
     response = await unpack(
         wallet_handle,
@@ -70,7 +79,7 @@ async def get_connection_started_by_suite(config, wallet_handle, transport, labe
     print("\n\nInvitation encoded as URL: ", invite_str)
 
     print("Awaiting request from tested agent...")
-    request_bytes = await expect_message(transport, expect_message_timeout) # A little extra time to copy-pasta
+    request_bytes = await expect_message(transport, EXPECT_MESSAGE_TIMEOUT) # A little extra time to copy-pasta
 
     request = await unpack(
         wallet_handle,
@@ -146,7 +155,7 @@ async def test_malformed_connection_request_by_testing_agent(config, wallet_hand
             request
         )
     )
-    await expect_silence(transport, expect_message_timeout)
+    await expect_silence(transport, EXPECT_MESSAGE_TIMEOUT)
     # TODO: Need some way to ensure tested agent has gracefully handled the error and not crashed.
 
     # Send a malformed Connection Request to inviter by removing only the DID from request. Expect error in response
@@ -161,7 +170,7 @@ async def test_malformed_connection_request_by_testing_agent(config, wallet_hand
             request
         )
     )
-    response_bytes = await expect_message(transport, expect_message_timeout)
+    response_bytes = await expect_message(transport, EXPECT_MESSAGE_TIMEOUT)
     response = await unpack(
         wallet_handle,
         response_bytes,
@@ -199,7 +208,7 @@ async def test_recv_connection_resp_without_sending_req(config, wallet_handle, t
             response
         )
     )
-    response_bytes = await expect_message(transport, expect_message_timeout)
+    response_bytes = await expect_message(transport, EXPECT_MESSAGE_TIMEOUT)
     response = await unpack(
         wallet_handle,
         response_bytes,
