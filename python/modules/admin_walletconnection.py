@@ -13,11 +13,11 @@ class AdminWalletConnection(Module):
     """
     FAMILY_NAME = "admin_walletconnection"
     VERSION = "1.0"
-    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION
 
-    CONNECT = FAMILY + "connect"
-    DISCONNECT = FAMILY + "disconnect"
-    USER_ERROR = FAMILY + "user_error"
+    CONNECT = FAMILY + "/connect"
+    DISCONNECT = FAMILY + "/disconnect"
+    USER_ERROR = FAMILY + "/user_error"
 
     def __init__(self, agent):
         self.agent = agent

@@ -117,6 +117,7 @@ async def connection(config, wallet_handle, transport):
 
     yield await get_connection_started_by_suite(config, wallet_handle, transport)
 
+
 ### Test configuration loading ###
 
 

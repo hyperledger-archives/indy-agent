@@ -3,6 +3,7 @@ import json
 import uuid
 from indy import pairwise, non_secrets
 
+from python_agent_utils.messages.errors import ValidationException
 from router.simple_router import SimpleRouter
 from python_agent_utils.messages.message import Message
 from . import Module
@@ -11,13 +12,13 @@ from . import Module
 class AdminBasicMessage(Module):
     FAMILY_NAME = "admin_basicmessage"
     VERSION = "1.0"
-    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION
 
-    MESSAGE_RECEIVED = FAMILY + "message_received"
-    SEND_MESSAGE = FAMILY + "send_message"
-    MESSAGE_SENT = FAMILY + "message_sent"
-    GET_MESSAGES = FAMILY + "get_messages"
-    MESSAGES = FAMILY + "messages"
+    MESSAGE_RECEIVED = FAMILY + "/message_received"
+    SEND_MESSAGE = FAMILY + "/send_message"
+    MESSAGE_SENT = FAMILY + "/message_sent"
+    GET_MESSAGES = FAMILY + "/get_messages"
+    MESSAGES = FAMILY + "/messages"
 
     def __init__(self, agent):
         self.agent = agent
@@ -109,9 +110,9 @@ class AdminBasicMessage(Module):
 class BasicMessage(Module):
     FAMILY_NAME = "basicmessage"
     VERSION = "1.0"
-    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION + "/"
+    FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION
 
-    MESSAGE = FAMILY + "message"
+    MESSAGE = FAMILY + "/message"
 
     def __init__(self, agent):
         self.agent = agent
@@ -122,6 +123,9 @@ class BasicMessage(Module):
         return await self.router.route(msg)
 
     async def receive_message(self, msg: Message):
+        r = await self.validate_common_message_blocks(msg, BasicMessage.FAMILY)
+        if not r:
+            return r
 
         # store message in the wallet
         await non_secrets.add_wallet_record(

@@ -31,7 +31,7 @@ class Connection(Message):
                 base64.urlsafe_b64decode(matches.group(2)).decode('ascii')
             )
 
-            invite_msg.validate(
+            invite_msg.check_for_attrs(
                 [
                     ('@type', Connection.INVITE),
                     'label',
@@ -100,7 +100,7 @@ class Connection(Message):
 
         @staticmethod
         def validate(request):
-            request.validate(
+            request.check_for_attrs(
                 [
                     ('@type', Connection.REQUEST),
                     '@id',
@@ -109,7 +109,7 @@ class Connection(Message):
                 ]
             )
 
-            Message.validate_message(
+            Message.check_for_attrs_in_message(
                 [
                     DIDDoc.DID,
                     DIDDoc.DID_DOC
@@ -125,7 +125,7 @@ class Connection(Message):
             return Message({
                 '@type': Connection.RESPONSE,
                 '@id': str(uuid.uuid4()),
-                '~thread': {'thid': req_id},
+                '~thread': {Message.THREAD_ID: req_id, Message.SENDER_ORDER: 0},
                 'connection': {
                     'did': my_did,
                     'did_doc': {
@@ -150,7 +150,7 @@ class Connection(Message):
 
         @staticmethod
         def validate_pre_sig(response: Message):
-            response.validate(
+            response.check_for_attrs(
                 [
                     ('@type', Connection.RESPONSE),
                     '~thread',
@@ -160,7 +160,7 @@ class Connection(Message):
 
         @staticmethod
         def validate(response: Message, req_id: str):
-            response.validate(
+            response.check_for_attrs(
                 [
                     ('@type', Connection.RESPONSE),
                     '~thread',
@@ -168,14 +168,14 @@ class Connection(Message):
                 ]
             )
 
-            Message.validate_message(
+            Message.check_for_attrs_in_message(
                 [
-                    ('thid', req_id)
+                    (Message.THREAD_ID, req_id)
                 ],
                 response['~thread']
             )
 
-            Message.validate_message(
+            Message.check_for_attrs_in_message(
                 [
                     DIDDoc.DID,
                     DIDDoc.DID_DOC
@@ -185,6 +185,8 @@ class Connection(Message):
 
             DIDDoc.validate(response[Connection.CONNECTION][DIDDoc.DID_DOC])
 
+    # TODO: Following 2 methods should be available on base Message.
+    #  Or the context should have verkey and endpoint info so that an error message can be returned.
     @staticmethod
     def extract_verkey_endpoint(msg: Message) -> (Optional, Optional):
         """

@@ -35,7 +35,7 @@ class FamilyRouter(BaseRouter):
 
     @staticmethod
     def family_from_type(msg_type: str) -> str:
-        matches = re.match("(.+/.+/\d+.\d+/).+", msg_type)
+        matches = re.match("(.+/.+/\d+.\d+).+", msg_type)
         if not matches:
             raise UnparsableMessageFamilyException()
 

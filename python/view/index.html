@@ -100,6 +100,12 @@
                                     <button class="btn btn-default" type="button" id="copy-invite" v-on:click="copy_invite">Copy</button>
                                 </span>
                             </div>
+                            <div id="qrcode-card" class="card">
+                                <div class="card-header">Invite QR</div>
+                                <div class="card-block">
+                                    <canvas id="qrcode"></canvas>
+                                </div>
+                            </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -188,7 +194,7 @@
                 <tbody>
                     <tr v-for="c in pairwise_connections">
                         <td style="cursor:pointer;" v-on:click="show_connection(c)">{{ c.metadata.label }}</td>
-                        <td>{{ c.their_did }} </td>
+                        <td>did:peer:{{ c.their_did }} </td>
                         <td>
 
                         </td>
@@ -224,8 +230,8 @@
         <!-- relationships page -->
         <div id="connection" class="tab" v-if="tab_active">
             <h3>Connection: {{connection.metadata.label}}</h3>
-            <p>My DID: {{connection.my_did}}</p>
-            <p>Their DID: {{connection.their_did}}</p>
+            <p>My DID: did:peer:{{connection.my_did}}</p>
+            <p>Their DID: did:peer:{{connection.their_did}}</p>
 
             <div id="chatlist">
                 <div id="new_message_box">
@@ -245,6 +251,13 @@
                 <button type="button" class="btn btn-primary" v-on:click="send_trustping()">Send Trust Ping</button>
                 <p>{{connection.trustping_state}}</p>
             </div>
+            <div id="protocol-discovery">
+                <h3>Discovered Protocols</h3>
+                <input type="text" v-model="new_query"/>
+                <button type="button" class="btn btn-primary" v-on:click="send_query()">Send Query</button>
+            </div>
+
+            <code><pre>{{connection.query_state}}</pre></code>
 
         </div>
 
@@ -269,12 +282,12 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/locale/es-us.js"></script>
     <script src="/res/vue-moment.min.js"></script>
+    <script src="/res/qrious.min.js"></script>
 
     <script src="res/indy-connector.js"></script>
     <script src="/res/indy-agent.js"></script>
     <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
     <script src="/res/utils.js"></script>
-
 
   </body>
 </html>
