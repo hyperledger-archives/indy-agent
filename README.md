@@ -36,6 +36,8 @@ would like to list your agent here, please submit a pull request.
 |Verity|Evernym|commercial enterprise agent, focused on credential issuance and proving for login and onboarding|not yet tested|[evernym.com](https://evernym.com)|
 |Connect.Me|Evernym|commercial mobile agent for individuals (free but requires SaaS subscription for supporting cloud agent)|not yet tested|Android or iOS App Store|
 |Pi Agent | Evernym | Simple cli agent for connecting and sending basic messages. Useful in IOT (Raspberry Pi) applications. | 100% passed in April 2019 | [https://github.com/evernym/connectathon-agent](https://github.com/evernym/connectathon-agent) |
+|StudyBits University Agent | Quintor | Cloud agent for universities for use in student exchange | Definitely would not pass | [GitHub](https://github.com/Quintor/StudyBits) [Project](https://www.bcined.com/studybits.html) |
+|StudyBits (Android) Wallet | Quintor | Mobile wallet for use in student exchange | Definitely would not pass | [GitHub](https://github.com/Quintor/StudyBitsWallet) |
 
 ## Related Topics
 
