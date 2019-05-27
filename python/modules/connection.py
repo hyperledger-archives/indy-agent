@@ -3,21 +3,20 @@
 
 # pylint: disable=import-error
 
-import json
 import base64
-import re
 import datetime
-from typing import Optional
+import json
+import re
 
 from indy import did, pairwise, non_secrets, error
 
 import indy_sdk_utils as utils
 import serializer.json_serializer as Serializer
-from python_agent_utils.messages.did_doc import DIDDoc
 from python_agent_utils.messages.connection import Connection as ConnectionMessage
+from python_agent_utils.messages.message import Message
 from router.simple_router import SimpleRouter
 from . import Module
-from python_agent_utils.messages.message import Message
+
 
 # TODO: Move all string literal in a place which can be accessed by the test suite as well
 
@@ -281,7 +280,6 @@ class AdminConnection(Module):
         """ Send response to request.
 
             send_response message format:
-
                 {
                   "@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin_connections/1.0/send_response",
                   "did": <did of request sender>
@@ -303,12 +301,11 @@ class AdminConnection(Module):
         pairwise_meta = json.loads(pairwise_info['metadata'])
 
         my_did = pairwise_info['my_did']
-        label = pairwise_meta['label']
         my_vk = await did.key_for_local_did(self.agent.wallet_handle, my_did)
 
         response_msg = Message({
             '@type': Connection.RESPONSE,
-            '~thread': { Message.THREAD_ID: pairwise_meta['req_id'], Message.SENDER_ORDER: 0 },
+            '~thread': {Message.THREAD_ID: pairwise_meta['req_id'], Message.SENDER_ORDER: 0},
             'connection': {
                 'did': my_did,
                 'did_doc': {
@@ -332,7 +329,9 @@ class AdminConnection(Module):
         })
 
         # Apply signature to connection field, sign it with the key used in the invitation and request
-        response_msg['connection~sig'] = await self.agent.sign_agent_message_field(response_msg['connection'], pairwise_meta["connection_key"])
+        response_msg['connection~sig'] = \
+            await self.agent.sign_agent_message_field(response_msg['connection'],
+                                                      pairwise_meta["connection_key"])
         del response_msg['connection']
 
         pending_connection = Serializer.unpack(
@@ -503,8 +502,8 @@ class Connection(Module):
 
         my_did = msg.context['to_did']
         if my_did is None:
-            msg[ConnectionMessage.CONNECTION], sig_verified = await self.agent.unpack_and_verify_signed_agent_message_field(
-                msg['connection~sig'])
+            msg[ConnectionMessage.CONNECTION], sig_verified = \
+                await self.agent.unpack_and_verify_signed_agent_message_field(msg['connection~sig'])
             if not sig_verified:
                 print('Encountered error parsing connection response. Connection request not found.')
             else:
@@ -523,13 +522,23 @@ class Connection(Module):
         my_vk = await did.key_for_local_did(self.agent.wallet_handle, my_did)
 
         #process signed field
-        msg[ConnectionMessage.CONNECTION], sig_verified = await self.agent.unpack_and_verify_signed_agent_message_field(msg['connection~sig'])
+        msg[ConnectionMessage.CONNECTION], sig_verified = \
+            await self.agent.unpack_and_verify_signed_agent_message_field(msg['connection~sig'])
         # connection~sig remains for metadata
 
         their_did, their_vk, their_endpoint = ConnectionMessage.extract_their_info(msg)
 
+        # Verify that their_vk (from did doc) matches msg_vk
         msg_vk = msg.context['from_key']
-        # TODO: verify their_vk (from did doc) matches msg_vk
+        if their_vk != msg_vk:
+            err_msg = \
+                self.build_problem_report_for_connections(
+                    Connection.FAMILY,
+                    ConnectionMessage.KEY_ERROR,
+                    "Key provided in response does not match expected key")
+            verkey, endpoint = ConnectionMessage.extract_verkey_endpoint(msg)
+            await self.agent.send_message_to_endpoint_and_key(verkey, endpoint, err_msg)
+            return
 
         # Retrieve connection information from DID metadata
         my_did_meta = json.loads(
@@ -592,4 +601,3 @@ class Connection(Module):
         await non_secrets.delete_wallet_record(self.agent.wallet_handle,
                                                'invitations',
                                                msg.data['connection~sig']['signer'])
-
