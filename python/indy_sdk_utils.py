@@ -45,9 +45,9 @@ async def store_their_did(wallet_handle, their_did, their_vk):
 async def did_for_key(wallet_handle, key):
     """ Retrieve DID for a given key from the non_secrets verkey to DID map.
     """
-    did = None
+    _did = None
     try:
-        did = json.loads(
+        _did = json.loads(
             await non_secrets.get_wallet_record(
                 wallet_handle,
                 'key-to-did',
@@ -61,19 +61,23 @@ async def did_for_key(wallet_handle, key):
         else:
             raise e
 
-    return did
+    return _did
 
 
-async def get_wallet_records(wallet_handle: int, search_type: str) -> list:
+async def get_wallet_records(wallet_handle: int, search_type: str,
+                             query_json: str = json.dumps({})) -> list:
     """ Search for records of a given type in a wallet.
+
     :param wallet_handle: Handle of the wallet to search.
     :param search_type: Type of records to search.
+    :param query_json: MongoDB style query to wallet record tags.
+           See non_secrets.open_wallet_search.
     :return: List of all records found.
     """
     list_of_records = []
     search_handle = await non_secrets.open_wallet_search(wallet_handle,
                                                          search_type,
-                                                         json.dumps({}),
+                                                         query_json,
                                                          json.dumps({'retrieveTotalCount': True}))
     while True:
         results_json = await non_secrets.fetch_wallet_search_next_records(wallet_handle,

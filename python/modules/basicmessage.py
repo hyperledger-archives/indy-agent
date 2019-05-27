@@ -1,15 +1,20 @@
+""" Module allowing a user to send and receive basic messages with their Indy agent.
+"""
 import datetime
 import json
 import uuid
-from indy import pairwise, non_secrets
 
-from python_agent_utils.messages.errors import ValidationException
-from router.simple_router import SimpleRouter
+from indy import non_secrets
+
+from indy_sdk_utils import get_wallet_records
 from python_agent_utils.messages.message import Message
+from router.simple_router import SimpleRouter
 from . import Module
 
 
 class AdminBasicMessage(Module):
+    """ Class handling messages received from the UI.
+    """
     FAMILY_NAME = "admin_basicmessage"
     VERSION = "1.0"
     FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION
@@ -27,26 +32,30 @@ class AdminBasicMessage(Module):
         self.router.register(AdminBasicMessage.GET_MESSAGES, self.get_messages)
 
     async def route(self, msg: Message) -> Message:
+        """ Route a message to its registered callback.
+        """
         return await self.router.route(msg)
 
-    async def send_message(self, msg: Message) -> Message:
-        """ UI activated method.
+    async def send_message(self, msg: Message) -> None:
+        """ UI activated method providing a message to be sent.
+
+        :param msg: Message from the UI to send a basic message to another Indy agent. It contains:
+            {
+                '@type': AdminBasicMessage.SEND_MESSAGE,
+                'from': 'TkbZ5zphpvX4MYDhRRQ5o7',  # DID of the sender of the message.
+                'to': 'Q3TnvPk6QtRazeiALDdLGs',  # DID fo the recipient of the message.
+                'message': 'Hello',  # text of the message to be sent.
+            }
         """
-
-        # This lookup block finds the from address from the to address. This should be fixed, so that the from address
-        #  comes in the admin message.
+        my_did_str = msg['from']
         their_did_str = msg['to']
-        pairwise_conn_info_str = await pairwise.get_pairwise(self.agent.wallet_handle, their_did_str)
-        pairwise_conn_info_json = json.loads(pairwise_conn_info_str)
-        my_did_str = pairwise_conn_info_json['my_did']
-
         message_to_send = msg['message']
         sent_time = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat(' ')
 
-        # store message in the wallet
+        # Store message in the wallet
         await non_secrets.add_wallet_record(
             self.agent.wallet_handle,
-            "basicmessage",
+            'basicmessage',
             uuid.uuid4().hex,
             json.dumps({
                 'from': my_did_str,
@@ -54,7 +63,7 @@ class AdminBasicMessage(Module):
                 'content': message_to_send
             }),
             json.dumps({
-                "their_did": their_did_str
+                'their_did': their_did_str
             })
         )
 
@@ -80,22 +89,20 @@ class AdminBasicMessage(Module):
             })
         )
 
-    async def get_messages(self, msg: Message) -> Message:
-        their_did = msg['with']
-        search_handle = await non_secrets.open_wallet_search(
-            self.agent.wallet_handle, "basicmessage",
-            json.dumps({"their_did": their_did}),
-            json.dumps({})
-        )
-        results = await non_secrets.fetch_wallet_search_next_records(self.agent.wallet_handle, search_handle, 100)
+    async def get_messages(self, msg: Message) -> None:
+        """ UI activated method requesting a list of messages exchanged with a given agent.
 
-        messages = []
-        for r in json.loads(results)["records"] or []: # records is None if empty
-            d = json.loads(r['value'])
-            d["_id"] = r["id"] # include record id for further reference.
-            messages.append(d)
-        #TODO: fetch in loop till all records are processed
-        await non_secrets.close_wallet_search(search_handle)
+        :param msg: Message from the UI to get a list of message exchanged with a given DID:
+            {
+                '@type': AdminBasicMessage.GET_MESSAGES,
+                'with': 'CzznW3pTbFr2YqDCGWWf8x',  # DID of other party with whom messages
+                                                   # have been exchanged
+            }
+        :return: None
+        """
+        their_did = msg['with']
+        messages = await get_wallet_records(self.agent.wallet_handle, 'basicmessage',
+                                            json.dumps({'their_did': their_did}))
         messages = sorted(messages, key=lambda n: n['sent_time'], reverse=True)
 
         await self.agent.send_admin_message(
@@ -108,6 +115,8 @@ class AdminBasicMessage(Module):
 
 
 class BasicMessage(Module):
+    """ Class handling messages received from another Indy agent.
+    """
     FAMILY_NAME = "basicmessage"
     VERSION = "1.0"
     FAMILY = "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/" + FAMILY_NAME + "/" + VERSION
@@ -120,17 +129,30 @@ class BasicMessage(Module):
         self.router.register(BasicMessage.MESSAGE, self.receive_message)
 
     async def route(self, msg: Message) -> Message:
+        """ Route a message to its registered callback.
+        """
         return await self.router.route(msg)
 
-    async def receive_message(self, msg: Message):
-        r = await self.validate_common_message_blocks(msg, BasicMessage.FAMILY)
-        if not r:
-            return r
+    async def receive_message(self, msg: Message) -> None:
+        """ Process the reception of a basic message from another Indy agent.
 
-        # store message in the wallet
+        :param msg: Basic message is of the following format:
+            {
+                '@type': BasicMessage.MESSAGE,
+                '~l10n': {'locale': 'en'},
+                'sent_time': '2019-05-27 08:34:25.105373+00:00',
+                'content': 'Hello'
+            }
+        :return: None
+        """
+        is_valid = await self.validate_common_message_blocks(msg, BasicMessage.FAMILY)
+        if not is_valid:
+            return
+
+        # Store message in the wallet
         await non_secrets.add_wallet_record(
             self.agent.wallet_handle,
-            "basicmessage",
+            'basicmessage',
             uuid.uuid4().hex,
             json.dumps({
                 'from': msg.context['from_did'],
@@ -138,7 +160,7 @@ class BasicMessage(Module):
                 'content': msg['content']
             }),
             json.dumps({
-                "their_did": msg.context['from_did']
+                'their_did': msg.context['from_did']
             })
         )
 

@@ -332,6 +332,7 @@ var ui_connection = new Vue({
             msg = {
                 '@type': ADMIN_BASICMESSAGE.SEND_MESSAGE,
                 to: this.connection.their_did,
+                from: this.connection.my_did,
                 message: this.new_basicmessage
             };
             sendMessage(msg);
