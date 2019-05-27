@@ -75,22 +75,26 @@ async def get_wallet_records(wallet_handle: int, search_type: str,
     :return: List of all records found.
     """
     list_of_records = []
-    search_handle = await non_secrets.open_wallet_search(wallet_handle,
-                                                         search_type,
-                                                         query_json,
-                                                         json.dumps({'retrieveTotalCount': True}))
-    while True:
-        results_json = await non_secrets.fetch_wallet_search_next_records(wallet_handle,
-                                                                          search_handle, 10)
-        results = json.loads(results_json)
+    if search_type:
+        search_handle = \
+            await non_secrets.open_wallet_search(wallet_handle, search_type, query_json,
+                                                 json.dumps({'retrieveTotalCount': True}))
+        while True:
+            results_json = await non_secrets.fetch_wallet_search_next_records(wallet_handle,
+                                                                              search_handle, 10)
+            results = json.loads(results_json)
 
-        if results['totalCount'] == 0 or results['records'] is None:
-            break
-        for record in results['records']:
-            record_value = json.loads(record['value'])
-            record_value['_id'] = record['id']
-            list_of_records.append(record_value)
+            if results['totalCount'] == 0 or results['records'] is None:
+                break
+            for record in results['records']:
+                try:
+                    record_value = json.loads(record['value'])
+                    if isinstance(record_value, dict):
+                        record_value['_id'] = record['id']
+                except json.decoder.JSONDecodeError:
+                    record_value = record['value']
+                list_of_records.append(record_value)
 
-    await non_secrets.close_wallet_search(search_handle)
+        await non_secrets.close_wallet_search(search_handle)
 
     return list_of_records
