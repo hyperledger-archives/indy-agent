@@ -12,9 +12,9 @@ import aiohttp
 from indy import wallet, did, error, crypto, pairwise
 
 import indy_sdk_utils as utils
-from serializer import json_serializer as Serializer
 from python_agent_utils.messages.message import Message
 from router.family_router import FamilyRouter
+from serializer.json_serializer import JSONSerializer as Serializer
 
 
 class WalletConnectionException(Exception):
@@ -183,7 +183,7 @@ class Agent:
         to_key = unpacked['recipient_verkey']
         to_did = await utils.did_for_key(self.wallet_handle, unpacked['recipient_verkey'])
 
-        msg = Serializer.unpack(unpacked['message'])
+        msg = Serializer.deserialize(unpacked['message'])
 
         msg.context = {
             'from_did': from_did,  # Could be None
@@ -214,7 +214,7 @@ class Agent:
         # If my_ver_key is omitted, anoncrypt is used inside pack.
         wire_message = await crypto.pack_message(
             self.wallet_handle,
-            Serializer.pack(msg),
+            Serializer.serialize(msg).decode('utf-8'),
             [their_ver_key],
             my_ver_key
         )
@@ -237,7 +237,7 @@ class Agent:
         if self.agent_admin_key and self.admin_key:
             msg = await crypto.pack_message(
                 self.wallet_handle,
-                Serializer.pack(msg),
+                Serializer.serialize(msg).decode('utf-8'),
                 [self.admin_key],
                 self.agent_admin_key
             )
@@ -251,7 +251,7 @@ class Agent:
         # Try to unpack message assuming it's not encrypted
         msg = ""
         try:
-            msg = Serializer.unpack(wire_msg)
+            msg = Serializer.deserialize(wire_msg)
         except Exception as e:
             print("Message encrypted, attempting to unpack...")
 

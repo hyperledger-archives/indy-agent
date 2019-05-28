@@ -10,12 +10,12 @@ class BaseRouter:
     """ Router Base Class. Provide basic interface for additional routers.
     """
 
-    async def register(self, msg_type: str, handler: Callable[[bytes], None]):
+    async def register(self, msg_type: str, handler: Callable[[bytes], None]) -> None:
         """ Register a callback for messages with a given type.
         """
         raise NotImplementedError("`register` not implemented in BaseRouter!")
 
-    async def route(self, msg: Message):
+    async def route(self, msg: Message) -> None:
         """ Route a message to it's registered callback
         """
         raise NotImplementedError("`route` not implemented in BaseRouter!")

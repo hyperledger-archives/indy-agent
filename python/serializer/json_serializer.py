@@ -5,26 +5,25 @@ Serializer using json as i/o format.
 import json
 
 from python_agent_utils.messages.message import Message
+from . import BaseSerializer
 
 
-def unpack_dict(dictionary: dict) -> Message:
-    deserialized_msg = Message(dictionary)
-    return deserialized_msg
-
-
-# TODO: Should be called `deserialize`
-def unpack(dump) -> Message:
+class JSONSerializer(BaseSerializer):
+    """ Serializer using json as i/o format.
     """
-    Deserialize from bytes or str to Message
-    """
-    dump_dict = json.loads(dump)
-    deserialized_msg = Message(dump_dict)
-    return deserialized_msg
+    @staticmethod
+    def deserialize(dump: bytes) -> Message:
+        """ Deserialize from json string to Message, if it looks like a Message.
+            Returns a dictionary otherwise.
+        """
+        def as_message(dct):
+            return Message(dct)
 
+        return json.loads(dump, object_hook=as_message)
 
-# TODO: Should be called `serialize`
-def pack(msg: Message) -> str:
-    """
-    Serialize from Message to json string or from dictionary to json string.
-    """
-    return msg.as_json()
+    @staticmethod
+    def serialize(msg: Message) -> bytes:
+        """ Serialize from Message to json string or from dictionary to json string.
+        """
+
+        return msg.as_json().encode('utf-8')
