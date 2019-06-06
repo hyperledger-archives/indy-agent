@@ -16,10 +16,8 @@ class JSONSerializer(BaseSerializer):
         """ Deserialize from json string to Message, if it looks like a Message.
             Returns a dictionary otherwise.
         """
-        def as_message(dct):
-            return Message(dct)
 
-        return json.loads(dump, object_hook=as_message)
+        return Message(json.loads(dump))
 
     @staticmethod
     def serialize(msg: Message) -> bytes:
