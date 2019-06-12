@@ -73,10 +73,10 @@ class AdminStaticConnection(Module):
 
             Currently, only peer DID is supported.
         """
-        their_did = msg.did
-        their_vk = msg.vk
-        their_endpoint = msg.endpoint
-        label = msg.label
+        their_did = msg['did']
+        their_vk = msg['vk']
+        their_endpoint = msg['endpoint']
+        label = msg['label']
 
 
         # Store their information from request
