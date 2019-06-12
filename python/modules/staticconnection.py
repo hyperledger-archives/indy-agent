@@ -19,14 +19,6 @@ from router.simple_router import SimpleRouter
 from . import Module
 from python_agent_utils.messages.message import Message
 
-# TODO: Move all string literal in a place which can be accessed by the test suite as well
-
-
-class BadInviteException(Exception):
-    def __init__(self, msg):
-        super().__init__(msg)
-
-
 class AdminStaticConnection(Module):
     FAMILY_NAME = "admin_staticconnections"
     VERSION = "1.0"

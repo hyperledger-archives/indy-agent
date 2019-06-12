@@ -347,7 +347,7 @@ var ui_relationships = new Vue({
             this.new_static_connection.label = msg.label;
             this.new_static_connection.my_did = msg.my_did;
             this.new_static_connection.my_vk = msg.my_vk;
-            this.new_static_connection.my_endpoint = msg.my_endpoint
+            this.new_static_connection.my_endpoint = msg.my_endpoint;
             $('#staticconnection_created_modal').modal('show');
         }
     }
