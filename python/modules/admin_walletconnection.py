@@ -25,12 +25,12 @@ class AdminWalletConnection(Module):
         self.router.register(AdminWalletConnection.CONNECT, self.connect)
         self.router.register(AdminWalletConnection.DISCONNECT, self.disconnect)
 
-    async def route(self, msg: Message) -> Message:
+    async def route(self, msg: Message) -> None:
         """ Route a message to its registered callback
         """
         return await self.router.route(msg)
 
-    async def connect(self, msg: Message) -> Message:
+    async def connect(self, msg: Message) -> None:
         """ Connect to an existing wallet.
         """
         try:
@@ -46,7 +46,7 @@ class AdminWalletConnection(Module):
         # Prompt a STATE message.
         return await self.agent.modules[Admin.FAMILY].state_request(None)
 
-    async def disconnect(self, _) -> Message:
+    async def disconnect(self, _) -> None:
         """ Disconnect from an existing wallet.
         """
         await self.agent.disconnect_wallet()

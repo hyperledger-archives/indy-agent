@@ -26,7 +26,9 @@ class AdminBasicMessage(Module):
         self.router.register(AdminBasicMessage.SEND_MESSAGE, self.send_message)
         self.router.register(AdminBasicMessage.GET_MESSAGES, self.get_messages)
 
-    async def route(self, msg: Message) -> Message:
+    async def route(self, msg: Message) -> None:
+        """ Route a message to its registered callback.
+        """
         return await self.router.route(msg)
 
     async def send_message(self, msg: Message) -> Message:
@@ -119,7 +121,9 @@ class BasicMessage(Module):
         self.router = SimpleRouter()
         self.router.register(BasicMessage.MESSAGE, self.receive_message)
 
-    async def route(self, msg: Message) -> Message:
+    async def route(self, msg: Message) -> None:
+        """ Route a message to its registered callback.
+        """
         return await self.router.route(msg)
 
     async def receive_message(self, msg: Message):

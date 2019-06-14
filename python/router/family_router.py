@@ -15,7 +15,7 @@ class FamilyRouter(BaseRouter):
     def __init__(self):
         self.routes = {}
 
-    def register(self, msg_family: str, module: Module):
+    def register(self, msg_family: str, module: Module) -> None:
         """ Register a callback for messages with a given type.
         """
         if msg_family in self.routes.keys():
@@ -23,7 +23,7 @@ class FamilyRouter(BaseRouter):
 
         self.routes[msg_family] = module
 
-    async def route(self, msg: Message):
+    async def route(self, msg: Message) -> None:
         """ Route a message to it's registered callback.
         """
         family = FamilyRouter.family_from_type(msg.type)
