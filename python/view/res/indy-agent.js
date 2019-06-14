@@ -1,6 +1,7 @@
 const MESSAGE_TYPES = {
     CONN_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/connections/1.0/",
     ADMIN_CONNECTIONS_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin_connections/1.0/",
+    ADMIN_STATICCONNECTIONS_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin_staticconnections/1.0/",
     ADMIN_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin/1.0/",
     ADMIN_WALLETCONNECTION_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin_walletconnection/1.0/",
     ADMIN_BASICMESSAGE_BASE: "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/admin_basicmessage/1.0/",
@@ -35,6 +36,11 @@ const ADMIN_CONNECTION = {
     SEND_RESPONSE: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "send_response",
     RESPONSE_SENT: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "response_sent",
     RESPONSE_RECEIVED: MESSAGE_TYPES.ADMIN_CONNECTIONS_BASE + "response_received"
+};
+
+const ADMIN_STATICCONNECTION = {
+    CREATE_STATIC_CONNECTION: MESSAGE_TYPES.ADMIN_STATICCONNECTIONS_BASE + "create_static_connection",
+    STATIC_CONNECTION_CREATED: MESSAGE_TYPES.ADMIN_STATICCONNECTIONS_BASE + "static_connection_created"
 };
 
 const ADMIN_BASICMESSAGE = {
@@ -171,6 +177,15 @@ var ui_data = {
     receive_invite_info: {
         label: "",
         invite: ""
+    },
+    new_static_connection: {
+        label: "",
+        endpoint: "",
+        vk: "",
+        did: "",
+        my_did: "",
+        my_vk: "",
+        my_endpoint: ""
     },
     connections: [],
     pairwise_connections:[],
@@ -314,6 +329,26 @@ var ui_relationships = new Vue({
             this.connection = c;
             ui_connection.load();
             this.current_tab = "connection";
+        },
+        add_static_connection: function(){
+            //TODO: save data here
+            console.log("add now");
+            //new_static_connection.public_key
+            sendMessage({
+                '@type': ADMIN_STATICCONNECTION.CREATE_STATIC_CONNECTION,
+                'label': this.new_static_connection.label,
+                'did': this.new_static_connection.did,
+                'vk': this.new_static_connection.vk,
+                'endpoint': this.new_static_connection.endpoint
+            });
+        },
+        show_new_connection: function(msg){
+            // pop modal
+            this.new_static_connection.label = msg.label;
+            this.new_static_connection.my_did = msg.my_did;
+            this.new_static_connection.my_vk = msg.my_vk;
+            this.new_static_connection.my_endpoint = msg.my_endpoint;
+            $('#staticconnection_created_modal').modal('show');
         }
     }
 });
@@ -499,6 +534,7 @@ msg_router.register(ADMIN_CONNECTION.INVITE_GENERATED, ui_relationships.invite_g
 msg_router.register(ADMIN_CONNECTION.INVITE_RECEIVED, ui_relationships.invite_received);
 msg_router.register(ADMIN_CONNECTION.REQUEST_SENT, ui_relationships.request_sent);
 msg_router.register(ADMIN_CONNECTION.RESPONSE_SENT, ui_relationships.response_sent);
+msg_router.register(ADMIN_STATICCONNECTION.STATIC_CONNECTION_CREATED, ui_relationships.show_new_connection);
 msg_router.register(ADMIN_BASICMESSAGE.MESSAGE_SENT, ui_relationships.message_sent);
 msg_router.register(ADMIN_CONNECTION.RESPONSE_RECEIVED, ui_relationships.response_received);
 msg_router.register(ADMIN_CONNECTION.REQUEST_RECEIVED, ui_relationships.request_received);
