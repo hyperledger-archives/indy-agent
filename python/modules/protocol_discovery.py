@@ -20,10 +20,10 @@ class AdminProtocolDiscovery(Module):
         self.router = SimpleRouter()
         self.router.register(AdminProtocolDiscovery.SEND_QUERY, self.send_query)
 
-    async def route(self, msg: Message):
+    async def route(self, msg: Message) -> None:
         return await self.router.route(msg)
 
-    async def send_query(self, msg: Message):
+    async def send_query(self, msg: Message) -> None:
         query_msg = Message({
             '@type': ProtocolDiscovery.QUERY,
             'query': msg['query']
@@ -54,10 +54,10 @@ class ProtocolDiscovery(Module):
         self.router.register(ProtocolDiscovery.QUERY, self.query_received)
         self.router.register(ProtocolDiscovery.DISCLOSE, self.disclose_received)
 
-    async def route(self, msg: Message):
+    async def route(self, msg: Message) -> None:
         return await self.router.route(msg)
 
-    async def query_received(self, msg: Message):
+    async def query_received(self, msg: Message) -> None:
         await self.agent.send_admin_message(
             Message({
                 '@type': AdminProtocolDiscovery.QUERY_RECEIVED,
@@ -92,7 +92,7 @@ class ProtocolDiscovery(Module):
             })
         )
 
-    async def disclose_received(self, msg: Message):
+    async def disclose_received(self, msg: Message) -> None:
         await self.agent.send_admin_message(
             Message({
                 '@type': AdminProtocolDiscovery.DISCLOSE_RECEIVED,

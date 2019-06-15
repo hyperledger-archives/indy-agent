@@ -1,11 +1,12 @@
-import aiohttp_jinja2
 import json
 import socket
-from indy import pairwise
-from indy_sdk_utils import get_wallet_records
 
-from router.simple_router import SimpleRouter
+import aiohttp_jinja2
+from indy import pairwise
+
+from indy_sdk_utils import get_wallet_records
 from python_agent_utils.messages.message import Message
+from router.simple_router import SimpleRouter
 from . import Module
 
 
@@ -22,10 +23,10 @@ class Admin(Module):
         self.router = SimpleRouter()
         self.router.register(self.STATE_REQUEST, self.state_request)
 
-    async def route(self, msg: Message) -> Message:
+    async def route(self, msg: Message) -> None:
         return await self.router.route(msg)
 
-    async def state_request(self, _) -> Message:
+    async def state_request(self, _) -> None:
         print("Processing state_request")
 
         if self.agent.initialized:

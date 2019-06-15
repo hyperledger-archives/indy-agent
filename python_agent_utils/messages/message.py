@@ -2,13 +2,13 @@
     received messages.
 """
 import json
+import uuid
 from collections import UserDict
 from typing import Iterable
 
-import uuid
-
 from python_agent_utils.messages.errors import ValidationException
-from python_agent_utils.messages.fields import NonNegativeNumberField, MapField, DIDField, ISODatetimeStringField
+from python_agent_utils.messages.fields import NonNegativeNumberField, MapField, DIDField, \
+    ISODatetimeStringField
 
 
 class Message(UserDict):
@@ -42,7 +42,7 @@ class Message(UserDict):
         other things: ambiguous data. Interpretation defined by type and id.
 
         """
-        UserDict.__init__(self,*args, **kwargs)
+        UserDict.__init__(self, *args, **kwargs)
         self.context = {}
         # Assign it an ID
         if '@id' not in self.data:
@@ -139,7 +139,8 @@ class Message(UserDict):
             timing = msg[Message.TIMING_DECORATOR]
             non_neg_num = NonNegativeNumberField()
             iso_data = ISODatetimeStringField()
-            expected_iso_fields = [Message.IN_TIME, Message.OUT_TIME, Message.STALE_TIME, Message.EXPIRES_TIME, Message.WAIT_UNTIL_TIME]
+            expected_iso_fields = [Message.IN_TIME, Message.OUT_TIME, Message.STALE_TIME,
+                                   Message.EXPIRES_TIME, Message.WAIT_UNTIL_TIME]
             for f in expected_iso_fields:
                 if f in timing:
                     err = iso_data.validate(timing[f])

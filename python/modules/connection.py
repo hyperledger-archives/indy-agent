@@ -12,10 +12,9 @@ from typing import Optional
 from indy import did, pairwise, non_secrets, error
 
 import indy_sdk_utils as utils
-import serializer.json_serializer as Serializer
-from python_agent_utils.messages.did_doc import DIDDoc
 from python_agent_utils.messages.connection import Connection as ConnectionMessage
 from router.simple_router import SimpleRouter
+from serializer.json_serializer import JSONSerializer as Serializer
 from . import Module
 from python_agent_utils.messages.message import Message
 
@@ -58,10 +57,10 @@ class AdminConnection(Module):
         self.router.register(AdminConnection.SEND_REQUEST, self.send_request)
         self.router.register(AdminConnection.SEND_RESPONSE, self.send_response)
 
-    async def route(self, msg: Message) -> Message:
+    async def route(self, msg: Message) -> None:
         return await self.router.route(msg)
 
-    async def generate_invite(self, msg: Message) -> Message:
+    async def generate_invite(self, msg: Message) -> None:
         """ Generate new connection invitation.
 
             This interaction represents an out-of-band communication channel. In the future and in
@@ -108,7 +107,7 @@ class AdminConnection(Module):
         })
 
         b64_invite = \
-            base64.urlsafe_b64encode(bytes(Serializer.pack(invite_msg), 'utf-8')).decode('ascii')
+            base64.urlsafe_b64encode(Serializer.serialize(invite_msg)).decode('ascii')
 
         await self.agent.send_admin_message(
             Message({
@@ -117,7 +116,7 @@ class AdminConnection(Module):
             })
         )
 
-    async def receive_invite(self, msg: Message) -> Message:
+    async def receive_invite(self, msg: Message) -> None:
         """ Receive and save invite.
 
             This interaction represents an out-of-band communication channel. In the future and in
@@ -158,7 +157,7 @@ class AdminConnection(Module):
         if not matches:
             raise BadInviteException("Invite string is improperly formatted")
 
-        invite_msg = Serializer.unpack(
+        invite_msg = Serializer.deserialize(
             base64.urlsafe_b64decode(matches.group(2)).decode('utf-8')
         )
 
@@ -179,11 +178,11 @@ class AdminConnection(Module):
             self.agent.wallet_handle,
             'invitations',
             invite_msg['recipientKeys'][0],
-            Serializer.pack(pending_connection),
+            Serializer.serialize(pending_connection).decode('utf-8'),
             '{}'
         )
 
-    async def send_request(self, msg: Message):
+    async def send_request(self, msg: Message) -> None:
         """ Recall invite message from wallet and prepare and send request to the inviter.
 
             send_request message format:
@@ -204,7 +203,7 @@ class AdminConnection(Module):
                   }
                 }
         """
-        pending_connection = Serializer.unpack(
+        pending_connection = Serializer.deserialize(
             json.loads(
                 await non_secrets.get_wallet_record(
                     self.agent.wallet_handle,
@@ -273,11 +272,11 @@ class AdminConnection(Module):
         await non_secrets.update_wallet_record_value(self.agent.wallet_handle,
                                                      'invitations',
                                                      pending_connection['connection_key'],
-                                                     Serializer.pack(pending_connection))
+                                                     Serializer.serialize(pending_connection).decode('utf-8'))
 
         await self.agent.send_admin_message(pending_connection)
 
-    async def send_response(self, msg: Message) -> Message:
+    async def send_response(self, msg: Message) -> None:
         """ Send response to request.
 
             send_response message format:
@@ -335,7 +334,7 @@ class AdminConnection(Module):
         response_msg['connection~sig'] = await self.agent.sign_agent_message_field(response_msg['connection'], pairwise_meta["connection_key"])
         del response_msg['connection']
 
-        pending_connection = Serializer.unpack(
+        pending_connection = Serializer.deserialize(
             json.loads(
                 await non_secrets.get_wallet_record(self.agent.wallet_handle,
                                                     'invitations',
@@ -374,10 +373,10 @@ class Connection(Module):
         self.router.register(Connection.REQUEST, self.request_received)
         self.router.register(Connection.RESPONSE, self.response_received)
 
-    async def route(self, msg: Message) -> Message:
+    async def route(self, msg: Message) -> None:
         return await self.router.route(msg)
 
-    async def request_received(self, msg: Message) -> Message:
+    async def request_received(self, msg: Message) -> None:
         """ Received connection request.
 
             Request format:
@@ -407,7 +406,7 @@ class Connection(Module):
         """
         r = await self.validate_common_message_blocks(msg, Connection.FAMILY)
         if not r:
-            return r
+            return
 
         try:
             ConnectionMessage.Request.validate(msg)
@@ -476,7 +475,7 @@ class Connection(Module):
                 self.agent.wallet_handle,
                 'invitations',
                 connection_key,
-                Serializer.pack(pending_connection),
+                Serializer.serialize(pending_connection).decode('utf-8'),
                 '{}'
             )
         except error.IndyError as indy_error:
@@ -485,7 +484,7 @@ class Connection(Module):
             raise indy_error
         await self.agent.send_admin_message(pending_connection)
 
-    async def response_received(self, msg: Message) -> Message:
+    async def response_received(self, msg: Message) -> None:
         """ Process response
 
             Response format:
@@ -499,7 +498,7 @@ class Connection(Module):
         """
         r = await self.validate_common_message_blocks(msg, Connection.FAMILY)
         if not r:
-            return r
+            return
 
         my_did = msg.context['to_did']
         if my_did is None:
@@ -571,7 +570,7 @@ class Connection(Module):
             })
         )
 
-        pending_connection = Serializer.unpack(
+        pending_connection = Serializer.deserialize(
             json.loads(
                 await non_secrets.get_wallet_record(self.agent.wallet_handle,
                                                     'invitations',
