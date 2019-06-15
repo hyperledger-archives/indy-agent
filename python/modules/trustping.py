@@ -18,14 +18,14 @@ class AdminTrustPing(Module):
         self.router = SimpleRouter()
         self.router.register(AdminTrustPing.SEND_TRUSTPING, self.send_trustping)
 
-    async def route(self, msg: Message) -> Message:
+    async def route(self, msg: Message) -> None:
         return await self.router.route(msg)
 
-    async def trustping_response(self, msg: Message) -> Message:
+    async def trustping_response(self, msg: Message) -> None:
         print("trustping_response")
         print(msg)
 
-    async def send_trustping(self, msg: Message) -> Message:
+    async def send_trustping(self, msg: Message) -> None:
         """ UI activated method.
         """
 
@@ -59,13 +59,13 @@ class TrustPing(Module):
         self.router.register(TrustPing.PING, self.ping)
         self.router.register(TrustPing.PING_RESPONSE, self.ping_response)
 
-    async def route(self, msg: Message) -> Message:
+    async def route(self, msg: Message) -> None:
         return await self.router.route(msg)
 
-    async def ping(self, msg: Message) -> Message:
+    async def ping(self, msg: Message) -> None:
         r = await self.validate_common_message_blocks(msg, TrustPing.FAMILY)
         if not r:
-            return r
+            return
 
         await self.agent.send_admin_message(
             Message({
@@ -82,7 +82,7 @@ class TrustPing(Module):
             })
         )
 
-    async def ping_response(self, msg: Message) -> Message:
+    async def ping_response(self, msg: Message) -> None:
         await self.agent.send_admin_message(
             Message({
                 '@type': AdminTrustPing.TRUSTPING_RESPONSE_RECEIVED,

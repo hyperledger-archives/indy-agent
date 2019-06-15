@@ -139,6 +139,97 @@
                 </div>
             </div>
 
+            <div class="modal fade" id="add_static_connection_modal" tabindex="-1" role="dialog" aria-labelledby="add_static_connection_modal_label" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="add_static_connection_modal_label">Add Static Connection</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Label</span>
+                                </div>
+                                <input type="text" class="form-control" v-model="new_static_connection.label"/>
+                            </div>
+                            <br/>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">DID</span>
+                                </div>
+                                <input type="text" class="form-control" v-model="new_static_connection.did"/>
+                            </div>
+                            <br/>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Public Key</span>
+                                </div>
+                                <input type="text" class="form-control" v-model="new_static_connection.vk"/>
+                            </div>
+                            <br/>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Endpoint (optional)</span>
+                                </div>
+                                <input type="text" class="form-control" v-model="new_static_connection.endpoint"/>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button id="add_static_connection" v-on:click="add_static_connection" type="button" class="btn btn-primary" data-dismiss="modal">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="staticconnection_created_modal" tabindex="-1" role="dialog" aria-labelledby="new_static_connection_modal_label" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="new_static_connection_modal_label">New Static Connection</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Label</span>
+                                </div>
+                                <input type="text" class="form-control" readonly v-model="new_static_connection.label"/>
+                            </div>
+                            <br/>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">My DID</span>
+                                </div>
+                                <input type="text" class="form-control" readonly v-model="new_static_connection.my_did"/>
+                            </div>
+                            <br/>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">My VerKey</span>
+                                </div>
+                                <input type="text" class="form-control" readonly v-model="new_static_connection.my_vk"/>
+                            </div>
+                            <br/>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">My Endpoint</span>
+                                </div>
+                                <input type="text" class="form-control" readonly v-model="new_static_connection.my_endpoint"/>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <nav class="navbar navbar-expand-lg navbar-light bg-light" style="margin-top:2em;">
               <a class="h3 navbar-brand" href="#">Pending Connections</a>
               <div class="collapse navbar-collapse" id="navbarSupportedContent">
@@ -181,6 +272,12 @@
 
             <nav class="navbar navbar-expand-lg navbar-light bg-light">
               <a class="h3 navbar-brand" href="#">Pairwise Connections</a>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
+
+                </ul>
+                <button type="button" class="btn btn-outline-primary btn-small navbar-btn" data-toggle="modal" data-target="#add_static_connection_modal">Add Static Connection</button>
+              </div>
             </nav>
 
             <table class="table table-bordered">

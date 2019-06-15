@@ -2,9 +2,8 @@
     received messages.
 """
 import json
-from collections import UserDict
-
 import uuid
+from collections import UserDict
 
 
 class Message(UserDict):
@@ -19,7 +18,7 @@ class Message(UserDict):
         other things: ambiguous data. Interpretation defined by type and id.
 
         """
-        UserDict.__init__(self,*args, **kwargs)
+        UserDict.__init__(self, *args, **kwargs)
         self.context = {}
         # Assign it an ID
         if '@id' not in self.data:

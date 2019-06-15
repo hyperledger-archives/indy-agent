@@ -6,14 +6,14 @@ class Module:
     PROBLEM_REPORT = 'problem_report'
 
     @staticmethod
-    def build_problem_report_for_connections(family, problem_code, problem_str):
+    def build_problem_report_for_connections(family, problem_code, problem_str) -> Message:
         return Message({
             "@type": "{}/problem_report".format(family),
             "problem-code": problem_code,
             "explain": problem_str
         })
 
-    async def validate_common_message_blocks(self, msg, family):
+    async def validate_common_message_blocks(self, msg, family) -> int:
         """
         Validate threading, timing blocks in messages and return error message to sender when invalid
         """

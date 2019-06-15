@@ -5,7 +5,7 @@ from typing import Optional
 
 from .message import Message
 from .did_doc import DIDDoc
-from test_suite.serializer import JSONSerializer as Serializer
+from python.serializer.json_serializer import JSONSerializer as Serializer
 
 
 class Connection(Message):
@@ -33,7 +33,7 @@ class Connection(Message):
             matches = re.match('(.+)?c_i=(.+)', invite_url)
             assert matches, 'Improperly formatted invite url!'
 
-            invite_msg = Serializer.unpack(
+            invite_msg = Serializer.deserialize(
                 base64.urlsafe_b64decode(matches.group(2)).decode('ascii')
             )
 
@@ -60,7 +60,7 @@ class Connection(Message):
 
             b64_invite = base64.urlsafe_b64encode(
                 bytes(
-                    Serializer.pack(msg),
+                    Serializer.serialize(msg).decode('utf-8'),
                     'ascii'
                 )
             ).decode('ascii')
