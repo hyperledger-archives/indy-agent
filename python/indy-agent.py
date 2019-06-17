@@ -42,6 +42,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--ephemeralwallet", action="store_true", help="Use ephemeral wallets")
     parser.add_argument("--adminkey", type=str, help="Base58 encoded admin interface key")
+    parser.add_argument("--hostname", type=str, help="Endpoint hostname")
     args = parser.parse_args()
 
     # Configure webapp
@@ -49,7 +50,7 @@ if __name__ == "__main__":
     WEBAPP = web.Application()
     aiohttp_jinja2.setup(WEBAPP, loader=jinja2.FileSystemLoader('view'))
 
-    AGENT = Agent()
+    AGENT = Agent(args.hostname, args.port)
     POST_MESSAGE_HANDLER = PostMessageHandler(AGENT.message_queue)
     WEBSOCKET_MESSAGE_HANDLER = WebSocketMessageHandler(
         AGENT.message_queue,
