@@ -1,5 +1,4 @@
 import json
-import socket
 
 import aiohttp_jinja2
 from indy import pairwise
@@ -66,14 +65,5 @@ class Admin(Module):
 @aiohttp_jinja2.template('index.html')
 async def root(request):
     agent = request.app['agent']
-    local_ip = socket.gethostbyname(socket.gethostname())
-    agent.offer_endpoint = request.url.scheme + '://' + local_ip
-    agent.endpoint = request.url.scheme + '://' + local_ip
-    if request.url.port is not None:
-        agent.endpoint += ':' + str(request.url.port) + '/indy'
-        agent.offer_endpoint += ':' + str(request.url.port) + '/offer'
-    else:
-        agent.endpoint += '/indy'
-        agent.offer_endpoint += '/offer'
     print('Agent Offer Endpoint : "{}"'.format(agent.offer_endpoint))
     return {'agent_admin_key': agent.agent_admin_key}
