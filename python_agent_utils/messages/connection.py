@@ -19,7 +19,13 @@ class Connection(Message):
     REQUEST = FAMILY + "request"
     RESPONSE = FAMILY + "response"
     REQUEST_NOT_ACCEPTED = "request_not_accepted"
+
+    # Problem codes
+    # No corresponding connection request found
     RESPONSE_FOR_UNKNOWN_REQUEST = "response_for_unknown_request"
+
+    # Verkey provided in response does not match expected key
+    KEY_ERROR = "verkey_error"
 
     class Invite:
         @staticmethod
