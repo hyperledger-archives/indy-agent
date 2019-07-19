@@ -1,4 +1,33 @@
-# Indy Agents
+Indy Agents
+===========
+
+Migration Notice
+----------------
+
+**The work of creating interoperable Agents has moved to the Hyperledger Aries Project.** Much of the code and
+information in this repository remains relevant as a reference point; however, this information is not as actively kept
+up to date and **may be incorrect**. For the up-to-date counterparts of the components in this repository, refer to the
+list below.
+
+#### Superseding Projects
+- Docs and Protocol: [Indy HIPE][1] for Indy specific documentation, [Aries RFCs][2] for everything else.
+- Python Reference Agent: [Aries Cloud Agent Python][3]
+- Agent Test Suite: [Aries Protocol Test Suite][4]
+- Node.js Agent: No codebase yet exists that directly supersedes this project. However, discussion around creating a
+	Node.js Agent Framework are being held in the Aries Community. Direct questions about these efforts to the
+	[Hyperledger Rocket.Chat Aries channel][5].
+
+[1]: https://github.com/hyperledger/indy-hipe
+[2]: https://github.com/hyperledger/aries-rfcs
+[3]: https://github.com/hyperledger/aries-cloudagent-python
+[4]: https://github.com/hyperledger/aries-protocol-test-suite
+[5]: https://chat.hyperledger.org/channel/aries
+
+#### Other questions?
+Direct any other questions you may have about this repository to the [Aries channel][5].
+
+Agents
+------
 
 Agents come in all varieties. Some are simple and static; these
 might be appropriate for IoT use cases that are hard-wired for
