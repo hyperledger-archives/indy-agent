@@ -1,8 +1,24 @@
-**_Note:_** This agent implementation is currently unmaintained. The protocols used here are close to but differ from
-the community accepted protocols. For a more update-to-date implementation of the established protocols, see the [Python
-Reference Agent](../python).
+# Run the node.js reference agent
 
-# Run the indy-agent node.js reference agent
+## Migration Notice
+
+**The work of creating interoperable Agents has moved to the Hyperledger Aries Project. This agent implementation is
+currently unmaintained. The protocols used here are no longer up-to-date with the standards discussed in the Hyperledger
+Aries Project.**
+
+Refer to [the main README][2] for more information on the other components of the Indy Agent repository.
+
+#### Superseding Project(s)
+No codebase yet exists that directly supersedes the Node.js agent. However, discussion around creating a Node.js Agent
+Framework are being held in the Aries Community. Direct questions about these efforts to the [Hyperledger Rocket.Chat
+Aries channel][1].
+
+#### Other questions?
+Direct any other questions you may have about this repository to the [Aries channel][1].
+
+[1]: https://chat.hyperledger.org/channel/aries
+[2]: ../README.md
+
 
 ## Quick start Instructions
 
