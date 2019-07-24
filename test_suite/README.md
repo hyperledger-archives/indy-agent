@@ -1,6 +1,23 @@
 Indy Agent Test Suite
 =====================
 
+Migration Notice
+----------------
+
+**The work of creating interoperable Agents has moved to the Hyperledger Aries Project.** The Indy Agent Test Suite will
+no longer be updated to match Aries protocols. The tests contained here remain as a reference point.
+
+#### Superseding Projects
+- [Aries Protocol Test Suite][1]
+
+#### Other questions?
+Direct any other questions you may have about this repository to the [Aries channel][2].
+
+[1]: https://github.com/hyperledger/aries-protocol-test-suite
+[2]: https://chat.hyperledger.org/channel/aries
+
+## Indy Agent Test Suite
+
 This is the Indy Agent Test Suite used to certify standards compliance and interoperability.
 
 The tests run by this test suite are based on approved Hyperledger Indy Project Enhancement (HIPE) proposals.
