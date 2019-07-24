@@ -1,11 +1,29 @@
 # Indy-agent implementation in Python
 
+Migration Notice
+----------------
+
+**The work of creating interoperable Agents has moved to the Hyperledger Aries Project. This agent is not actively
+maintained and over time the protocols used here may diverge more and more from the standards discussed in the
+Hyperledger Aries Project.**
+
+#### Superseding Projects
+- [Aries Cloud Agent Python][1]
+
+#### Other questions?
+Direct any other questions you may have about this repository to the [Aries channel][2].
+
+[1]: https://github.com/hyperledger/aries-cloudagent-python
+[2]: https://chat.hyperledger.org/channel/aries
+
+## Python Reference Agent
+
 This is an implementation of indy-agent written in Python.
 
 This agent seeks to be as simple as possible while accurately representing
 the Sovrin protocol. See [Scope](scope.md) for goal and scope details.
 
-## Quickstart
+### Quickstart
 
 There are two ways to run the agent:
 1. Using Docker (tested on Ubuntu 16.04 and MacOS Mojave 10.14)
@@ -13,7 +31,7 @@ There are two ways to run the agent:
 
 Change your current folder to `indy-agent/python`.
 
-### 1. Using Docker
+#### 1. Using Docker
 
 * Make sure you have Docker installed
 * Build docker image : `$ make docker-build`
@@ -25,7 +43,7 @@ If agent is not reachable with `localhost`, try with the internal docker contain
 * Run `make docker-getip PORT=8094` to get the ID address of the first container (for example : 172.17.0.2)
 * And run `make docker-getip PORT=8095` to get the ID address of the second container (for example : 172.17.0.3)
 
-### 2. Using dev mode
+#### 2. Using dev mode
 
 Requirements :
 * Python 3.6
@@ -41,7 +59,7 @@ Procedure :
 * In another instance of your terminal: `$ python indy-agent.py 8095` and don't close it.
 * Open up your browser, with two tabs opened: localhost:8094 (agent A) and localhost:8095 (agent B).
 
-### Using the demo
+#### Using the demo
 
 To this point I hope you have properly launched the agents. In each terminal, 
 after browser tabs opened, you can see the "offer endpoint" usefull for
